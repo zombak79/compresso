@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compresso"
+version = "0.1.0"
+description = "Compresso: structured compression in PyTorch"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["compresso"]
