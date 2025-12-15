@@ -32,50 +32,31 @@ class CooSparseLinear(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         x: dense tensor of shape (*prefix, in_features)
-
-        Returns:
-            y: dense tensor of shape (*prefix, out_features)
+        returns: dense tensor of shape (*prefix, out_features)
         """
         if x.is_sparse:
             raise ValueError("CooSparseLinear expects dense input x; got sparse.")
 
-        # Check last dim
         if x.shape[-1] != self.in_features:
             raise ValueError(
                 f"Expected last dim {self.in_features}, got {x.shape[-1]} in CooSparseLinear"
             )
 
         device = x.device
-        dtype = torch.float32  # do matmul in fp32 for numeric stability
+        dtype = torch.float32  # compute in fp32
 
-        # Build sparse weight W: (out_features, in_features)
-        W = self.sparam.build_coo(device=device, dtype=dtype)  # sparse COO
+        # sparse weight: (out, in)
+        W = self.sparam.build_coo(device=device, dtype=dtype)
 
-        # Flatten prefix dims: (*prefix, in_features) -> (N, in_features)
-        prefix_shape = x.shape[:-1]
-        N = 1
-        for d in prefix_shape:
-            N *= d
-
-        x32 = x.to(dtype=dtype).reshape(N, self.in_features)   # (N, in_features)
-
-        # We want y_flat = x32 @ W^T, but torch.sparse.mm only supports sparse @ dense,
-        # so we compute:
-        #   y^T = W @ x^T  -> (out_features, N)
-        #   y_flat = (y^T)^T -> (N, out_features)
-
-        x_t = x32.t()                            # (in_features, N)
-        y_t = torch.sparse.mm(W, x_t)           # (out_features, N) dense
-        y_flat = y_t.t()                        # (N, out_features)
+        # flatten prefix dims
+        x32 = x.to(dtype=dtype).reshape(-1, self.in_features)  # (N, in)
+        y_flat = torch.sparse.mm(W, x32.t()).t()               # (N, out)
 
         if self.bias is not None:
-            y_flat = y_flat + self.bias.to(y_flat.device, y_flat.dtype)
+            y_flat = y_flat + self.bias.to(device=device, dtype=y_flat.dtype)
 
-        # Reshape back to (*prefix, out_features)
-        y = y_flat.view(*prefix_shape, self.out_features)
-
+        y = y_flat.reshape(*x.shape[:-1], self.out_features)
         return y.to(x.dtype)
-
 
 class CooSparseEmbedding(nn.Module):
     """
