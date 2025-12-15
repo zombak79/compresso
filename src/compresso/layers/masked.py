@@ -29,6 +29,7 @@ class MaskedLinear(nn.Module):
         num_stages: int = 10,
         stability_window: int = 5,
         change_threshold: float = 0.01,
+        sparsity = "row",
     ):
         super().__init__()
         self.in_features = in_features
@@ -53,6 +54,7 @@ class MaskedLinear(nn.Module):
             num_stages=num_stages,
             stability_window=stability_window,
             change_threshold=change_threshold,
+            sparsity=sparsity,
         )
 
         # --- bias: follow nn.Linear exactly --------------------------------
