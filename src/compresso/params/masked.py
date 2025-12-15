@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from collections import deque
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Literal
 
 from compresso.params.coo import CooSparseParam
 from compresso.utils.schedule import exponential_decay
@@ -29,6 +29,7 @@ class MaskedParam(nn.Module):
         num_stages: int = 10,
         stability_window: int = 5,
         change_threshold: float = 0.01,
+        sparsity: Literal["row", "col"] = "row", 
     ):
         """
         Args:
@@ -55,6 +56,9 @@ class MaskedParam(nn.Module):
             change_threshold:
                 Maximum allowed portion of changed entries per update for it
                 to be counted as "stable". 
+            sparsity:
+                row: Apply sparsity row-wise or 
+                col: column-wise
         """
         super().__init__()
         if weight.dim() != 2:
@@ -64,6 +68,15 @@ class MaskedParam(nn.Module):
         self.k_target = int(k_target)
         self.k_full = self.cols
         self.num_stages = num_stages
+        # set dim
+        if sparsity == "row":
+            self.dim = 1
+        elif sparsity == "col":
+            self.dim = 0
+        else:
+            raise ValueError(f"Sparsity could be row or col, got {sparsity}")
+
+
         # Save original init
         self.initialization = weight.detach().cpu().clone()
         
@@ -89,14 +102,13 @@ class MaskedParam(nn.Module):
             self.k_schedule = exponential_decay(self.k_full, self.k_target, self.num_stages-1)
             self.k_schedule.append(self.k_target)
 
-        self.num_stages = len(self.k_schedule)
-        
+        # schedule
+        self.num_stages = len(self.k_schedule)        
         self.stage_idx = 0                  # current stage index in k_schedule
         self.k_current = self.k_full        # effective k in last update; starts dense
         self.k_next = self.k_schedule[self.stage_idx+1] if (self.stage_idx+1)<self.num_stages else self.k_target
         self.mask = torch.ones(self.weight.shape, dtype=self.weight.dtype).to(self.weight.device)
         self.last_mask = self.topk_mask(k=self.k_next).to(self.weight.device)
-        
         
         # Stability tracking
         self.stability_window = int(stability_window)
@@ -110,8 +122,8 @@ class MaskedParam(nn.Module):
 
     def topk_weights_with_mask(self, k=None, return_mask=True):
         k = k if k else self.k_current
-        w_topk = torch.topk(torch.abs(self.weight), k, -1)
-        out = torch.zeros_like(self.weight).scatter(-1, w_topk.indices, w_topk.values) * torch.sign(self.weight)
+        w_topk = torch.topk(torch.abs(self.weight), k, self.dim)
+        out = torch.zeros_like(self.weight).scatter(self.dim, w_topk.indices, w_topk.values) * torch.sign(self.weight)
         return (out, out.bool()) if return_mask else out
 
     def topk_weights(self, k=None):
