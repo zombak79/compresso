@@ -52,6 +52,9 @@ class SparseAwareLinearKernel(nn.Module):
         """
         if not x.is_sparse:
             raise ValueError("x must be sparse in _sparse_forward")
+        
+        if not x.is_coalesced():
+            x = x.coalesce()
 
         full_shape = x.shape                     # e.g. (B, T, E)
         if len(full_shape) < 2:
@@ -72,6 +75,8 @@ class SparseAwareLinearKernel(nn.Module):
 
         indices = x.indices()                # (ndim, nnz)
         values = x.values()                  # (nnz,)
+        out_dtype = values.dtype             # what the caller expects back
+        values32 = values.to(torch.float32)          
         ndim, nnz = indices.shape
 
         # prefix coords: shape (k, nnz)
@@ -98,22 +103,22 @@ class SparseAwareLinearKernel(nn.Module):
         indices_2d = torch.stack([row_flat, col_idx], dim=0)        # (2, nnz)
         x2d = torch.sparse_coo_tensor(
             indices_2d,
-            values,
+            values32,
             size=(N, in_features),
             device=device,
-            dtype=values.dtype,
+            dtype=torch.float32,
         ).coalesce()
 
         # sparse.mm: (N, in) @ (in, out) -> (N, out)
-        Wt = self.weight.t().to(values.dtype).to(device)            # (in, out)
-        y2d = torch.sparse.mm(x2d, Wt)                              # (N, out), dense
+        Wt = self.weight.t().to(device=device, dtype=torch.float32) # (in, out)
+        y2d = torch.sparse.mm(x2d, Wt)                              # (N, out), dense, fp32
 
         if self.bias is not None:
-            y2d = y2d + self.bias.to(device=device, dtype=y2d.dtype)
+            y2d = y2d + self.bias.to(device=device, dtype=torch.float32)
 
         # reshape back to (*prefix, out_features)
-        out = y2d.view(*prefix_shape, self.out_features)
-        return out
+        out = y2d.reshape(*prefix_shape, self.out_features)
+        return out.to(out_dtype)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not x.is_sparse:
