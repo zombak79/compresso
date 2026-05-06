@@ -166,7 +166,7 @@ class MaskedEmbedding(nn.Module):
         Expose underlying dense weight parameter (masked version is returned in forward).
         This mirrors nn.Embedding API (module.weight).
         """
-        return self.mparam.weight
+        return self.mparam()
 
     def extra_repr(self) -> str:
         s = (
@@ -195,3 +195,95 @@ class MaskedEmbedding(nn.Module):
             padding_idx=self.padding_idx,
             # You can add more args later: max_norm, norm_type, etc.
         )
+
+class MaskedELSALayer(nn.Module):
+    """
+    ELSA layer using MaskedParam-managed item embeddings.
+
+    This is used during the *mask search* phase:
+      - weights are dense (masked)
+      - row slicing is fast
+      - rewinding works naturally
+    """
+
+    def __init__(
+        self,
+        num_items: int,
+        embedding_dim: int,
+        k_target: int,
+        k_schedule=None,
+        num_stages: int = 10,
+        stability_window: int = 5,
+        change_threshold: float = 0.01,
+        device=None,
+        dtype=None,
+    ):
+        super().__init__()
+        factory_kwargs = {"device": device, "dtype": dtype}
+
+        # Dense embedding table
+        weight = torch.empty(num_items, embedding_dim, **factory_kwargs)
+        nn.init.normal_(weight, mean=0.0, std=1.0)
+
+        # Masked sparsity controller
+        self.mparam = MaskedParam(
+            weight=weight,
+            k_target=k_target,
+            k_schedule=k_schedule,
+            num_stages=num_stages,
+            stability_window=stability_window,
+            change_threshold=change_threshold,
+        )
+
+        self.num_items = num_items
+        self.embedding_dim = embedding_dim
+
+    @property
+    def weight(self) -> torch.Tensor:
+        """Dense masked weight (for inspection/debug)."""
+        return self.mparam()
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        pos_items: torch.Tensor = None,
+        cand_items: torch.Tensor = None,
+        y = None,
+    ) -> torch.Tensor:
+        """
+        Args:
+            x:
+                Dense interaction slice, shape (B, P)
+            pos_items:
+                LongTensor of shape (P,)
+            cand_items:
+                LongTensor of shape (C,)
+
+        Returns:
+            scores: Tensor of shape (B, C)
+        """
+        if y is None:
+            y = x
+
+        # Get current masked dense weight
+        A = self.mparam()  # (num_items, d)
+
+        # Row gather
+        if pos_items is not None:
+            A_pos  = A[pos_items]   # (P, d)
+        else:
+            A_pos = A
+        if cand_items is not None:
+            A_cand = A[cand_items]  # (C, d)
+        else:
+            A_cand = A
+
+        # Normalize rows (as in ELSA)
+        A_pos  = F.normalize(A_pos, dim=-1)
+        A_cand = F.normalize(A_cand, dim=-1)
+
+        # Two-stage projection
+        xA   = x @ A_pos              # (B, d)
+        xAAT = xA @ A_cand.t()        # (B, C)
+
+        return xAAT - y

@@ -32,6 +32,8 @@ class SparsityController:
         self.phase: str = "mask_search"  # or "final"
         self.num_restarts: int = 0
         self.method = method
+        # set of module-ids of GatedMaskedMLPParam that advanced in the last rewind()
+        self.last_advanced_gates = set()
 
     def step(self) -> dict:
         """
@@ -47,7 +49,8 @@ class SparsityController:
         info = {
             "rewind_triggered": False,
             "all_schedules_done": False,
-            "phase": self.phase
+            "phase": self.phase,
+            "compact_triggered": False,
         }
 
         # Once we are in final phase, do nothing here
@@ -67,14 +70,20 @@ class SparsityController:
         for mp in masked_parameters(self.model):
             check_if_any_masked_params_present=True
             delta = mp.step_mask()  # average unstable_fraction
+            
             # mp.stage_completed is set inside step_mask
-            if mp.stage_completed:
+            if (hasattr(mp, "stage_completed") and mp.stage_completed) or ((hasattr(mp, "stage_completed_qk") and mp.stage_completed_qk) and (hasattr(mp, "stage_completed_v") and mp.stage_completed_v)):
                 any_stage_completed = True
             else:
                 all_stages_completed = False
-            if not mp.schedule_done:
+            
+            if hasattr(mp, "schedule_done") and (not mp.schedule_done):
                 all_schedules_done = False
-        
+            if hasattr(mp, "schedule_done_qk") and (not mp.schedule_done_qk):
+                all_schedules_done = False
+            if hasattr(mp, "schedule_done_v") and (not mp.schedule_done_v):
+                all_schedules_done = False
+
         if not check_if_any_masked_params_present:
             # Nothing to do
             return info
@@ -82,22 +91,30 @@ class SparsityController:
         # 2) If at least one param completed its current stage -> rewind all
         if all_stages_completed and self.method=="all":
             self.num_restarts += 1
-            #self.model.load_state_dict(self.init_state)
+            self.last_advanced_gates = set()
+            # rewind
             for mp in masked_parameters(self.model):
                 stats = mp.rewind()
-                # you can log stats here if you want
+                # Only GatedMaskedMLPParam has "advanced" in returned stats
+                if isinstance(stats, dict) and stats.get("advanced", False):
+                    self.last_advanced_gates.add(id(mp))
+                # todo: change logger
                 print(f"[SparsityController] Rewind: {stats}")
+
             info["rewind_triggered"] = True
-        
+            info["compact_triggered"] = True
         
         if any_stage_completed and self.method=="one":
             self.num_restarts += 1
-            #self.model.load_state_dict(self.init_state)
+            self.last_advanced_gates = set()
             for mp in masked_parameters(self.model):
                 stats = mp.rewind()
-                # you can log stats here if you want
+                if isinstance(stats, dict) and stats.get("advanced", False):
+                    self.last_advanced_gates.add(id(mp))
+                # todo: change logger
                 print(f"[SparsityController] Rewind: {stats}")
             info["rewind_triggered"] = True
+            info["compact_triggered"] = True
 
         # 3) If all schedules done -> optionally freeze masks and switch to final
         if all_schedules_done:
@@ -109,7 +126,13 @@ class SparsityController:
 
         stats=[]
         for mp in masked_parameters(self.model):
-            stats.append(mp.get_stats()["last_num_changes"])
+            if hasattr(mp, "last_num_changes"):
+                stats.append(mp.get_stats()["last_num_changes"])
+            if hasattr(mp, "last_num_changes_qk"):
+                stats.append(mp.get_stats()["last_num_changes_qk"])
+            if hasattr(mp, "last_num_changes_v"):
+                stats.append(mp.get_stats()["last_num_changes_v"])
+
         info["num_changes"]=stats
         self.num_changes=stats
         return info

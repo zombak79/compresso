@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from compresso.utils.ops import srpmm_rowpacked_core
+from compresso.params.srp import SRPTensor, SRPParam
 
 class SparseAwareLinearKernel(nn.Module):
     """
@@ -10,6 +12,7 @@ class SparseAwareLinearKernel(nn.Module):
     Input:
       - dense: (..., in_features)
       - sparse: (*prefix, in_features) in COO (dim >= 2)
+      - SRP input: SRPTensor representing (*prefix, in_features) but stored as (rows=N, k) with prefix_shape.
 
     Output:
       - dense: (..., out_features) with the SAME prefix shape.
@@ -40,6 +43,8 @@ class SparseAwareLinearKernel(nn.Module):
             fan_in = in_features
             bound = 1 / (fan_in**0.5) if fan_in > 0 else 0
             nn.init.uniform_(self.bias, -bound, bound)
+
+        self.debug = None
 
     def extra_repr(self) -> str:
         return f"in_features={self.in_features}, out_features={self.out_features}, bias={self.bias is not None}"
@@ -101,17 +106,19 @@ class SparseAwareLinearKernel(nn.Module):
 
         # Build 2D sparse (N, in_features)
         indices_2d = torch.stack([row_flat, col_idx], dim=0)        # (2, nnz)
-        x2d = torch.sparse_coo_tensor(
-            indices_2d,
-            values32,
-            size=(N, in_features),
-            device=device,
-            dtype=torch.float32,
-        ).coalesce()
+        
+        with torch.cuda.amp.autocast(enabled=False):
+            x2d = torch.sparse_coo_tensor(
+                indices_2d,
+                values32,
+                size=(N, in_features),
+                device=device,
+                dtype=torch.float32,
+            ).coalesce()
 
-        # sparse.mm: (N, in) @ (in, out) -> (N, out)
-        Wt = self.weight.t().to(device=device, dtype=torch.float32) # (in, out)
-        y2d = torch.sparse.mm(x2d, Wt)                              # (N, out), dense, fp32
+            # sparse.mm: (N, in) @ (in, out) -> (N, out)
+            Wt = self.weight.t().to(device=device, dtype=torch.float32) # (in, out)
+            y2d = torch.sparse.mm(x2d, Wt)                              # (N, out), dense, fp32
 
         if self.bias is not None:
             y2d = y2d + self.bias.to(device=device, dtype=torch.float32)
@@ -119,10 +126,67 @@ class SparseAwareLinearKernel(nn.Module):
         # reshape back to (*prefix, out_features)
         out = y2d.reshape(*prefix_shape, self.out_features)
         return out.to(out_dtype)
+    
+    def _srp_forward(self, x: "SRPTensor") -> torch.Tensor:
+        """
+        x: SRPTensor representing sparse activations with logical shape (*prefix, in_features)
+        but stored row-packed as (rows=N, k).
+        Returns:
+            dense tensor with shape (*prefix, out_features)
+        """
+        rows, in_features = x.shape
+        if in_features != self.in_features:
+            raise ValueError(
+                f"SRP cols_total ({in_features}) != in_features ({self.in_features})"
+            )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if not x.is_sparse:
-            # dense path: (..., in_features) -> (..., out_features)
-            return F.linear(x, self.weight, self.bias)
+        # If prefix_shape isn't set, we assume it's already flattened (rows, in_features)
+        prefix_shape = x.prefix_shape
+        out_dtype = x.dtype
+        device = x.device
+
+        # weight: (out, in) -> need B: (in, out)
+        # IMPORTANT: keep autograd; do NOT wrap in no_grad.
+        B = self.weight.t()  # (in_features, out_features)
+
+        # Accumulate in fp32 (typical); return whatever dtype the model uses
+        with torch.cuda.amp.autocast(enabled=False):
+            Y2d = srpmm_rowpacked_core(x.cols, x.vals, B, accum_dtype=torch.float32)
+
+        if self.bias is not None:
+            # bias add in fp32 for stability, then cast
+            Y2d = Y2d.to(torch.float32) + self.bias.to(torch.float32)
+
+        Y2d = Y2d.to(out_dtype)
+
+        if prefix_shape is not None:
+            return Y2d.view(*prefix_shape, self.out_features)
         else:
-            return self._sparse_forward(x)
+            return Y2d.view(rows, self.out_features)
+
+    def forward(self, x) -> torch.Tensor:
+        # 1) SRP fast path
+        if self.debug != type(x):
+            print("type(x)", type(x))
+            debug=True
+        else:
+            debug=False
+        self.debug = type(x)
+
+        if isinstance(x, SRPParam):
+            if debug:
+                print(x.values)
+            x=x()
+            
+        if isinstance(x, SRPTensor):
+            return self._srp_forward(x)
+            x=x.to_dense()
+            if debug:
+                print("to_dense")
+
+        # 2) Dense path
+        if not getattr(x, "is_sparse", False):
+            return F.linear(x, self.weight, self.bias)
+
+        # 3) COO sparse path
+        return self._sparse_forward(x)
