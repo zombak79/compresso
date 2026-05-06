@@ -13,4 +13,8 @@ dependencies = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["compresso"]
+packages = ["compresso", "compresso.functional", "compresso.nn"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

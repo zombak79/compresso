@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from typing import Optional
-
+from compresso.params.coo import CooSparseParam
 
 class CooSparseLinear(nn.Module):
     """
@@ -22,7 +22,7 @@ class CooSparseLinear(nn.Module):
         self.out_features = sparam.rows
 
         if bias is not None:
-            self.bias = nn.Parameter(torch.zeros(self.out_features))
+            self.bias = bias #nn.Parameter(torch.zeros(self.out_features))
         else:
             self.bias = None
 
@@ -92,6 +92,15 @@ class CooSparseEmbedding(nn.Module):
         if self.padding_idx is not None:
             s += f", padding_idx={self.padding_idx}"
         return s
+
+    @property
+    def weight(self) -> torch.Tensor:
+        """
+        Expose underlying dense weight parameter (masked version is returned in forward).
+        This mirrors nn.Embedding API (module.weight).
+        """
+        return self.sparam()
+
 
     def _build_batch_sparse(self, input_ids: torch.Tensor) -> torch.Tensor:
         """
@@ -232,3 +241,55 @@ class CooSparseEmbedding(nn.Module):
             Sparse COO tensor of shape (*input.shape, embedding_dim).
         """
         return self._build_batch_sparse(input)
+
+
+class CooELSALayer(nn.Module):
+    """
+    ELSA layer using CooSparseParam with fixed structure.
+
+    This is used after mask search is finished.
+    """
+
+    def __init__(self, coo_param: CooSparseParam):
+        super().__init__()
+        self.A = coo_param
+        self.embedding_dim = coo_param.shape[1]
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        pos_items: torch.Tensor,
+        cand_items: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        Args:
+            x:
+                Dense interaction slice, shape (B, P)
+            pos_items:
+                LongTensor of shape (P,)
+            cand_items:
+                LongTensor of shape (C,)
+
+        Returns:
+            scores: Tensor of shape (B, C)
+        """
+        device = x.device
+        dtype = torch.float32
+
+        # Build sparse submatrices (cheap, fixed-k)
+        A_pos  = self.A(row_indices=pos_items)    # sparse (P, d)
+        A_cand = self.A(row_indices=cand_items)   # sparse (C, d)
+
+        # Convert to dense for GEMMs (ELSA math wants dense here)
+        A_pos  = A_pos.to_dense()
+        A_cand = A_cand.to_dense()
+
+        # Normalize
+        A_pos  = F.normalize(A_pos, dim=-1)
+        A_cand = F.normalize(A_cand, dim=-1)
+
+        # Same math
+        xA   = x @ A_pos
+        xAAT = xA @ A_cand.t()
+
+        return xAAT
