@@ -105,6 +105,30 @@ class TestModes:
         y2 = topk_ste(x, k=HAND_K, dim=-1, mode="values_ste_identity")
         assert torch.equal(y1, y2)
 
+    def test_score_mode_raw_ranks_by_signed_values(self, dtype, device):
+        x = torch.tensor([[-10.0, -1.0, 0.2, 0.1]], dtype=dtype, device=device)
+        y = topk_ste(x, k=2, dim=-1, mode="values", score_mode="raw")
+        # raw top-k picks 0.2 and 0.1 (largest signed values)
+        assert y[0, 2].item() == pytest.approx(0.2)
+        assert y[0, 3].item() == pytest.approx(0.1)
+        assert (y != 0).sum().item() == 2
+
+    def test_score_mode_relu_ignores_negative_rank(self, dtype, device):
+        x = torch.tensor([[-10.0, -1.0, 0.2, 0.1]], dtype=dtype, device=device)
+        y = topk_ste(x, k=2, dim=-1, mode="values", score_mode="relu")
+        # relu top-k also picks positive entries here
+        assert y[0, 2].item() == pytest.approx(0.2)
+        assert y[0, 3].item() == pytest.approx(0.1)
+        assert (y != 0).sum().item() == 2
+
+    def test_score_mode_abs_keeps_magnitude_winners(self, dtype, device):
+        x = torch.tensor([[-10.0, -1.0, 0.2, 0.1]], dtype=dtype, device=device)
+        y = topk_ste(x, k=2, dim=-1, mode="values", score_mode="abs")
+        # abs top-k picks -10 and -1 by magnitude
+        assert y[0, 0].item() == pytest.approx(-10.0)
+        assert y[0, 1].item() == pytest.approx(-1.0)
+        assert (y != 0).sum().item() == 2
+
 
 # ---------------------------------------------------------------------------
 # Gradient tests
@@ -239,6 +263,25 @@ class TestKBackward:
 
         grad_nonzero = (x.grad != 0).sum(dim=-1)
         assert (grad_nonzero == 10).all()
+
+    def test_k_backward_uses_score_mode_for_selection(self, dtype, device):
+        # abs and raw select different backward supports here
+        x_abs = torch.tensor([[-10.0, -1.0, 0.2, 0.1]], dtype=dtype, device=device, requires_grad=True)
+        y_abs = topk_ste(x_abs, k=1, dim=-1, mode="values", score_mode="abs", k_backward=2)
+        y_abs.sum().backward()
+        mask_abs = x_abs.grad != 0
+
+        x_raw = torch.tensor([[-10.0, -1.0, 0.2, 0.1]], dtype=dtype, device=device, requires_grad=True)
+        y_raw = topk_ste(x_raw, k=1, dim=-1, mode="values", score_mode="raw", k_backward=2)
+        y_raw.sum().backward()
+        mask_raw = x_raw.grad != 0
+
+        # abs backward support: indices 0 and 1
+        assert mask_abs[0, 0].item()
+        assert mask_abs[0, 1].item()
+        # raw backward support: indices 2 and 3
+        assert mask_raw[0, 2].item()
+        assert mask_raw[0, 3].item()
 
     def test_backward_is_one_at_selected(self, dtype, device):
         """Grad values are 1 at the k_backward positions, 0 elsewhere."""

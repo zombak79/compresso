@@ -33,24 +33,32 @@ class TopKSparsify(nn.Module):
         k: int,
         dim: int = -1,
         mode: str = "values",
+        score_mode: str = "abs",
         k_backward: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.k = k
         self.dim = dim
         self.mode = mode
+        self.score_mode = score_mode
         self.k_backward = k_backward
 
     def forward(self, x: Tensor) -> Tensor:
-        return topk_ste(x, k=self.k, dim=self.dim, mode=self.mode,
-                        k_backward=self.k_backward)
+        return topk_ste(
+            x,
+            k=self.k,
+            dim=self.dim,
+            mode=self.mode,
+            score_mode=self.score_mode,
+            k_backward=self.k_backward,
+        )
 
     def set_k(self, k: int) -> None:
         """Change *k* at runtime (e.g. for scheduling)."""
         self.k = k
 
     def extra_repr(self) -> str:
-        parts = f"k={self.k}, dim={self.dim}, mode={self.mode!r}"
+        parts = f"k={self.k}, dim={self.dim}, mode={self.mode!r}, score_mode={self.score_mode!r}"
         if self.k_backward is not None:
             parts += f", k_backward={self.k_backward}"
         return parts
