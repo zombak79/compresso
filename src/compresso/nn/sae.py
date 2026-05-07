@@ -38,6 +38,12 @@ class TopKSAE(nn.Module):
         k: int,
         tied: bool = False,
         pre_act: Optional[nn.Module] = None,
+        post_sparsify: Optional[nn.Module] = None,
+        encoder: Optional[nn.Module] = None,
+        decoder: Optional[nn.Module] = None,
+        sparsify_mode: str = "values",
+        sparsify_score_mode: str = "abs",
+        k_backward: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.input_dim = input_dim
@@ -45,19 +51,39 @@ class TopKSAE(nn.Module):
         self.k = k
         self.tied = tied
 
-        self.encoder = nn.Linear(input_dim, hidden_dim)
-        self.sparsify = TopKSparsify(k=k, dim=-1, mode="values")
+        if encoder is None:
+            self.encoder = nn.Linear(input_dim, hidden_dim)
+        else:
+            self.encoder = encoder
+
+        self.sparsify = TopKSparsify(
+            k=k,
+            dim=-1,
+            mode=sparsify_mode,
+            score_mode=sparsify_score_mode,
+            k_backward=k_backward,
+        )
 
         if pre_act is not None:
             self.pre_act = pre_act
         else:
             self.pre_act = None
 
+        if post_sparsify is not None:
+            self.post_sparsify = post_sparsify
+        else:
+            self.post_sparsify = None
+
         if tied:
+            if decoder is not None:
+                raise ValueError("Cannot provide a custom decoder when tied=True.")
             # Only a bias for the decoder path; weight is encoder.weight.T
             self.decoder_bias = nn.Parameter(torch.zeros(input_dim))
         else:
-            self.decoder = nn.Linear(hidden_dim, input_dim)
+            if decoder is None:
+                self.decoder = nn.Linear(hidden_dim, input_dim)
+            else:
+                self.decoder = decoder
 
     # ------------------------------------------------------------------
     # Public helpers
@@ -85,6 +111,8 @@ class TopKSAE(nn.Module):
         if self.pre_act is not None:
             h = self.pre_act(h)
         codes = self.sparsify(h)
+        if self.post_sparsify is not None:
+            codes = self.post_sparsify(codes)
 
         if self.tied:
             # encoder.weight is (hidden_dim, input_dim)
@@ -109,11 +137,19 @@ class TopKSAE(nn.Module):
         activation_freq = active_mask.float().mean(dim=0)  # (H,)
         dead_features = (activation_freq == 0).sum()
 
-        diff = x - recon
+        x_flat = x.reshape(x.shape[0], -1)
+        recon_flat = recon.reshape(recon.shape[0], -1)
+        if x_flat.shape != recon_flat.shape:
+            raise ValueError(
+                f"Input and reconstruction must match per-sample flattened shape, got "
+                f"{tuple(x_flat.shape)} vs {tuple(recon_flat.shape)}"
+            )
+
+        diff = x_flat - recon_flat
         reconstruction_mse = (diff * diff).mean()
 
         # Cosine similarity (per sample, then average)
-        cos = F.cosine_similarity(x, recon, dim=-1).mean()
+        cos = F.cosine_similarity(x_flat, recon_flat, dim=-1).mean()
 
         return {
             "active_count": active_count,

@@ -10,6 +10,19 @@ from torch import Tensor
 __all__ = ["topk_ste"]
 
 _VALID_MODES = {"values", "mask", "values_ste_identity", "values_ste_selected"}
+_VALID_SCORE_MODES = {"abs", "raw", "relu"}
+
+
+def _topk_scores(x: Tensor, score_mode: str) -> Tensor:
+    if score_mode == "abs":
+        return x.abs()
+    if score_mode == "raw":
+        return x
+    if score_mode == "relu":
+        return x.relu()
+    raise ValueError(
+        f"Unknown score_mode {score_mode!r}. Expected one of {sorted(_VALID_SCORE_MODES)}."
+    )
 
 
 def topk_ste(
@@ -17,6 +30,7 @@ def topk_ste(
     k: int,
     dim: int = -1,
     mode: str = "values",
+    score_mode: str = "abs",
     k_backward: Optional[int] = None,
 ) -> Tensor:
     """Hard top-k sparsification with straight-through estimation.
@@ -40,6 +54,12 @@ def topk_ste(
           Backward passes gradients **only** through selected positions.
         * ``"mask"`` –
           Returns binary ``{0, 1}`` mask. No gradient.
+    score_mode : str
+        One of:
+
+        * ``"abs"`` – rank by ``abs(x)`` (default).
+        * ``"raw"`` – rank by signed raw values ``x``.
+        * ``"relu"`` – rank by ``relu(x)``.
     k_backward : int | None
         If set, overrides the backward STE width regardless of *mode*.
         Gradients flow through the top-``k_backward`` positions (by absolute
@@ -60,9 +80,14 @@ def topk_ste(
         raise ValueError(
             f"Unknown mode {mode!r}. Expected one of {sorted(_VALID_MODES)}."
         )
+    if score_mode not in _VALID_SCORE_MODES:
+        raise ValueError(
+            f"Unknown score_mode {score_mode!r}. Expected one of {sorted(_VALID_SCORE_MODES)}."
+        )
 
     # --- forward top-k selection ---
-    idx = torch.topk(x.abs(), k, dim=dim).indices
+    scores = _topk_scores(x, score_mode=score_mode)
+    idx = torch.topk(scores, k, dim=dim).indices
     mask = torch.zeros_like(x).scatter(dim, idx, 1.0)
 
     if mode == "mask":
@@ -76,7 +101,7 @@ def topk_ste(
             # full identity STE
             return x + (masked - x).detach()
         # wider (or equal) backward mask
-        back_idx = torch.topk(x.abs(), k_backward, dim=dim).indices
+        back_idx = torch.topk(scores, k_backward, dim=dim).indices
         back_mask = torch.zeros_like(x).scatter(dim, back_idx, 1.0)
         back_masked = x * back_mask
         # forward = masked, backward flows through back_masked

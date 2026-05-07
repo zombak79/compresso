@@ -9,6 +9,16 @@ description = "Compresso: structured compression in PyTorch"
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.1",
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "scipy>=1.11",
+    "datasets>=2.19",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "numpy>=1.26",
 ]
 
 [tool.setuptools]

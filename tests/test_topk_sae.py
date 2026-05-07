@@ -178,3 +178,44 @@ class TestEdgeCases:
         recon, codes, stats = model(x)
         # With ReLU pre-activation, codes should be non-negative
         assert (codes >= 0).all()
+
+
+class TestCustomModules:
+    def test_custom_encoder_decoder(self, device):
+        encoder = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(28 * 28, H),
+        )
+        decoder = nn.Sequential(
+            nn.Linear(H, 28 * 28),
+            nn.Unflatten(1, (28, 28)),
+        )
+        model = TopKSAE(
+            input_dim=28 * 28,
+            hidden_dim=H,
+            k=K,
+            encoder=encoder,
+            decoder=decoder,
+        ).to(device)
+
+        x = torch.randn(B, 28, 28, device=device)
+        recon, codes, stats = model(x)
+        assert recon.shape == (B, 28, 28)
+        assert codes.shape == (B, H)
+        assert (codes != 0).sum(dim=-1).eq(K).all()
+        assert "reconstruction_mse" in stats
+
+    def test_post_sparsify_hook_runs(self, device):
+        model = TopKSAE(
+            input_dim=D,
+            hidden_dim=H,
+            k=K,
+            post_sparsify=nn.ReLU(),
+            sparsify_mode="values",
+            sparsify_score_mode="abs",
+            k_backward=K,
+        ).to(device)
+        x = torch.randn(B, D, device=device)
+        _, codes, _ = model(x)
+        # ReLU post-sparsify should clip negative selected values
+        assert (codes >= 0).all()
