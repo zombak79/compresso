@@ -35,18 +35,28 @@ def parse_args():
     p.add_argument("--data_dir", type=str, default="data")
     p.add_argument("--checkpoint_path", type=str, default="artifacts/ml20m/elsa_checkpoint.npz")
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--val_users", type=int, default=10000)
-    p.add_argument("--test_users", type=int, default=10000)
+    p.add_argument("--val_users", type=int, default=2500)
+    p.add_argument("--test_users", type=int, default=5000)
     p.add_argument("--min_user_support", type=int, default=5)
     p.add_argument("--item_min_support", type=int, default=1)
     p.add_argument("--min_value_to_keep", type=float, default=4.0)
     p.add_argument("--set_all_values_to", type=float, default=1.0)
 
-    p.add_argument("--elsa_dim", type=int, default=512)
+    p.add_argument("--elsa_dim", type=int, default=1024)
     p.add_argument("--elsa_epochs", type=int, default=10)
     p.add_argument("--elsa_batch_size", type=int, default=1024)
     p.add_argument("--elsa_lr", type=float, default=0.1)
     p.add_argument("--elsa_weight_decay", type=float, default=0.0)
+    p.add_argument("--elsa_beta1", type=float, default=0.9)
+    p.add_argument("--elsa_beta2", type=float, default=0.999)
+    p.add_argument("--elsa_eps", type=float, default=1e-8)
+    p.add_argument("--elsa_momentum_decay", type=float, default=0.004)
+    p.add_argument("--elsa_decoupled_weight_decay", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--elsa_grad_clip_norm", type=float, default=None)
+    p.add_argument("--elsa_grad_accum_steps", type=int, default=1)
+    p.add_argument("--elsa_use_ema", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--elsa_ema_momentum", type=float, default=0.99)
+    p.add_argument("--elsa_ema_overwrite_frequency", type=int, default=150)
 
     p.add_argument("--eval_batch_size", type=int, default=1024)
     p.add_argument("--eval_fold", type=int, default=0, choices=[0, 1])
@@ -54,11 +64,31 @@ def parse_args():
     return p.parse_args()
 
 
+def resolve_device(requested: str) -> str:
+    req = requested.lower()
+    if req == "cpu":
+        return "cpu"
+    if req == "mps":
+        if torch.backends.mps.is_available():
+            return "mps"
+        if torch.cuda.is_available():
+            return "cuda"
+        return "cpu"
+    if req == "cuda":
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+    return req
+
+
 def main():
     args = parse_args()
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
+    device = resolve_device(args.device)
 
     ds = MovieLens20M(data_dir=args.data_dir)
     raw_df = ds.get_interactions()
@@ -102,12 +132,22 @@ def main():
         batch_size=args.elsa_batch_size,
         lr=args.elsa_lr,
         weight_decay=args.elsa_weight_decay,
-        device=args.device,
+        beta1=args.elsa_beta1,
+        beta2=args.elsa_beta2,
+        eps=args.elsa_eps,
+        momentum_decay=args.elsa_momentum_decay,
+        decoupled_weight_decay=args.elsa_decoupled_weight_decay,
+        grad_clip_norm=args.elsa_grad_clip_norm,
+        grad_accum_steps=args.elsa_grad_accum_steps,
+        use_ema=args.elsa_use_ema,
+        ema_momentum=args.elsa_ema_momentum,
+        ema_overwrite_frequency=args.elsa_ema_overwrite_frequency,
+        device=device,
         val_callback=_elsa_val_callback,
     )
     item_embs = elsa.export_item_embeddings()
 
-    holdout = build_eval_holdout(
+    test_holdout = build_eval_holdout(
         train_item_ids=item_ids,
         eval_interactions=split.test,
         min_user_support=args.min_user_support,
@@ -117,18 +157,20 @@ def main():
 
     metrics = eval_three_metrics(
         item_embs,
-        holdout["source_indices"],
-        holdout["target_indices"],
+        test_holdout["source_indices"],
+        test_holdout["target_indices"],
         args.eval_batch_size,
     )
     print("ELSA checkpoint metrics:", metrics)
 
     ckpt = save_recsys_checkpoint(
         args.checkpoint_path,
-        item_ids=holdout["item_ids"],
+        item_ids=test_holdout["item_ids"],
         item_embeddings=item_embs,
-        source_indices=holdout["source_indices"],
-        target_indices=holdout["target_indices"],
+        val_source_indices=val_holdout["source_indices"],
+        val_target_indices=val_holdout["target_indices"],
+        test_source_indices=test_holdout["source_indices"],
+        test_target_indices=test_holdout["target_indices"],
     )
     print(f"Saved checkpoint to: {ckpt}")
 

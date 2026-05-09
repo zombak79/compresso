@@ -37,19 +37,20 @@ class TopKSAE(nn.Module):
         hidden_dim: int,
         k: int,
         tied: bool = False,
+        decoder_bias: bool = False,
         pre_act: Optional[nn.Module] = None,
         post_sparsify: Optional[nn.Module] = None,
         encoder: Optional[nn.Module] = None,
         decoder: Optional[nn.Module] = None,
-        sparsify_mode: str = "values",
         sparsify_score_mode: str = "abs",
-        k_backward: Optional[int] = None,
+        sparsify_ste_alpha: float = 0.0,
     ) -> None:
         super().__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.k = k
         self.tied = tied
+        self.decoder_bias_enabled = decoder_bias
 
         if encoder is None:
             self.encoder = nn.Linear(input_dim, hidden_dim)
@@ -59,9 +60,8 @@ class TopKSAE(nn.Module):
         self.sparsify = TopKSparsify(
             k=k,
             dim=-1,
-            mode=sparsify_mode,
             score_mode=sparsify_score_mode,
-            k_backward=k_backward,
+            ste_alpha=sparsify_ste_alpha,
         )
 
         if pre_act is not None:
@@ -81,7 +81,7 @@ class TopKSAE(nn.Module):
             self.decoder_bias = nn.Parameter(torch.zeros(input_dim))
         else:
             if decoder is None:
-                self.decoder = nn.Linear(hidden_dim, input_dim)
+                self.decoder = nn.Linear(hidden_dim, input_dim, bias=decoder_bias)
             else:
                 self.decoder = decoder
 

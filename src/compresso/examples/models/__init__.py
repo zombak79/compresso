@@ -1,3 +1,3 @@
-from .elsa import TorchELSA, fit_elsa
+from .elsa import TorchELSA, CompressedELSA, fit_elsa, fit_compressed_elsa
 
-__all__ = ["TorchELSA", "fit_elsa"]
+__all__ = ["TorchELSA", "CompressedELSA", "fit_elsa", "fit_compressed_elsa"]

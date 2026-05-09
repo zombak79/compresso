@@ -16,6 +16,7 @@ from .utils.ops import srpmm
 from .utils.controllers import SparsityController
 from .utils.schedule import exponential_decay
 from .utils.helpers import convert_masked_to_coo_inplace, compact_gated_modules, compact_all_gated_mlps_after_rewind, masked_parameters
+from .io import save_srp_tensor, load_srp_tensor
 
 __all__ = [
     "MaskedParam",
@@ -42,4 +43,6 @@ __all__ = [
     "compact_gated_modules",
     "compact_all_gated_mlps_after_rewind",
     "masked_parameters",
+    "save_srp_tensor",
+    "load_srp_tensor",
 ]
