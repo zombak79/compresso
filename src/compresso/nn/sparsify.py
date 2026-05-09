@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import torch.nn as nn
 from torch import Tensor
 
@@ -21,36 +19,32 @@ class TopKSparsify(nn.Module):
         Number of entries to keep along *dim*.
     dim : int
         Dimension along which to select (default ``-1``).
-    mode : str
-        STE mode forwarded to :func:`~compresso.functional.sparsify.topk_ste`.
-    k_backward : int | None
-        If set, backward STE uses top-``k_backward`` positions instead of
-        the default determined by *mode*.
+    score_mode : str
+        Scoring mode for top-k ranking (``abs``, ``raw``, ``relu``).
+    ste_alpha : float
+        Backward gradient scale for non-selected positions.
     """
-
+    # idea: decay ste_alpha to zero during training to transition from dense to sparse gradients
     def __init__(
         self,
         k: int,
         dim: int = -1,
-        mode: str = "values",
         score_mode: str = "abs",
-        k_backward: Optional[int] = None,
+        ste_alpha: float = 0.0,
     ) -> None:
         super().__init__()
         self.k = k
         self.dim = dim
-        self.mode = mode
         self.score_mode = score_mode
-        self.k_backward = k_backward
+        self.ste_alpha = ste_alpha
 
     def forward(self, x: Tensor) -> Tensor:
         return topk_ste(
             x,
             k=self.k,
             dim=self.dim,
-            mode=self.mode,
             score_mode=self.score_mode,
-            k_backward=self.k_backward,
+            ste_alpha=self.ste_alpha,
         )
 
     def set_k(self, k: int) -> None:
@@ -58,7 +52,4 @@ class TopKSparsify(nn.Module):
         self.k = k
 
     def extra_repr(self) -> str:
-        parts = f"k={self.k}, dim={self.dim}, mode={self.mode!r}, score_mode={self.score_mode!r}"
-        if self.k_backward is not None:
-            parts += f", k_backward={self.k_backward}"
-        return parts
+        return f"k={self.k}, dim={self.dim}, score_mode={self.score_mode!r}, ste_alpha={self.ste_alpha}"

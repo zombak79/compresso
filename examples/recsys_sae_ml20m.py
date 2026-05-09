@@ -28,6 +28,16 @@ def parse_args():
     p.add_argument("--elsa_batch_size", type=int, default=1024)
     p.add_argument("--elsa_lr", type=float, default=0.1)
     p.add_argument("--elsa_weight_decay", type=float, default=0.0)
+    p.add_argument("--elsa_beta1", type=float, default=0.9)
+    p.add_argument("--elsa_beta2", type=float, default=0.999)
+    p.add_argument("--elsa_eps", type=float, default=1e-8)
+    p.add_argument("--elsa_momentum_decay", type=float, default=0.004)
+    p.add_argument("--elsa_decoupled_weight_decay", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--elsa_grad_clip_norm", type=float, default=None)
+    p.add_argument("--elsa_grad_accum_steps", type=int, default=1)
+    p.add_argument("--elsa_use_ema", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--elsa_ema_momentum", type=float, default=0.99)
+    p.add_argument("--elsa_ema_overwrite_frequency", type=int, default=None)
 
     p.add_argument("--sae_hidden_dim", type=int, default=4096)
     p.add_argument("--sae_k", type=int, default=128)
@@ -176,6 +186,16 @@ def main():
         batch_size=args.elsa_batch_size,
         lr=args.elsa_lr,
         weight_decay=args.elsa_weight_decay,
+        beta1=args.elsa_beta1,
+        beta2=args.elsa_beta2,
+        eps=args.elsa_eps,
+        momentum_decay=args.elsa_momentum_decay,
+        decoupled_weight_decay=args.elsa_decoupled_weight_decay,
+        grad_clip_norm=args.elsa_grad_clip_norm,
+        grad_accum_steps=args.elsa_grad_accum_steps,
+        use_ema=args.elsa_use_ema,
+        ema_momentum=args.elsa_ema_momentum,
+        ema_overwrite_frequency=args.elsa_ema_overwrite_frequency,
         device=args.device,
         val_callback=_elsa_val_callback,
     )

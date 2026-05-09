@@ -211,9 +211,8 @@ class TestCustomModules:
             hidden_dim=H,
             k=K,
             post_sparsify=nn.ReLU(),
-            sparsify_mode="values",
             sparsify_score_mode="abs",
-            k_backward=K,
+            sparsify_ste_alpha=0.0,
         ).to(device)
         x = torch.randn(B, D, device=device)
         _, codes, _ = model(x)

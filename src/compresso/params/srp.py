@@ -1,11 +1,8 @@
 import torch
 import torch.nn as nn
-from typing import Optional, Literal, Tuple
+from typing import Any, Optional, Literal, Tuple
 
 InitMode = Literal["topk_abs", "random_k"]
-
-from dataclasses import dataclass
-import torch
 
 class SRPTensor:
     """
@@ -24,6 +21,7 @@ class SRPTensor:
         vals: torch.Tensor,          # (rows, k) float
         shape: Tuple[int, int],      # (rows, cols_total)
         prefix_shape: Optional[Tuple[int, ...]] = None,
+        validate: bool = True,
     ):
         if cols.dtype != torch.long:
             raise ValueError("SRPTensor.cols must be torch.long")
@@ -34,9 +32,25 @@ class SRPTensor:
         rows, k = cols.shape
         if shape[0] != rows:
             raise ValueError(f"shape[0]={shape[0]} must equal rows={rows}")
+        cols_total = int(shape[1])
+        if cols_total <= 0:
+            raise ValueError("shape[1] (cols_total) must be >= 1")
+        if validate and cols.numel() > 0:
+            cmin = int(cols.min().item())
+            cmax = int(cols.max().item())
+            if cmin < 0 or cmax >= cols_total:
+                raise ValueError(f"cols out of bounds: min={cmin}, max={cmax}, allowed [0, {cols_total-1}]")
+        if prefix_shape is not None:
+            rows_from_prefix = 1
+            for d in prefix_shape:
+                rows_from_prefix *= int(d)
+            if rows_from_prefix != rows:
+                raise ValueError(
+                    f"prefix_shape={tuple(prefix_shape)} implies rows={rows_from_prefix}, expected {rows}"
+                )
         self.cols = cols
         self.vals = vals
-        self.shape = (int(shape[0]), int(shape[1]))
+        self.shape = (int(shape[0]), cols_total)
         self.prefix_shape = tuple(prefix_shape) if prefix_shape is not None else None
 
     @property
@@ -61,18 +75,87 @@ class SRPTensor:
 
     def to_dense(self) -> torch.Tensor:
         """Densify to (rows, cols_total) or (*prefix, cols_total) if prefix_shape is set."""
-        #print(self.shape)
-        #print(self.cols, self.cols.device)
-        #print(self.vals, self.vals.device)
-        out = torch.zeros(self.shape, device=self.vals.device, dtype=self.vals.dtype).scatter(1, self.cols, self.vals)
+        rows, cols_total = self.shape
+        out = torch.zeros((rows, cols_total), device=self.device, dtype=self.dtype)
+        # Duplicates in a row accumulate by design.
+        out.scatter_add_(dim=1, index=self.cols, src=self.vals)
+        if self.prefix_shape is not None:
+            out = out.view(*self.prefix_shape, cols_total)
         return out
-        
-        #rows, cols_total = self.shape
-        #out = torch.zeros((rows, cols_total), device=self.device, dtype=self.dtype)
-        #out.scatter_add_(dim=1, index=self.cols, src=self.vals)
-        #if self.prefix_shape is not None:
-        #    out = out.view(*self.prefix_shape, cols_total)
-        #return out
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize SRPTensor to a torch-saveable payload."""
+        return {
+            "version": 1,
+            "layout": "srp",
+            "shape": self.shape,
+            "prefix_shape": self.prefix_shape,
+            "cols": self.cols,
+            "vals": self.vals,
+        }
+
+    @staticmethod
+    def from_dict(payload: dict[str, Any], *, validate: bool = True) -> "SRPTensor":
+        """Deserialize SRPTensor from payload produced by :meth:`to_dict`."""
+        if not isinstance(payload, dict):
+            raise ValueError("payload must be a dict")
+        if payload.get("layout", "srp") != "srp":
+            raise ValueError(f"Unsupported layout: {payload.get('layout')!r}")
+        if int(payload.get("version", 1)) != 1:
+            raise ValueError(f"Unsupported SRP payload version: {payload.get('version')!r}")
+        required = {"cols", "vals", "shape"}
+        missing = sorted(required - set(payload.keys()))
+        if missing:
+            raise ValueError(f"Missing payload keys: {missing}")
+        return SRPTensor(
+            cols=payload["cols"],
+            vals=payload["vals"],
+            shape=tuple(payload["shape"]),
+            prefix_shape=tuple(payload["prefix_shape"]) if payload.get("prefix_shape") is not None else None,
+            validate=validate,
+        )
+
+    @staticmethod
+    def from_dense(
+        x: torch.Tensor,
+        k: int,
+        *,
+        score_mode: Literal["abs", "raw", "relu"] = "abs",
+    ) -> "SRPTensor":
+        """Project dense tensor to fixed-k SRP row-packed representation.
+
+        Accepts shape ``(*prefix, cols_total)`` and flattens prefix dims into rows.
+        Stores signed values gathered from original ``x`` at selected indices.
+        """
+        if x.dim() < 2:
+            raise ValueError(f"x must have at least 2 dims, got {tuple(x.shape)}")
+        cols_total = int(x.shape[-1])
+        if not (1 <= int(k) <= cols_total):
+            raise ValueError(f"k must be in [1, {cols_total}], got {k}")
+
+        prefix_shape = tuple(int(d) for d in x.shape[:-1])
+        rows = 1
+        for d in prefix_shape:
+            rows *= d
+        x2d = x.reshape(rows, cols_total)
+
+        if score_mode == "abs":
+            scores = x2d.abs()
+        elif score_mode == "raw":
+            scores = x2d
+        elif score_mode == "relu":
+            scores = x2d.relu()
+        else:
+            raise ValueError("score_mode must be one of {'abs', 'raw', 'relu'}")
+
+        idx = torch.topk(scores, k=int(k), dim=-1, largest=True).indices
+        vals = x2d.gather(dim=-1, index=idx)
+        return SRPTensor(
+            cols=idx.to(torch.long),
+            vals=vals,
+            shape=(rows, cols_total),
+            prefix_shape=prefix_shape if len(prefix_shape) > 0 else None,
+        )
 
 class SRPParam(nn.Module):
     """
@@ -160,10 +243,8 @@ class SRPParam(nn.Module):
     
     def to_dense(self) -> torch.Tensor:
         rows, cols_total = self.shape
-        out = torch.zeros((rows, cols_total), device=self.device, dtype=self.dtype)
-        out = out.scatter_add(1, self.cols, self.vals)   # out-of-place version keeps autograd happy
-        if self.prefix_shape is not None:
-            out = out.view(*self.prefix_shape, cols_total)
+        out = torch.zeros((rows, cols_total), device=self.values.device, dtype=self.values.dtype)
+        out = out.scatter_add(1, self.cols, self.values)
         return out
 
     #@torch.no_grad()

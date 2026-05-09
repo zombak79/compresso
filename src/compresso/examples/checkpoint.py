@@ -11,21 +11,27 @@ def save_recsys_checkpoint(
     *,
     item_ids: np.ndarray,
     item_embeddings: np.ndarray,
-    source_indices: list[np.ndarray],
-    target_indices: list[np.ndarray],
+    val_source_indices: list[np.ndarray],
+    val_target_indices: list[np.ndarray],
+    test_source_indices: list[np.ndarray],
+    test_target_indices: list[np.ndarray],
 ) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    src_obj = np.array([np.asarray(x, dtype=np.int64) for x in source_indices], dtype=object)
-    tgt_obj = np.array([np.asarray(x, dtype=np.int64) for x in target_indices], dtype=object)
+    val_src_obj = np.array([np.asarray(x, dtype=np.int64) for x in val_source_indices], dtype=object)
+    val_tgt_obj = np.array([np.asarray(x, dtype=np.int64) for x in val_target_indices], dtype=object)
+    test_src_obj = np.array([np.asarray(x, dtype=np.int64) for x in test_source_indices], dtype=object)
+    test_tgt_obj = np.array([np.asarray(x, dtype=np.int64) for x in test_target_indices], dtype=object)
 
     np.savez_compressed(
         path,
         item_ids=np.asarray(item_ids).astype(str),
         item_embeddings=np.asarray(item_embeddings, dtype=np.float32),
-        source_indices=src_obj,
-        target_indices=tgt_obj,
+        val_source_indices=val_src_obj,
+        val_target_indices=val_tgt_obj,
+        test_source_indices=test_src_obj,
+        test_target_indices=test_tgt_obj,
     )
     return path
 
@@ -35,7 +41,8 @@ def load_recsys_checkpoint(path: str | Path) -> dict[str, Any]:
     return {
         "item_ids": data["item_ids"],
         "item_embeddings": data["item_embeddings"],
-        "source_indices": [np.asarray(x, dtype=np.int64) for x in data["source_indices"].tolist()],
-        "target_indices": [np.asarray(x, dtype=np.int64) for x in data["target_indices"].tolist()],
+        "val_source_indices": [np.asarray(x, dtype=np.int64) for x in data["val_source_indices"].tolist()],
+        "val_target_indices": [np.asarray(x, dtype=np.int64) for x in data["val_target_indices"].tolist()],
+        "test_source_indices": [np.asarray(x, dtype=np.int64) for x in data["test_source_indices"].tolist()],
+        "test_target_indices": [np.asarray(x, dtype=np.int64) for x in data["test_target_indices"].tolist()],
     }
-

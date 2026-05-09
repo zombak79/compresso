@@ -1,16 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from collections import deque
 from typing import Optional, Sequence, Literal, List
 
 from compresso.params.coo import CooSparseParam
 from compresso.params.srp import SRPParam, SRPTensor
-from compresso.functional.sparsify import topk_ste
 from compresso.utils.schedule import exponential_decay
 
 AggFn = Literal["sum_abs", "max_abs"]
-TopKScoreMode = Literal["abs", "raw", "relu"]
 
 
 class MaskedParam(nn.Module):
@@ -28,9 +25,6 @@ class MaskedParam(nn.Module):
         change_threshold: float = 0.01,
         sparsity: Literal["row", "col"] = "row",
         allow_regrowth = True,
-        score_mode: TopKScoreMode = "abs",
-        ste_alpha: float = 1.0,
-        post_norm_l1: bool = False,
     ):
         super().__init__()
         if weight.dim() != 2:
@@ -48,9 +42,6 @@ class MaskedParam(nn.Module):
         self.k_target = int(k_target)
         self.k_full = self.cols if self.dim==1 else self.rows
         self.allow_regrowth = allow_regrowth
-        self.score_mode: TopKScoreMode = score_mode
-        self.ste_alpha = float(ste_alpha)
-        self.post_norm_l1 = bool(post_norm_l1)
 
         # --- Save original init on CPU as a buffer (checkpoint-safe) ---
         # stays on CPU by design; we move it on-demand in rewind()
@@ -109,19 +100,18 @@ class MaskedParam(nn.Module):
 
     def topk_weights_with_mask(self, k=None, return_mask=True):
         k = int(k) if k is not None else int(self.k_current)
+        # topk over dim (row-wise => dim=1 keeps k per row; col-wise => dim=0 keeps k per col)
+        #w_abs = torch.abs(self.weight)
+        #if not self.allow_regrowth:
+        #    w_abs *= self.mask.to(self.weight.dtype)
+        #w_topk = torch.topk(w_abs, k, self.dim)
+        #out = torch.zeros_like(self.weight).scatter(self.dim, w_topk.indices, w_topk.values) * torch.sign(self.weight)
         e = self.weight
-        if self.score_mode == "abs":
-            scores = e.abs()
-        elif self.score_mode == "raw":
-            scores = e
-        else:
-            scores = e.relu()
-        idx = torch.topk(scores, k, dim=self.dim).indices
-        mask = torch.zeros_like(e, dtype=torch.bool).scatter(self.dim, idx, True)
-        out = topk_ste(e, k=k, dim=self.dim, score_mode=self.score_mode, ste_alpha=self.ste_alpha)
-        if self.post_norm_l1:
-            out = F.normalize(out, p=1.0, dim=self.dim)
-        return (out, mask) if return_mask else out
+        idx = torch.topk(e.abs(), k, dim=self.dim).indices
+        mask = torch.zeros_like(e).scatter(self.dim, idx, 1.0)
+        masked = e * mask 
+
+        return (e + (masked - e).detach(), mask) if return_mask else e + (masked - e).detach()
 
     def topk_weights(self, k=None):
         return self.topk_weights_with_mask(k=k, return_mask=False)
@@ -131,16 +121,22 @@ class MaskedParam(nn.Module):
 
     def forward(self):
         if self.mask_frozen:
-            out = self.weight * self.mask.to(self.weight.dtype)
-            if self.post_norm_l1:
-                out = F.normalize(out, p=1.0, dim=self.dim)
-            return out
+            return self.weight * self.mask.to(self.weight.dtype)
         else:
             return self.topk_weights()
     
     def srp(self):
         assert self.dim == 1
-        return SRPTensor.from_dense(self.weight, k=int(self.k_current), score_mode=self.score_mode)
+        k = self.k_current
+        # topk over dim (row-wise => dim=1 keeps k per row; col-wise => dim=0 keeps k per col)
+        w_abs = torch.abs(self.weight)
+        if not self.allow_regrowth:
+            w_abs *= self.mask.to(self.weight.dtype)
+        w_topk = torch.topk(w_abs, k, self.dim)
+        values = self.weight.gather(dim=self.dim, index=w_topk.indices)
+        indices = w_topk.indices
+        shape = self.weight.shape
+        return SRPTensor(vals=values, cols=indices, shape=shape)
 
     @torch.no_grad()
     def update_grad_stats(self, beta: float = 0.98, use_mask: bool = True):
