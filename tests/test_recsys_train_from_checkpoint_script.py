@@ -7,17 +7,17 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from scipy.sparse import csr_matrix
 
-from compresso.examples.checkpoint import save_recsys_checkpoint
+from compresso.examples.checkpoint import save_recsys_split, update_checkpoint
 
 
 def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
-    # Tiny synthetic checkpoint
     n_items = 12
     emb_dim = 8
     rng = np.random.default_rng(0)
     item_ids = np.array([f"i{i}" for i in range(n_items)])
-    item_embeddings = rng.standard_normal((n_items, emb_dim), dtype=np.float32)
+    x_train = csr_matrix(rng.integers(0, 2, size=(6, n_items), dtype=np.int8).astype(np.float32))
 
     val_source_indices = [
         np.array([0, 1, 2], dtype=np.int64),
@@ -44,18 +44,42 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
         np.array([11], dtype=np.int64),
     ]
 
-    ckpt_path = tmp_path / "elsa_checkpoint.npz"
-    save_recsys_checkpoint(
-        ckpt_path,
-        item_ids=item_ids,
-        item_embeddings=item_embeddings,
-        val_source_indices=val_source_indices,
-        val_target_indices=val_target_indices,
-        test_source_indices=test_source_indices,
-        test_target_indices=test_target_indices,
-    )
-
+    ckpt_path = tmp_path / "recsys_checkpoint.zip"
+    with update_checkpoint(ckpt_path) as root:
+        save_recsys_split(
+            root,
+            item_ids=item_ids,
+            x_train=x_train,
+            val_source_indices=val_source_indices,
+            val_target_indices=val_target_indices,
+            test_source_indices=test_source_indices,
+            test_target_indices=test_target_indices,
+            metadata={"dataset": "synthetic"},
+        )
     repo_root = Path(__file__).resolve().parents[1]
+    elsa_script = repo_root / "examples" / "recsys_train_elsa_from_checkpoint.py"
+    elsa_cmd = [
+        sys.executable,
+        str(elsa_script),
+        "--checkpoint_path",
+        str(ckpt_path),
+        "--device",
+        "cpu",
+        "--seed",
+        "0",
+        "--elsa_dim",
+        str(emb_dim),
+        "--elsa_epochs",
+        "1",
+        "--elsa_batch_size",
+        "4",
+        "--eval_batch_size",
+        "4",
+    ]
+    elsa_proc = subprocess.run(elsa_cmd, cwd=repo_root, capture_output=True, text=True)
+    assert elsa_proc.returncode == 0, elsa_proc.stderr
+    assert "ELSA checkpoint metrics:" in elsa_proc.stdout
+
     script = repo_root / "examples" / "recsys_train_sae_from_checkpoint.py"
 
     cmd = [
@@ -63,8 +87,6 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
         str(script),
         "--checkpoint_path",
         str(ckpt_path),
-        "--output_dir",
-        str(tmp_path / "out"),
         "--device",
         "cpu",
         "--seed",
@@ -84,8 +106,34 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
 
     assert proc.returncode == 0, proc.stderr
     assert "Original embedding metrics:" in proc.stdout
+    assert "(from checkpoint)" in proc.stdout
     assert "SAE embedding metrics:" in proc.stdout
     assert "Perf drop vs original:" in proc.stdout
-    assert (tmp_path / "out" / "sae_model.pt").exists()
-    assert (tmp_path / "out" / "sae_sparse_embeddings.srp.pt").exists()
-    assert (tmp_path / "out" / "sae_result.json").exists()
+    assert "Saved SAE stage to checkpoint:" in proc.stdout
+
+    import zipfile
+
+    with zipfile.ZipFile(ckpt_path, "r") as zf:
+        names = set(zf.namelist())
+    assert "elsa/model.pt" in names
+    assert "elsa/item_embeddings.npy" in names
+    assert "sae/model.pt" in names
+    assert "sae/sparse_embeddings.srp.pt" in names
+    assert "sae/metrics.json" in names
+
+    eval_script = repo_root / "examples" / "recsys_eval_checkpoint.py"
+    eval_cmd = [
+        sys.executable,
+        str(eval_script),
+        "--checkpoint_path",
+        str(ckpt_path),
+        "--device",
+        "cpu",
+        "--eval_batch_size",
+        "4",
+    ]
+    eval_proc = subprocess.run(eval_cmd, cwd=repo_root, capture_output=True, text=True)
+    assert eval_proc.returncode == 0, eval_proc.stderr
+    assert "ELSA metrics:" in eval_proc.stdout
+    assert "SRP sparse code metrics:" in eval_proc.stdout
+    assert "SRP + decoder kernel-trick metrics:" in eval_proc.stdout
