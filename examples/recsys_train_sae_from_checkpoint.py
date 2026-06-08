@@ -6,9 +6,9 @@ import random
 import numpy as np
 import torch
 
-from compresso.examples.checkpoint import ELSA_DIR, SAE_DIR, load_json, load_recsys_split, save_json, update_checkpoint, update_stage_manifest
-from compresso.examples.retrieval import evaluate_item_embeddings_with_holdout
-from compresso.examples.runners import TwoStagePipeline
+from recsys_lib.checkpoint import ELSA_DIR, SAE_DIR, SBERT_DIR, SBERT_SAE_DIR, load_json, load_recsys_split, save_json, update_checkpoint, update_stage_manifest
+from recsys_lib.retrieval import evaluate_item_embeddings_with_holdout
+from recsys_lib.models.sae import fit_sae_on_embeddings
 from compresso.io import save_srp_tensor
 from compresso.params.srp import SRPTensor
 
@@ -17,6 +17,7 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--checkpoint_path", type=str, required=True)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--embedding_stage", type=str, default="elsa", choices=["elsa", "sbert"])
 
     p.add_argument("--sae_hidden_dim", type=int, default=4096)
     p.add_argument("--sae_k", type=int, default=128)
@@ -68,6 +69,14 @@ def percent_drop(base: float, new: float) -> float:
     return ((base - new) / base) * 100.0
 
 
+def stage_dirs(embedding_stage: str) -> tuple[str, str, str]:
+    if embedding_stage == "elsa":
+        return ELSA_DIR, SAE_DIR, "Original embedding"
+    if embedding_stage == "sbert":
+        return SBERT_DIR, SBERT_SAE_DIR, "Original SBERT embedding"
+    raise ValueError(f"Unknown embedding stage: {embedding_stage}")
+
+
 def eval_multi_k(embs, source_indices, target_indices, *, eval_batch_size, eval_debug, eval_debug_users):
     out = {}
     debug_rows = None
@@ -98,19 +107,20 @@ def main():
 
     with update_checkpoint(args.checkpoint_path) as root:
         split = load_recsys_split(root)
-        elsa_path = root / ELSA_DIR / "item_embeddings.npy"
-        if not elsa_path.exists():
-            raise FileNotFoundError(f"ELSA embeddings not found in checkpoint: {ELSA_DIR}/item_embeddings.npy")
-        item_embs = np.load(elsa_path).astype(np.float32)
+        base_dir, output_dir, base_label = stage_dirs(args.embedding_stage)
+        embeddings_path = root / base_dir / "item_embeddings.npy"
+        if not embeddings_path.exists():
+            raise FileNotFoundError(f"Embeddings not found in checkpoint: {base_dir}/item_embeddings.npy")
+        item_embs = np.load(embeddings_path).astype(np.float32)
         val_source_indices = split["val_source_indices"]
         val_target_indices = split["val_target_indices"]
         test_source_indices = split["test_source_indices"]
         test_target_indices = split["test_target_indices"]
 
-        elsa_metrics_path = root / ELSA_DIR / "metrics.json"
-        if elsa_metrics_path.exists():
-            base_all = select_metrics(load_json(root, f"{ELSA_DIR}/metrics.json").get("test_metrics", {}))
-            print("Original embedding metrics:", base_all, "(from checkpoint)")
+        base_metrics_path = root / base_dir / "metrics.json"
+        if base_metrics_path.exists():
+            base_all = select_metrics(load_json(root, f"{base_dir}/metrics.json").get("test_metrics", {}))
+            print(f"{base_label} metrics:", base_all, "(from checkpoint)")
         else:
             base_all = eval_multi_k(
                 item_embs,
@@ -120,9 +130,9 @@ def main():
                 eval_debug=args.eval_debug,
                 eval_debug_users=args.eval_debug_users,
             )
-            print("Original embedding metrics:", select_metrics(base_all))
+            print(f"{base_label} metrics:", select_metrics(base_all))
             if args.eval_debug and "debug_ndcg@100" in base_all:
-                print("Original ndcg@100 debug rows:", base_all["debug_ndcg@100"])
+                print(f"{base_label} ndcg@100 debug rows:", base_all["debug_ndcg@100"])
 
         def _sae_val_callback(model):
             with torch.no_grad():
@@ -156,8 +166,7 @@ def main():
                 "ndcg@100": m100.get("ndcg@100", 0.0),
             }
 
-        pipeline = TwoStagePipeline(workdir=root / SAE_DIR)
-        sae = pipeline.train_sae_on_embeddings(
+        sae = fit_sae_on_embeddings(
             item_embs,
             hidden_dim=args.sae_hidden_dim,
             k=args.sae_k,
@@ -195,13 +204,13 @@ def main():
         if args.eval_debug and "debug_ndcg@100" in sae_all:
             print("SAE ndcg@100 debug rows:", sae_all["debug_ndcg@100"])
         print(
-            "Perf drop vs original: "
+            f"Perf drop vs {args.embedding_stage}: "
             f"recall@20={percent_drop(base_metrics['recall@20'], sae_metrics['recall@20']):.2f}% "
             f"recall@50={percent_drop(base_metrics['recall@50'], sae_metrics['recall@50']):.2f}% "
             f"ndcg@100={percent_drop(base_metrics['ndcg@100'], sae_metrics['ndcg@100']):.2f}%"
         )
 
-        stage_dir = root / SAE_DIR
+        stage_dir = root / output_dir
         stage_dir.mkdir(parents=True, exist_ok=True)
         model_path = stage_dir / "model.pt"
         sparse_path = stage_dir / "sparse_embeddings.srp.pt"
@@ -209,6 +218,9 @@ def main():
             {
                 "model_state_dict": sae.state_dict(),
                 "config": vars(args),
+                "embedding_stage": args.embedding_stage,
+                "base_stage": base_dir,
+                "output_stage": output_dir,
                 "hidden_dim": args.sae_hidden_dim,
                 "k": args.sae_k,
                 "score_mode": args.sae_score_mode,
@@ -225,7 +237,7 @@ def main():
         save_srp_tensor(sparse_path, srp_codes)
         save_json(
             root,
-            f"{SAE_DIR}/metrics.json",
+            f"{output_dir}/metrics.json",
             {
                 "original_metrics": base_metrics,
                 "sae_metrics": sae_metrics,
@@ -239,8 +251,10 @@ def main():
         )
         update_stage_manifest(
             root,
-            "sae",
+            output_dir,
             {
+                "embedding_stage": args.embedding_stage,
+                "base_stage": base_dir,
                 "hidden_dim": args.sae_hidden_dim,
                 "k": args.sae_k,
                 "score_mode": args.sae_score_mode,
@@ -250,7 +264,7 @@ def main():
                 "dead_neurons": {"count": dead, "total": args.sae_hidden_dim, "fraction": dead_frac},
             },
         )
-    print(f"Saved SAE stage to checkpoint: {args.checkpoint_path}")
+    print(f"Saved {output_dir} stage to checkpoint: {args.checkpoint_path}")
 
 
 if __name__ == "__main__":

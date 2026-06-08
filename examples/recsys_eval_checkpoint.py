@@ -5,8 +5,18 @@ import argparse
 import numpy as np
 import torch
 
-from compresso.examples.checkpoint import COMPRESSED_ELSA_DIR, ELSA_DIR, SAE_DIR, load_json, load_recsys_split, save_json, update_checkpoint
-from compresso.examples.retrieval import evaluate_item_embeddings_with_holdout
+from recsys_lib.checkpoint import (
+    COMPRESSED_ELSA_DIR,
+    ELSA_DIR,
+    SAE_DIR,
+    SBERT_DIR,
+    SBERT_SAE_DIR,
+    load_json,
+    load_recsys_split,
+    save_json,
+    update_checkpoint,
+)
+from recsys_lib.retrieval import evaluate_item_embeddings_with_holdout
 from compresso.io import load_srp_tensor
 from compresso.nn import TopKSAE
 
@@ -118,7 +128,14 @@ def _ndcg(target_sets: list[set[int]], pred_ranked: list[np.ndarray], k: int) ->
     return float(np.mean(vals)) if vals else 0.0
 
 
-def _compute_topk_kernel_trick(z: torch.Tensor, decoder_map: torch.Tensor, source_indices: list[np.ndarray], k: int, *, batch_size: int) -> list[np.ndarray]:
+def _compute_topk_kernel_trick(
+    z: torch.Tensor,
+    decoder_map: torch.Tensor,
+    source_indices: list[np.ndarray],
+    k: int,
+    *,
+    batch_size: int,
+) -> list[np.ndarray]:
     device = z.device
     n_items = z.shape[0]
     k_eff = min(k, n_items)
@@ -144,7 +161,16 @@ def _compute_topk_kernel_trick(z: torch.Tensor, decoder_map: torch.Tensor, sourc
     return preds
 
 
-def eval_kernel_trick(*, z_codes: np.ndarray, decoder_map: np.ndarray, source_indices: list[np.ndarray], target_indices: list[np.ndarray], k: int, batch_size: int, device: str) -> dict[str, float]:
+def eval_kernel_trick(
+    *,
+    z_codes: np.ndarray,
+    decoder_map: np.ndarray,
+    source_indices: list[np.ndarray],
+    target_indices: list[np.ndarray],
+    k: int,
+    batch_size: int,
+    device: str,
+) -> dict[str, float]:
     z = torch.from_numpy(z_codes.astype(np.float32)).to(device)
     w = torch.from_numpy(decoder_map.astype(np.float32)).to(device)
     pred_ranked = _compute_topk_kernel_trick(z, w, source_indices, k=k, batch_size=batch_size)
@@ -152,13 +178,122 @@ def eval_kernel_trick(*, z_codes: np.ndarray, decoder_map: np.ndarray, source_in
     return {f"recall@{k}": _calibrated_recall(target_sets, pred_ranked, k), f"ndcg@{k}": _ndcg(target_sets, pred_ranked, k)}
 
 
-def print_drop(label: str, base: dict, metrics: dict) -> None:
+def print_drop(base_label: str, variant_label: str, base: dict, metrics: dict) -> None:
     print(
-        f"Perf drop vs ELSA ({label}): "
+        f"Perf drop vs {base_label} ({variant_label}): "
         f"recall@20={percent_drop(base['recall@20'], metrics['recall@20']):.2f}% "
         f"recall@50={percent_drop(base['recall@50'], metrics['recall@50']):.2f}% "
         f"ndcg@100={percent_drop(base['ndcg@100'], metrics['ndcg@100']):.2f}%"
     )
+
+
+def load_or_eval_dense_stage(root, *, stage_dir: str, label: str, source_indices, target_indices, eval_batch_size):
+    emb_path = root / stage_dir / "item_embeddings.npy"
+    if not emb_path.exists():
+        return None, None
+    embs = np.load(emb_path).astype(np.float32)
+    metrics = saved_metrics(root, f"{stage_dir}/metrics.json", "test_metrics")
+    if metrics is None:
+        metrics = eval_three_metrics(embs, source_indices, target_indices, eval_batch_size)
+        merge_metrics(root, f"{stage_dir}/metrics.json", test_metrics=metrics)
+        print(f"{label} metrics:", metrics)
+    else:
+        print(f"{label} metrics:", metrics, "(from checkpoint)")
+    print(f"Inference size (MB) {label} dense: {bytes_to_mb(int(embs.nbytes)):.2f}")
+    return embs, metrics
+
+
+def eval_sae_stage(
+    root,
+    *,
+    base_embs: np.ndarray,
+    base_metrics: dict,
+    base_label: str,
+    sae_dir: str,
+    variant_label: str,
+    source_indices,
+    target_indices,
+    eval_batch_size: int,
+    device: str,
+) -> None:
+    sae_model_path = root / sae_dir / "model.pt"
+    sae_sparse_path = root / sae_dir / "sparse_embeddings.srp.pt"
+    if not (sae_model_path.exists() and sae_sparse_path.exists()):
+        return
+
+    srp_codes = load_srp_tensor(sae_sparse_path)
+    z_codes = None
+    srp_metrics = saved_metrics(root, f"{sae_dir}/metrics.json", "sae_metrics")
+    if srp_metrics is None:
+        z_codes = srp_codes.to_dense().detach().cpu().numpy().astype(np.float32)
+        srp_metrics = eval_three_metrics(z_codes, source_indices, target_indices, eval_batch_size)
+        merge_metrics(root, f"{sae_dir}/metrics.json", sae_metrics=srp_metrics)
+        print(f"{variant_label} sparse code metrics:", srp_metrics)
+    else:
+        print(f"{variant_label} sparse code metrics:", srp_metrics, "(from checkpoint)")
+
+    kernel_metrics = saved_metrics(root, f"{sae_dir}/metrics.json", "kernel_metrics")
+    blob = torch.load(sae_model_path, map_location="cpu", weights_only=False)
+    cfg = blob.get("config", {})
+    hidden_dim = int(blob.get("hidden_dim", cfg.get("sae_hidden_dim", srp_codes.shape[1])))
+    k = int(blob.get("k", cfg.get("sae_k", 128)))
+    score_mode = str(blob.get("score_mode", cfg.get("sae_score_mode", "abs")))
+    ste_alpha = float(blob.get("ste_alpha", cfg.get("sae_ste_alpha", 0.0)))
+    decoder_bias = "decoder.bias" in blob["model_state_dict"]
+    sae = TopKSAE(
+        input_dim=base_embs.shape[1],
+        hidden_dim=hidden_dim,
+        k=k,
+        decoder_bias=decoder_bias,
+        sparsify_score_mode=score_mode,
+        sparsify_ste_alpha=ste_alpha,
+    )
+    sae.load_state_dict(blob["model_state_dict"], strict=True)
+    decoder_map = (
+        sae.encoder.weight.detach().cpu().numpy().astype(np.float32)
+        if sae.tied
+        else sae.decoder.weight.detach().cpu().numpy().astype(np.float32).T
+    )
+    kernel = decoder_map @ decoder_map.T
+    if kernel_metrics is None:
+        if z_codes is None:
+            z_codes = srp_codes.to_dense().detach().cpu().numpy().astype(np.float32)
+        k20 = eval_kernel_trick(
+            z_codes=z_codes,
+            decoder_map=decoder_map,
+            source_indices=source_indices,
+            target_indices=target_indices,
+            k=20,
+            batch_size=eval_batch_size,
+            device=device,
+        )
+        k50 = eval_kernel_trick(
+            z_codes=z_codes,
+            decoder_map=decoder_map,
+            source_indices=source_indices,
+            target_indices=target_indices,
+            k=50,
+            batch_size=eval_batch_size,
+            device=device,
+        )
+        k100 = eval_kernel_trick(
+            z_codes=z_codes,
+            decoder_map=decoder_map,
+            source_indices=source_indices,
+            target_indices=target_indices,
+            k=100,
+            batch_size=eval_batch_size,
+            device=device,
+        )
+        kernel_metrics = {"recall@20": k20["recall@20"], "recall@50": k50["recall@50"], "ndcg@100": k100["ndcg@100"]}
+        merge_metrics(root, f"{sae_dir}/metrics.json", kernel_metrics=kernel_metrics)
+        print(f"{variant_label} + decoder kernel-trick metrics:", kernel_metrics)
+    else:
+        print(f"{variant_label} + decoder kernel-trick metrics:", kernel_metrics, "(from checkpoint)")
+    print_drop(base_label, f"{variant_label} sparse", base_metrics, srp_metrics)
+    print_drop(base_label, f"{variant_label} kernel trick", base_metrics, kernel_metrics)
+    print(f"Inference size (MB) {variant_label} SRP sparse: {srp_size_mb(srp_codes):.2f}")
+    print(f"Inference size (MB) {variant_label} kernel_K: {bytes_to_mb(int(kernel.nbytes)):.2f}")
 
 
 def main():
@@ -169,79 +304,64 @@ def main():
         split = load_recsys_split(root)
         test_source_indices = split["test_source_indices"]
         test_target_indices = split["test_target_indices"]
-        elsa_embs = np.load(root / ELSA_DIR / "item_embeddings.npy").astype(np.float32)
 
-        elsa_metrics = saved_metrics(root, f"{ELSA_DIR}/metrics.json", "test_metrics")
-        if elsa_metrics is None:
-            elsa_metrics = eval_three_metrics(elsa_embs, test_source_indices, test_target_indices, args.eval_batch_size)
-            merge_metrics(root, f"{ELSA_DIR}/metrics.json", test_metrics=elsa_metrics)
-            print("ELSA metrics:", elsa_metrics)
-        else:
-            print("ELSA metrics:", elsa_metrics, "(from checkpoint)")
-        print(f"Inference size (MB) ELSA dense: {bytes_to_mb(int(elsa_embs.nbytes)):.2f}")
-
-        sae_model_path = root / SAE_DIR / "model.pt"
-        sae_sparse_path = root / SAE_DIR / "sparse_embeddings.srp.pt"
-        if sae_model_path.exists() and sae_sparse_path.exists():
-            srp_codes = load_srp_tensor(sae_sparse_path)
-            z_codes = None
-            srp_metrics = saved_metrics(root, f"{SAE_DIR}/metrics.json", "sae_metrics")
-            if srp_metrics is None:
-                z_codes = srp_codes.to_dense().detach().cpu().numpy().astype(np.float32)
-                srp_metrics = eval_three_metrics(z_codes, test_source_indices, test_target_indices, args.eval_batch_size)
-                merge_metrics(root, f"{SAE_DIR}/metrics.json", sae_metrics=srp_metrics)
-                print("SRP sparse code metrics:", srp_metrics)
-            else:
-                print("SRP sparse code metrics:", srp_metrics, "(from checkpoint)")
-
-            kernel_metrics = saved_metrics(root, f"{SAE_DIR}/metrics.json", "kernel_metrics")
-            blob = torch.load(sae_model_path, map_location="cpu", weights_only=False)
-            cfg = blob.get("config", {})
-            hidden_dim = int(blob.get("hidden_dim", cfg.get("sae_hidden_dim", srp_codes.shape[1])))
-            k = int(blob.get("k", cfg.get("sae_k", 128)))
-            score_mode = str(blob.get("score_mode", cfg.get("sae_score_mode", "abs")))
-            ste_alpha = float(blob.get("ste_alpha", cfg.get("sae_ste_alpha", 0.0)))
-            decoder_bias = "decoder.bias" in blob["model_state_dict"]
-            sae = TopKSAE(
-                input_dim=elsa_embs.shape[1],
-                hidden_dim=hidden_dim,
-                k=k,
-                decoder_bias=decoder_bias,
-                sparsify_score_mode=score_mode,
-                sparsify_ste_alpha=ste_alpha,
+        elsa_embs, elsa_metrics = load_or_eval_dense_stage(
+            root,
+            stage_dir=ELSA_DIR,
+            label="ELSA",
+            source_indices=test_source_indices,
+            target_indices=test_target_indices,
+            eval_batch_size=args.eval_batch_size,
+        )
+        if elsa_embs is not None and elsa_metrics is not None:
+            eval_sae_stage(
+                root,
+                base_embs=elsa_embs,
+                base_metrics=elsa_metrics,
+                base_label="ELSA",
+                sae_dir=SAE_DIR,
+                variant_label="SAE",
+                source_indices=test_source_indices,
+                target_indices=test_target_indices,
+                eval_batch_size=args.eval_batch_size,
+                device=device,
             )
-            sae.load_state_dict(blob["model_state_dict"], strict=True)
-            decoder_map = sae.encoder.weight.detach().cpu().numpy().astype(np.float32) if sae.tied else sae.decoder.weight.detach().cpu().numpy().astype(np.float32).T
-            kernel = decoder_map @ decoder_map.T
-            if kernel_metrics is None:
-                if z_codes is None:
-                    z_codes = srp_codes.to_dense().detach().cpu().numpy().astype(np.float32)
-                k20 = eval_kernel_trick(z_codes=z_codes, decoder_map=decoder_map, source_indices=test_source_indices, target_indices=test_target_indices, k=20, batch_size=args.eval_batch_size, device=device)
-                k50 = eval_kernel_trick(z_codes=z_codes, decoder_map=decoder_map, source_indices=test_source_indices, target_indices=test_target_indices, k=50, batch_size=args.eval_batch_size, device=device)
-                k100 = eval_kernel_trick(z_codes=z_codes, decoder_map=decoder_map, source_indices=test_source_indices, target_indices=test_target_indices, k=100, batch_size=args.eval_batch_size, device=device)
-                kernel_metrics = {"recall@20": k20["recall@20"], "recall@50": k50["recall@50"], "ndcg@100": k100["ndcg@100"]}
-                merge_metrics(root, f"{SAE_DIR}/metrics.json", kernel_metrics=kernel_metrics)
-                print("SRP + decoder kernel-trick metrics:", kernel_metrics)
-            else:
-                print("SRP + decoder kernel-trick metrics:", kernel_metrics, "(from checkpoint)")
-            print_drop("SRP sparse", elsa_metrics, srp_metrics)
-            print_drop("kernel trick", elsa_metrics, kernel_metrics)
-            print(f"Inference size (MB) SAE SRP sparse: {srp_size_mb(srp_codes):.2f}")
-            print(f"Inference size (MB) SAE kernel_K: {bytes_to_mb(int(kernel.nbytes)):.2f}")
 
-        compressed_path = root / COMPRESSED_ELSA_DIR / "sparse_embeddings.srp.pt"
-        if compressed_path.exists():
-            compressed_srp = load_srp_tensor(compressed_path)
-            compressed_metrics = saved_metrics(root, f"{COMPRESSED_ELSA_DIR}/metrics.json", "test_metrics")
-            if compressed_metrics is None:
-                compressed_dense = compressed_srp.to_dense().detach().cpu().numpy().astype(np.float32)
-                compressed_metrics = eval_three_metrics(compressed_dense, test_source_indices, test_target_indices, args.eval_batch_size)
-                merge_metrics(root, f"{COMPRESSED_ELSA_DIR}/metrics.json", test_metrics=compressed_metrics)
-                print("CompressedELSA SRP metrics:", compressed_metrics)
-            else:
-                print("CompressedELSA SRP metrics:", compressed_metrics, "(from checkpoint)")
-            print_drop("CompressedELSA SRP", elsa_metrics, compressed_metrics)
-            print(f"Inference size (MB) CompressedELSA SRP: {srp_size_mb(compressed_srp):.2f}")
+            compressed_path = root / COMPRESSED_ELSA_DIR / "sparse_embeddings.srp.pt"
+            if compressed_path.exists():
+                compressed_srp = load_srp_tensor(compressed_path)
+                compressed_metrics = saved_metrics(root, f"{COMPRESSED_ELSA_DIR}/metrics.json", "test_metrics")
+                if compressed_metrics is None:
+                    compressed_dense = compressed_srp.to_dense().detach().cpu().numpy().astype(np.float32)
+                    compressed_metrics = eval_three_metrics(compressed_dense, test_source_indices, test_target_indices, args.eval_batch_size)
+                    merge_metrics(root, f"{COMPRESSED_ELSA_DIR}/metrics.json", test_metrics=compressed_metrics)
+                    print("CompressedELSA SRP metrics:", compressed_metrics)
+                else:
+                    print("CompressedELSA SRP metrics:", compressed_metrics, "(from checkpoint)")
+                print_drop("ELSA", "CompressedELSA SRP", elsa_metrics, compressed_metrics)
+                print(f"Inference size (MB) CompressedELSA SRP: {srp_size_mb(compressed_srp):.2f}")
+
+        sbert_embs, sbert_metrics = load_or_eval_dense_stage(
+            root,
+            stage_dir=SBERT_DIR,
+            label="SBERT",
+            source_indices=test_source_indices,
+            target_indices=test_target_indices,
+            eval_batch_size=args.eval_batch_size,
+        )
+        if sbert_embs is not None and sbert_metrics is not None:
+            eval_sae_stage(
+                root,
+                base_embs=sbert_embs,
+                base_metrics=sbert_metrics,
+                base_label="SBERT",
+                sae_dir=SBERT_SAE_DIR,
+                variant_label="SBERT-SAE",
+                source_indices=test_source_indices,
+                target_indices=test_target_indices,
+                eval_batch_size=args.eval_batch_size,
+                device=device,
+            )
 
 
 if __name__ == "__main__":

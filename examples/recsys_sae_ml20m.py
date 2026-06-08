@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import argparse
 import random
+from pathlib import Path
 import numpy as np
 import torch
 
-from compresso.examples.datasets import MovieLens20M
-from compresso.examples.models.elsa import fit_elsa
-from compresso.examples.retrieval import build_eval_holdout, evaluate_item_embeddings, evaluate_item_embeddings_with_holdout
-from compresso.examples.runners import TwoStagePipeline
+from recsys_lib.datasets import MovieLens20M
+from recsys_lib.models.elsa import fit_elsa
+from recsys_lib.retrieval import build_eval_holdout, evaluate_item_embeddings, evaluate_item_embeddings_with_holdout
+from recsys_lib.models.sae import fit_sae_on_embeddings
 
 
 def parse_args():
@@ -216,11 +217,13 @@ def main():
     if args.eval_debug and "debug_ndcg@100" in elsa_all:
         print("ELSA ndcg@100 debug rows:", elsa_all["debug_ndcg@100"])
 
-    pipeline = TwoStagePipeline(workdir=args.artifacts_dir)
-    artifacts = pipeline.save_item_embeddings(item_embs)
-    print(f"Saved stage-1 item embeddings to: {artifacts.item_embeddings_path}")
+    artifacts_dir = Path(args.artifacts_dir)
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    item_embeddings_path = artifacts_dir / "item_embeddings.npy"
+    np.save(item_embeddings_path, item_embs)
+    print(f"Saved stage-1 item embeddings to: {item_embeddings_path}")
 
-    sae = pipeline.train_sae_on_embeddings(
+    sae = fit_sae_on_embeddings(
         item_embs,
         hidden_dim=args.sae_hidden_dim,
         k=args.sae_k,

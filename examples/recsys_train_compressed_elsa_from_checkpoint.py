@@ -6,9 +6,9 @@ import random
 import numpy as np
 import torch
 
-from compresso.examples.checkpoint import COMPRESSED_ELSA_DIR, load_recsys_split, save_json, update_checkpoint, update_stage_manifest
-from compresso.examples.models.elsa import fit_compressed_elsa
-from compresso.examples.retrieval import evaluate_item_embeddings_with_holdout
+from recsys_lib.checkpoint import COMPRESSED_ELSA_DIR, load_recsys_split, save_json, update_checkpoint, update_stage_manifest
+from recsys_lib.models.elsa import fit_compressed_elsa
+from recsys_lib.retrieval import evaluate_item_embeddings_with_holdout
 from compresso.io import save_srp_tensor
 
 
