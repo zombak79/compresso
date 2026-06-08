@@ -7,9 +7,12 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from scipy.sparse import csr_matrix
 
-from compresso.examples.checkpoint import save_recsys_split, update_checkpoint
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
+
+from recsys_lib.checkpoint import save_recsys_split, update_checkpoint
 
 
 def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
@@ -18,6 +21,16 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
     rng = np.random.default_rng(0)
     item_ids = np.array([f"i{i}" for i in range(n_items)])
     x_train = csr_matrix(rng.integers(0, 2, size=(6, n_items), dtype=np.int8).astype(np.float32))
+    entity_tag_matrix = csr_matrix(
+        rng.integers(0, 2, size=(n_items, 3), dtype=np.int8).astype(np.float32)
+    )
+    tag_names = np.array(["alpha", "beta", "gamma"])
+    entity_metadata = pd.DataFrame(
+        {
+            "item_id": item_ids,
+            "title": [f"Item {i}" for i in range(n_items)],
+        }
+    )
 
     val_source_indices = [
         np.array([0, 1, 2], dtype=np.int64),
@@ -54,6 +67,9 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
             val_target_indices=val_target_indices,
             test_source_indices=test_source_indices,
             test_target_indices=test_target_indices,
+            entity_tag_matrix=entity_tag_matrix,
+            tag_names=tag_names,
+            entity_metadata=entity_metadata,
             metadata={"dataset": "synthetic"},
         )
     repo_root = Path(__file__).resolve().parents[1]
@@ -108,8 +124,8 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
     assert "Original embedding metrics:" in proc.stdout
     assert "(from checkpoint)" in proc.stdout
     assert "SAE embedding metrics:" in proc.stdout
-    assert "Perf drop vs original:" in proc.stdout
-    assert "Saved SAE stage to checkpoint:" in proc.stdout
+    assert "Perf drop vs elsa:" in proc.stdout
+    assert "Saved sae stage to checkpoint:" in proc.stdout
 
     import zipfile
 
@@ -117,6 +133,9 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
         names = set(zf.namelist())
     assert "elsa/model.pt" in names
     assert "elsa/item_embeddings.npy" in names
+    assert "data/entity_tags.npz" in names
+    assert "data/tag_names.npy" in names
+    assert "data/entity_metadata.csv" in names
     assert "sae/model.pt" in names
     assert "sae/sparse_embeddings.srp.pt" in names
     assert "sae/metrics.json" in names
@@ -135,5 +154,5 @@ def test_recsys_train_from_checkpoint_script_smoke(tmp_path: Path):
     eval_proc = subprocess.run(eval_cmd, cwd=repo_root, capture_output=True, text=True)
     assert eval_proc.returncode == 0, eval_proc.stderr
     assert "ELSA metrics:" in eval_proc.stdout
-    assert "SRP sparse code metrics:" in eval_proc.stdout
-    assert "SRP + decoder kernel-trick metrics:" in eval_proc.stdout
+    assert "SAE sparse code metrics:" in eval_proc.stdout
+    assert "SAE + decoder kernel-trick metrics:" in eval_proc.stdout

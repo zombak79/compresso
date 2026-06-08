@@ -6,9 +6,9 @@ import random
 import numpy as np
 import torch
 
-from compresso.examples.checkpoint import ELSA_DIR, load_recsys_split, save_json, update_checkpoint, update_stage_manifest
-from compresso.examples.models.elsa import fit_elsa
-from compresso.examples.retrieval import evaluate_item_embeddings_with_holdout
+from recsys_lib.checkpoint import ELSA_DIR, load_recsys_split, save_json, update_checkpoint, update_stage_manifest
+from recsys_lib.models.elsa import fit_elsa
+from recsys_lib.retrieval import evaluate_item_embeddings_with_holdout
 
 
 def eval_three_metrics(item_embs, source_indices, target_indices, eval_batch_size):
