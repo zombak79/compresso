@@ -165,14 +165,15 @@ def assign_to_clusters(
     if srp.cols_total != clusters.n_features:
         raise ValueError("srp feature dimension must match cluster set")
 
-    centroid_maps = [dict(zip(c.centroid.indices.tolist(), c.centroid.values.tolist())) for c in clusters.clusters]
+    candidate_clusters = clusters.active_clusters
+    centroid_maps = [dict(zip(c.centroid.indices.tolist(), c.centroid.values.tolist())) for c in candidate_clusters]
     out: list[list[tuple[str, float]]] = []
     cols = srp.cols.detach().cpu().numpy()
     vals = srp.vals.detach().cpu().numpy()
     for row in range(srp.rows):
         row_pairs = dict(zip(cols[row].tolist(), vals[row].tolist()))
         scored = []
-        for cluster, cmap in zip(clusters.clusters, centroid_maps):
+        for cluster, cmap in zip(candidate_clusters, centroid_maps):
             score = 0.0
             for idx, cval in cmap.items():
                 score += float(row_pairs.get(idx, 0.0)) * float(cval)
