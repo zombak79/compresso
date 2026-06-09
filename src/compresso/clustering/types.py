@@ -72,6 +72,8 @@ class SparseCluster:
     centroid: SparseVector
     entity_indices: np.ndarray
     source_cluster_ids: tuple[str, ...] = ()
+    parent_cluster_ids: tuple[str, ...] = ()
+    child_cluster_ids: tuple[str, ...] = ()
     tags: tuple[ScoredTag, ...] = ()
     label: str | None = None
     description: str | None = None
@@ -97,6 +99,7 @@ class SparseClusterSet:
     clusters: tuple[SparseCluster, ...]
     n_entities: int
     n_features: int
+    active_cluster_ids: tuple[str, ...] | None = None
     entity_ids: np.ndarray | None = None
     feature_ids: np.ndarray | None = None
     assignment_mode: str = "dominant_signed"
@@ -120,22 +123,103 @@ class SparseClusterSet:
             if feature_ids.shape[0] != self.n_features:
                 raise ValueError("feature_ids length must equal n_features")
             object.__setattr__(self, "feature_ids", feature_ids)
+        cluster_ids = [cluster.cluster_id for cluster in self.clusters]
+        if len(cluster_ids) != len(set(cluster_ids)):
+            raise ValueError("cluster_id values must be unique")
+        cluster_id_set = set(cluster_ids)
+        if self.active_cluster_ids is None:
+            object.__setattr__(self, "active_cluster_ids", tuple(cluster_ids))
+        else:
+            active = tuple(str(cluster_id) for cluster_id in self.active_cluster_ids)
+            missing = [cluster_id for cluster_id in active if cluster_id not in cluster_id_set]
+            if missing:
+                raise ValueError(f"active_cluster_ids contains unknown cluster ids: {missing}")
+            object.__setattr__(self, "active_cluster_ids", active)
 
     @property
     def cluster_by_id(self) -> dict[str, SparseCluster]:
         return {cluster.cluster_id: cluster for cluster in self.clusters}
 
     @property
+    def active_clusters(self) -> tuple[SparseCluster, ...]:
+        by_id = self.cluster_by_id
+        return tuple(by_id[cluster_id] for cluster_id in (self.active_cluster_ids or ()))
+
+    @property
+    def root_clusters(self) -> tuple[SparseCluster, ...]:
+        return tuple(cluster for cluster in self.clusters if not cluster.parent_cluster_ids)
+
+    @property
+    def leaf_clusters(self) -> tuple[SparseCluster, ...]:
+        return tuple(cluster for cluster in self.clusters if not cluster.child_cluster_ids)
+
+    @property
     def entity_to_cluster_ids(self) -> dict[int, list[str]]:
+        """Map entity index to active cluster ids."""
+        out: dict[int, list[str]] = {}
+        for cluster in self.active_clusters:
+            for entity_idx in cluster.entity_indices.tolist():
+                out.setdefault(int(entity_idx), []).append(cluster.cluster_id)
+        return out
+
+    @property
+    def entity_to_all_cluster_ids(self) -> dict[int, list[str]]:
         out: dict[int, list[str]] = {}
         for cluster in self.clusters:
             for entity_idx in cluster.entity_indices.tolist():
                 out.setdefault(int(entity_idx), []).append(cluster.cluster_id)
         return out
 
+    def children(self, cluster_id: str) -> tuple[SparseCluster, ...]:
+        cluster = self.cluster_by_id[cluster_id]
+        by_id = self.cluster_by_id
+        return tuple(by_id[child_id] for child_id in cluster.child_cluster_ids)
+
+    def parents(self, cluster_id: str) -> tuple[SparseCluster, ...]:
+        cluster = self.cluster_by_id[cluster_id]
+        by_id = self.cluster_by_id
+        return tuple(by_id[parent_id] for parent_id in cluster.parent_cluster_ids)
+
+    def descendants(self, cluster_id: str) -> tuple[SparseCluster, ...]:
+        out: list[SparseCluster] = []
+        seen: set[str] = set()
+
+        def visit(current_id: str) -> None:
+            for child in self.children(current_id):
+                if child.cluster_id in seen:
+                    continue
+                seen.add(child.cluster_id)
+                out.append(child)
+                visit(child.cluster_id)
+
+        visit(cluster_id)
+        return tuple(out)
+
+    def ancestors(self, cluster_id: str) -> tuple[SparseCluster, ...]:
+        out: list[SparseCluster] = []
+        seen: set[str] = set()
+
+        def visit(current_id: str) -> None:
+            for parent in self.parents(current_id):
+                if parent.cluster_id in seen:
+                    continue
+                seen.add(parent.cluster_id)
+                out.append(parent)
+                visit(parent.cluster_id)
+
+        visit(cluster_id)
+        return tuple(out)
+
     def with_clusters(self, clusters: list[SparseCluster] | tuple[SparseCluster, ...], *, history_entry: Mapping[str, Any] | None = None) -> "SparseClusterSet":
         history = self.history + ((dict(history_entry),) if history_entry is not None else ())
         return replace(self, clusters=tuple(clusters), history=history)
 
+    def with_active_cluster_ids(self, active_cluster_ids: tuple[str, ...] | list[str], *, history_entry: Mapping[str, Any] | None = None) -> "SparseClusterSet":
+        history = self.history + ((dict(history_entry),) if history_entry is not None else ())
+        return replace(self, active_cluster_ids=tuple(active_cluster_ids), history=history)
+
     def append_history(self, entry: Mapping[str, Any]) -> "SparseClusterSet":
         return replace(self, history=self.history + (dict(entry),))
+
+
+SparseClusterGraph = SparseClusterSet
