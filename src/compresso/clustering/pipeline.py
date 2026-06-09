@@ -9,6 +9,7 @@ import numpy as np
 
 from compresso.params.srp import SRPTensor
 from .activation import build_activation_clusters
+from .labels import label_clusters
 from .merge import (
     filter_clusters_by_size,
     link_clusters_by_entity_containment,
@@ -21,7 +22,7 @@ from .merge import (
     prune_redundant_active_clusters,
 )
 from .tags import assign_cluster_tags
-from .types import SparseClusterSet
+from .types import SparseCluster, SparseClusterSet
 
 
 ClusterBuildStep = Callable[[SRPTensor], SparseClusterSet]
@@ -257,6 +258,29 @@ class AssignTags(AbstractClusterTransform):
             method=self.method,
             top_k=self.top_k,
             min_score=self.min_score,
+        )
+
+
+@dataclass(frozen=True)
+class LabelClusters(AbstractClusterTransform):
+    entity_metadata: object
+    text_extractor: Callable[[SparseCluster, object], object]
+    label_fn: Callable[[object], object]
+    cluster_scope: Literal["active", "all", "leaves", "roots"] = "active"
+    overwrite: bool = False
+    verbose: bool = False
+    show_progress: bool = False
+
+    def __call__(self, clusters: SparseClusterSet) -> SparseClusterSet:
+        return label_clusters(
+            clusters,
+            entity_metadata=self.entity_metadata,
+            text_extractor=self.text_extractor,
+            label_fn=self.label_fn,
+            cluster_scope=self.cluster_scope,
+            overwrite=self.overwrite,
+            verbose=self.verbose,
+            show_progress=self.show_progress,
         )
 
 
