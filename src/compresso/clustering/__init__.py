@@ -1,5 +1,6 @@
 from .types import SparseVector, ScoredTag, SparseCluster, SparseClusterGraph, SparseClusterSet
 from .activation import build_activation_clusters, assign_to_clusters
+from .labels import label_clusters
 from .tags import assign_cluster_tags, compute_cluster_tag_counts, tfidf_score
 from .merge import (
     filter_clusters_by_size,
@@ -26,6 +27,7 @@ from .pipeline import (
     EntityIoUMerge,
     FeatureContainmentMerge,
     FeatureContainmentLink,
+    LabelClusters,
     MaterializeLinkMerges,
     PruneRedundantRoots,
     SizeFilter,
@@ -43,6 +45,7 @@ __all__ = [
     "SparseClusterSet",
     "build_activation_clusters",
     "assign_to_clusters",
+    "label_clusters",
     "assign_cluster_tags",
     "compute_cluster_tag_counts",
     "tfidf_score",
@@ -68,6 +71,7 @@ __all__ = [
     "EntityIoUMerge",
     "FeatureContainmentMerge",
     "FeatureContainmentLink",
+    "LabelClusters",
     "MaterializeLinkMerges",
     "PruneRedundantRoots",
     "SizeFilter",
