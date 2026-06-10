@@ -1,5 +1,6 @@
 from .types import SparseVector, ScoredTag, SparseCluster, SparseClusterGraph, SparseClusterSet
 from .activation import build_activation_clusters, assign_to_clusters
+from .io import graph_from_dict, graph_to_dict, load_cluster_graph, save_cluster_graph
 from .labels import label_clusters
 from .semantic import merge_clusters_by_semantic_similarity
 from .tags import assign_cluster_tags, compute_cluster_tag_counts, tfidf_score
@@ -47,6 +48,10 @@ __all__ = [
     "SparseClusterSet",
     "build_activation_clusters",
     "assign_to_clusters",
+    "graph_from_dict",
+    "graph_to_dict",
+    "load_cluster_graph",
+    "save_cluster_graph",
     "label_clusters",
     "merge_clusters_by_semantic_similarity",
     "assign_cluster_tags",
