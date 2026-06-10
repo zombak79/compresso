@@ -1,6 +1,7 @@
 from .types import SparseVector, ScoredTag, SparseCluster, SparseClusterGraph, SparseClusterSet
 from .activation import build_activation_clusters, assign_to_clusters
 from .labels import label_clusters
+from .semantic import merge_clusters_by_semantic_similarity
 from .tags import assign_cluster_tags, compute_cluster_tag_counts, tfidf_score
 from .merge import (
     filter_clusters_by_size,
@@ -30,6 +31,7 @@ from .pipeline import (
     LabelClusters,
     MaterializeLinkMerges,
     PruneRedundantRoots,
+    SemanticSimilarityMerge,
     SizeFilter,
     TagSimilarityMerge,
     TopMSignedClustering,
@@ -46,6 +48,7 @@ __all__ = [
     "build_activation_clusters",
     "assign_to_clusters",
     "label_clusters",
+    "merge_clusters_by_semantic_similarity",
     "assign_cluster_tags",
     "compute_cluster_tag_counts",
     "tfidf_score",
@@ -74,6 +77,7 @@ __all__ = [
     "LabelClusters",
     "MaterializeLinkMerges",
     "PruneRedundantRoots",
+    "SemanticSimilarityMerge",
     "SizeFilter",
     "TagSimilarityMerge",
     "TopMSignedClustering",

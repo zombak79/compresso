@@ -21,6 +21,7 @@ from .merge import (
     merge_clusters_by_tag_similarity,
     prune_redundant_active_clusters,
 )
+from .semantic import merge_clusters_by_semantic_similarity
 from .tags import assign_cluster_tags
 from .types import SparseCluster, SparseClusterSet
 
@@ -236,6 +237,39 @@ class TagSimilarityMerge(AbstractMerging):
             threshold=self.threshold,
             metric=self.metric,
             max_rounds=self.max_rounds,
+            normalize_centroids=self.normalize_centroids,
+            verbose=self.verbose,
+            show_progress=self.show_progress,
+        )
+
+
+@dataclass(frozen=True)
+class SemanticSimilarityMerge(AbstractMerging):
+    embed_fn: Callable[[list[str]], np.ndarray]
+    threshold: float = 0.9
+    text_fn: Callable[[SparseCluster], str] | None = None
+    label_fn: Callable[[object], object] | None = None
+    label_text_fn: Callable[[SparseCluster, list[SparseCluster]], object] | None = None
+    cluster_scope: Literal["active", "all", "leaves", "roots"] = "active"
+    max_rounds: int = 10
+    min_group_size: int = 2
+    normalize_embeddings: bool = True
+    normalize_centroids: bool = True
+    verbose: bool = False
+    show_progress: bool = False
+
+    def __call__(self, clusters: SparseClusterSet) -> SparseClusterSet:
+        return merge_clusters_by_semantic_similarity(
+            clusters,
+            embed_fn=self.embed_fn,
+            threshold=self.threshold,
+            text_fn=self.text_fn,
+            label_fn=self.label_fn,
+            label_text_fn=self.label_text_fn,
+            cluster_scope=self.cluster_scope,
+            max_rounds=self.max_rounds,
+            min_group_size=self.min_group_size,
+            normalize_embeddings=self.normalize_embeddings,
             normalize_centroids=self.normalize_centroids,
             verbose=self.verbose,
             show_progress=self.show_progress,

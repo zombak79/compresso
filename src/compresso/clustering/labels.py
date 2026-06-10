@@ -65,23 +65,17 @@ def label_clusters(
     the calls and stores returned labels on the graph.
     """
     scoped = _scoped_clusters(clusters, cluster_scope)
-    scoped_ids = {cluster.cluster_id for cluster in scoped}
-    updated: list[SparseCluster] = []
+    updated_by_id = clusters.cluster_by_id
     n_labeled = 0
     n_skipped = 0
-    by_id = clusters.cluster_by_id
 
     for cluster in _progress_iter(
-        clusters.clusters,
+        scoped,
         enabled=show_progress,
-        total=len(clusters.clusters),
+        total=len(scoped),
         desc="label_clusters",
     ):
-        if cluster.cluster_id not in scoped_ids:
-            updated.append(cluster)
-            continue
         if not overwrite and cluster.label is not None:
-            updated.append(cluster)
             n_skipped += 1
             continue
 
@@ -97,8 +91,8 @@ def label_clusters(
             labeling_metadata["result_metadata"] = result_metadata
         metadata = dict(cluster.metadata)
         metadata["labeling"] = labeling_metadata
-        updated.append(
-            by_id[cluster.cluster_id].with_updates(
+        updated_by_id[cluster.cluster_id] = (
+            updated_by_id[cluster.cluster_id].with_updates(
                 label=label if label is not None else cluster.label,
                 description=description if description is not None else cluster.description,
                 metadata=metadata,
@@ -109,7 +103,7 @@ def label_clusters(
     if verbose:
         print(f"[label_clusters] labeled={n_labeled} skipped={n_skipped} scope={cluster_scope}")
     return clusters.with_clusters(
-        updated,
+        [updated_by_id[cluster.cluster_id] for cluster in clusters.clusters],
         history_entry={
             "phase": "label_clusters",
             "cluster_scope": cluster_scope,
