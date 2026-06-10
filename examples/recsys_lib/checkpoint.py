@@ -10,6 +10,8 @@ import zipfile
 
 import numpy as np
 import pandas as pd
+from compresso.clustering import load_cluster_graph, save_cluster_graph
+from compresso.clustering.types import SparseClusterSet
 from scipy.sparse import csr_matrix, load_npz, save_npz
 
 
@@ -20,6 +22,8 @@ SAE_DIR = "sae"
 SBERT_DIR = "sbert"
 SBERT_SAE_DIR = "sbert_sae"
 COMPRESSED_ELSA_DIR = "compressed_elsa"
+CLUSTERING_DIR = "clustering"
+CLUSTER_GRAPH_NAME = "graph.json"
 
 
 def _as_obj_array(xs: list[np.ndarray]) -> np.ndarray:
@@ -163,3 +167,34 @@ def load_recsys_split(root: str | Path) -> dict[str, Any]:
         "tag_names": np.load(tag_names_path, allow_pickle=False) if tag_names_path.exists() else None,
         "entity_metadata": pd.read_csv(metadata_path, dtype={"item_id": str}) if metadata_path.exists() else None,
     }
+
+
+def save_cluster_graph_stage(
+    root: str | Path,
+    graph: SparseClusterSet,
+    *,
+    stage_dir: str = CLUSTERING_DIR,
+    metadata: dict[str, Any] | None = None,
+) -> Path:
+    root = Path(root)
+    path = root / stage_dir / CLUSTER_GRAPH_NAME
+    save_cluster_graph(graph, path)
+    update_stage_manifest(
+        root,
+        stage_dir,
+        {
+            "graph_path": f"{stage_dir}/{CLUSTER_GRAPH_NAME}",
+            "n_nodes": len(graph.clusters),
+            "n_active_clusters": len(graph.active_clusters),
+            **(metadata or {}),
+        },
+    )
+    return path
+
+
+def load_cluster_graph_stage(
+    root: str | Path,
+    *,
+    stage_dir: str = CLUSTERING_DIR,
+) -> SparseClusterSet:
+    return load_cluster_graph(Path(root) / stage_dir / CLUSTER_GRAPH_NAME)
