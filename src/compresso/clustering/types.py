@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from collections.abc import Callable, Iterable
 from typing import Any, Mapping
 
 import numpy as np
@@ -220,6 +221,99 @@ class SparseClusterSet:
 
     def append_history(self, entry: Mapping[str, Any]) -> "SparseClusterSet":
         return replace(self, history=self.history + (dict(entry),))
+
+    def fill_missing_cluster_labels(
+        self,
+        label_fn: Callable[[object], object] | None = None,
+        text_fn: Callable[[SparseCluster], object] | None = None,
+        *,
+        roots: Iterable[str | SparseCluster] | None = None,
+        active_roots_only: bool = True,
+        overwrite: bool = False,
+        verbose: bool = False,
+    ) -> tuple["SparseClusterSet", int, int]:
+        """Count or fill missing labels below selected graph roots.
+
+        When ``label_fn`` is not provided this is a count-only traversal. When
+        ``label_fn`` is provided, the method returns a new graph with filled
+        labels and leaves the original graph unchanged.
+        """
+        by_id = self.cluster_by_id
+        if roots is None:
+            start = [c for c in self.active_clusters if not c.parent_cluster_ids] if active_roots_only else list(self.root_clusters)
+        else:
+            start = [by_id[root] if isinstance(root, str) else root for root in roots]
+
+        seen: set[str] = set()
+        ordered: list[SparseCluster] = []
+
+        def visit(cluster: SparseCluster) -> None:
+            if cluster.cluster_id in seen:
+                return
+            seen.add(cluster.cluster_id)
+            ordered.append(cluster)
+            for child_id in cluster.child_cluster_ids:
+                visit(by_id[child_id])
+
+        for root in start:
+            visit(root)
+
+        n_missing = sum(1 for cluster in ordered if not cluster.label)
+        if label_fn is None:
+            return self, 0, n_missing
+
+        updated: list[SparseCluster] = []
+        n_changes = 0
+        for cluster in self.clusters:
+            if cluster.cluster_id not in seen:
+                updated.append(cluster)
+                continue
+            if cluster.label and not overwrite:
+                updated.append(cluster)
+                continue
+
+            payload = text_fn(cluster) if text_fn is not None else cluster
+            result = label_fn(payload)
+            result_metadata: dict[str, Any] = {}
+            description = cluster.description
+            if isinstance(result, Mapping):
+                label_value = result.get("label")
+                description = result.get("description", description)
+                result_metadata = {str(k): v for k, v in result.items() if k not in {"label", "description"}}
+            else:
+                label_value = result
+
+            label = str(label_value).strip() if label_value is not None else ""
+            if not label:
+                updated.append(cluster)
+                if verbose:
+                    print(f"still empty {cluster.cluster_id}")
+                continue
+
+            metadata = dict(cluster.metadata)
+            metadata["label_fill"] = {
+                "source": "fill_missing_cluster_labels",
+                "result_metadata": result_metadata,
+            }
+            updated.append(
+                cluster.with_updates(
+                    label=label,
+                    description=description,
+                    metadata=metadata,
+                )
+            )
+            n_changes += 1
+            if verbose:
+                print(f"filled {cluster.cluster_id}: {label}")
+
+        history_entry = {
+            "phase": "fill_missing_cluster_labels",
+            "n_visited": len(ordered),
+            "n_missing_before": n_missing,
+            "n_changed": n_changes,
+            "overwrite": overwrite,
+        }
+        return self.with_clusters(updated, history_entry=history_entry), n_changes, n_missing
 
 
 SparseClusterGraph = SparseClusterSet
