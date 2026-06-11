@@ -170,6 +170,7 @@ class _FeaturePathNode:
 def build_feature_path_clusters(
     srp: SRPTensor,
     *,
+    top_m: int = 1,
     max_depth: int | None = None,
     min_cluster_size: int | None = None,
     min_activation: float | None = None,
@@ -180,11 +181,13 @@ def build_feature_path_clusters(
 ) -> SparseClusterSet:
     """Build a hierarchy by repeatedly splitting on next strongest features.
 
-    Each entity follows one greedy signed-feature path. At depth 1 it is
-    assigned by its strongest signed feature. Inside every parent node, the
-    same entity is assigned by its next strongest feature whose feature id is
-    not already used in the parent path.
+    Each entity follows one or more greedy signed-feature paths. At depth 1 it
+    is assigned by each of its top-m signed features. Inside every parent node,
+    the same entity is assigned by its next strongest feature whose feature id
+    is not already used in the parent path.
     """
+    if top_m < 1 or top_m > srp.k:
+        raise ValueError(f"top_m must be in [1, {srp.k}], got {top_m}")
     if max_depth is not None and max_depth < 1:
         raise ValueError("max_depth must be >= 1 when provided")
     if min_cluster_size is not None and min_cluster_size < 1:
@@ -229,10 +232,28 @@ def build_feature_path_clusters(
                 return feature, sign, value
         return None
 
-    root_rows = np.arange(srp.rows, dtype=np.int64)
-    pending: list[tuple[tuple[tuple[int, int], ...], np.ndarray, str | None]] = [((), root_rows, None)]
+    root_groups: dict[tuple[int, int], list[int]] = defaultdict(list)
+    root_values: dict[tuple[int, int], list[float]] = defaultdict(list)
+    for row, candidates in enumerate(row_candidates):
+        for feature, sign, value in candidates[:top_m]:
+            key = (feature, sign)
+            root_groups[key].append(row)
+            root_values[key].append(value)
+
+    pending: list[tuple[tuple[tuple[int, int], ...], np.ndarray, str | None]] = []
     nodes: dict[str, _FeaturePathNode] = {}
     terminal_ids: set[str] = set()
+    for signed_feature, rows in sorted(root_groups.items(), key=lambda item: (item[0][0], item[0][1])):
+        if min_cluster_size is not None and len(rows) < min_cluster_size:
+            continue
+        root = _FeaturePathNode(
+            path=(signed_feature,),
+            entity_indices=np.asarray(rows, dtype=np.int64),
+            parent_cluster_id=None,
+            chosen_values=np.asarray(root_values[signed_feature], dtype=np.float32),
+        )
+        nodes[root.cluster_id] = root
+        pending.append((root.path, root.entity_indices, root.cluster_id))
 
     while pending:
         path, rows, parent_id = pending.pop(0)
@@ -317,6 +338,7 @@ def build_feature_path_clusters(
         history=(
             {
                 "phase": "build_feature_path_clusters",
+                "top_m": top_m,
                 "max_depth": max_depth,
                 "min_cluster_size": min_cluster_size,
                 "min_activation": min_activation,

@@ -96,6 +96,7 @@ class ComboSignedClustering(AbstractClustering):
 
 @dataclass(frozen=True)
 class FeaturePathClustering(AbstractClustering):
+    top_m: int = 1
     max_depth: int | None = None
     min_cluster_size: int | None = None
     min_activation: float | None = None
@@ -104,6 +105,7 @@ class FeaturePathClustering(AbstractClustering):
     def __call__(self, srp: SRPTensor) -> SparseClusterSet:
         return build_feature_path_clusters(
             srp,
+            top_m=self.top_m,
             max_depth=self.max_depth,
             min_cluster_size=self.min_cluster_size,
             min_activation=self.min_activation,
