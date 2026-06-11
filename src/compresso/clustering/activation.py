@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import dataclass, field
 from itertools import combinations
 from typing import Literal
 
@@ -147,6 +148,180 @@ def build_activation_clusters(
                 "combo_size": combo_size,
                 "min_cluster_size": min_cluster_size,
                 "n_clusters": len(clusters),
+            },
+        ),
+    )
+
+
+@dataclass
+class _FeaturePathNode:
+    path: tuple[tuple[int, int], ...]
+    entity_indices: np.ndarray
+    parent_cluster_id: str | None
+    chosen_values: np.ndarray
+    child_cluster_ids: list[str] = field(default_factory=list)
+
+    @property
+    def cluster_id(self) -> str:
+        parts = [f"{feature}:{'pos' if sign > 0 else 'neg'}" for feature, sign in self.path]
+        return "path:" + "/".join(parts)
+
+
+def build_feature_path_clusters(
+    srp: SRPTensor,
+    *,
+    max_depth: int | None = None,
+    min_cluster_size: int | None = None,
+    min_activation: float | None = None,
+    entity_ids: np.ndarray | None = None,
+    normalize_centroids: bool = True,
+    ignore_zero: bool = True,
+    show_progress: bool = False,
+) -> SparseClusterSet:
+    """Build a hierarchy by repeatedly splitting on next strongest features.
+
+    Each entity follows one greedy signed-feature path. At depth 1 it is
+    assigned by its strongest signed feature. Inside every parent node, the
+    same entity is assigned by its next strongest feature whose feature id is
+    not already used in the parent path.
+    """
+    if max_depth is not None and max_depth < 1:
+        raise ValueError("max_depth must be >= 1 when provided")
+    if min_cluster_size is not None and min_cluster_size < 1:
+        raise ValueError("min_cluster_size must be >= 1 when provided")
+    if min_activation is not None and min_activation < 0:
+        raise ValueError("min_activation must be >= 0 when provided")
+
+    srp = _as_srp_2d(srp)
+    cols = srp.cols.detach().cpu().numpy()
+    vals = srp.vals.detach().cpu().numpy()
+
+    row_candidates: list[list[tuple[int, int, float]]] = []
+    for row in _progress_iter(
+        range(srp.rows),
+        enabled=show_progress,
+        total=srp.rows,
+        desc="build_feature_path_clusters: rows",
+    ):
+        candidates: list[tuple[int, int, float]] = []
+        order = sorted(
+            range(srp.k),
+            key=lambda pos: (-abs(float(vals[row, pos])), int(cols[row, pos])),
+        )
+        seen_features: set[int] = set()
+        for pos in order:
+            value = float(vals[row, pos])
+            if ignore_zero and value == 0.0:
+                continue
+            if min_activation is not None and abs(value) < min_activation:
+                continue
+            feature = int(cols[row, pos])
+            if feature in seen_features:
+                continue
+            seen_features.add(feature)
+            sign = 1 if value >= 0.0 else -1
+            candidates.append((feature, sign, value))
+        row_candidates.append(candidates)
+
+    def next_signed_feature(row: int, used_features: set[int]) -> tuple[int, int, float] | None:
+        for feature, sign, value in row_candidates[row]:
+            if feature not in used_features:
+                return feature, sign, value
+        return None
+
+    root_rows = np.arange(srp.rows, dtype=np.int64)
+    pending: list[tuple[tuple[tuple[int, int], ...], np.ndarray, str | None]] = [((), root_rows, None)]
+    nodes: dict[str, _FeaturePathNode] = {}
+    terminal_ids: set[str] = set()
+
+    while pending:
+        path, rows, parent_id = pending.pop(0)
+        if max_depth is not None and len(path) >= max_depth:
+            if parent_id is not None:
+                terminal_ids.add(parent_id)
+            continue
+
+        used_features = {feature for feature, _ in path}
+        groups: dict[tuple[int, int], list[int]] = defaultdict(list)
+        chosen_values: dict[tuple[int, int], list[float]] = defaultdict(list)
+        for row in rows.tolist():
+            chosen = next_signed_feature(int(row), used_features)
+            if chosen is None:
+                continue
+            feature, sign, value = chosen
+            key = (feature, sign)
+            groups[key].append(int(row))
+            chosen_values[key].append(float(value))
+
+        kept_child_ids: list[str] = []
+        group_items = sorted(groups.items(), key=lambda item: (item[0][0], item[0][1]))
+        for signed_feature, child_rows in group_items:
+            if min_cluster_size is not None and len(child_rows) < min_cluster_size:
+                continue
+            child_path = path + (signed_feature,)
+            child = _FeaturePathNode(
+                path=child_path,
+                entity_indices=np.asarray(child_rows, dtype=np.int64),
+                parent_cluster_id=parent_id,
+                chosen_values=np.asarray(chosen_values[signed_feature], dtype=np.float32),
+            )
+            nodes[child.cluster_id] = child
+            kept_child_ids.append(child.cluster_id)
+            pending.append((child_path, child.entity_indices, child.cluster_id))
+
+        if parent_id is not None:
+            parent = nodes[parent_id]
+            parent.child_cluster_ids.extend(kept_child_ids)
+            if not kept_child_ids:
+                terminal_ids.add(parent_id)
+
+    clusters: list[SparseCluster] = []
+    for node in nodes.values():
+        features = np.asarray([feature for feature, _ in node.path], dtype=np.int64)
+        signs = np.asarray([float(sign) for _, sign in node.path], dtype=np.float32)
+        centroid = SparseVector(features, signs, srp.cols_total)
+        if normalize_centroids:
+            centroid = centroid.normalized()
+        act = node.chosen_values.astype(np.float32, copy=False)
+        act_abs = np.abs(act)
+        clusters.append(
+            SparseCluster(
+                cluster_id=node.cluster_id,
+                centroid=centroid,
+                entity_indices=node.entity_indices,
+                source_cluster_ids=(node.cluster_id,),
+                parent_cluster_ids=(() if node.parent_cluster_id is None else (node.parent_cluster_id,)),
+                child_cluster_ids=tuple(sorted(set(node.child_cluster_ids))),
+                stats={
+                    "depth": len(node.path),
+                    "mean_activation": float(act.mean()) if act.size else 0.0,
+                    "mean_abs_activation": float(act_abs.mean()) if act_abs.size else 0.0,
+                    "max_abs_activation": float(act_abs.max()) if act_abs.size else 0.0,
+                },
+                metadata={
+                    "path": tuple((int(feature), int(sign)) for feature, sign in node.path),
+                    "features": tuple(int(feature) for feature, _ in node.path),
+                    "signs": tuple(int(sign) for _, sign in node.path),
+                    "depth": len(node.path),
+                },
+            )
+        )
+
+    return SparseClusterSet(
+        clusters=tuple(clusters),
+        n_entities=srp.rows,
+        n_features=srp.cols_total,
+        active_cluster_ids=tuple(sorted(terminal_ids)),
+        entity_ids=entity_ids,
+        assignment_mode="feature_path",
+        history=(
+            {
+                "phase": "build_feature_path_clusters",
+                "max_depth": max_depth,
+                "min_cluster_size": min_cluster_size,
+                "min_activation": min_activation,
+                "n_clusters": len(clusters),
+                "n_active_clusters": len(terminal_ids),
             },
         ),
     )
