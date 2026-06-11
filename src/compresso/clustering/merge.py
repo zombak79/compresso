@@ -224,6 +224,11 @@ def _scoped_clusters(clusters: SparseClusterSet, scope: ClusterScope) -> tuple[S
     raise ValueError("scope must be one of 'active', 'all', 'leaves', or 'roots'")
 
 
+def _normalize_label(label: str, *, case_sensitive: bool = False) -> str:
+    out = " ".join(str(label).strip().split())
+    return out if case_sensitive else out.lower()
+
+
 def _has_path(clusters: SparseClusterSet, *, ancestor_id: str, descendant_id: str) -> bool:
     return any(c.cluster_id == descendant_id for c in clusters.descendants(ancestor_id))
 
@@ -563,6 +568,209 @@ def prune_redundant_active_clusters(
             "n_pruned": len(covered),
         },
     )
+
+
+def merge_clusters_by_duplicate_label(
+    clusters: SparseClusterSet,
+    *,
+    cluster_scope: ClusterScope = "active",
+    case_sensitive: bool = False,
+    mark_children_hidden: bool = True,
+    min_group_size: int = 2,
+    normalize_centroids: bool = True,
+    verbose: bool = False,
+) -> SparseClusterSet:
+    """Merge clusters with identical normalized labels into canonical parents."""
+    if min_group_size < 2:
+        raise ValueError("min_group_size must be >= 2")
+    candidates = _scoped_clusters(clusters, cluster_scope)
+    label_groups: dict[str, list[SparseCluster]] = defaultdict(list)
+    label_by_key: dict[str, str] = {}
+    for cluster in candidates:
+        if not cluster.label:
+            continue
+        key = _normalize_label(cluster.label, case_sensitive=case_sensitive)
+        if not key:
+            continue
+        label_groups[key].append(cluster)
+        label_by_key.setdefault(key, " ".join(str(cluster.label).strip().split()))
+
+    groups = [members for key, members in sorted(label_groups.items()) if len(members) >= min_group_size]
+    if not groups:
+        return clusters.append_history(
+            {
+                "phase": "merge_clusters_by_duplicate_label",
+                "cluster_scope": cluster_scope,
+                "case_sensitive": case_sensitive,
+                "min_group_size": min_group_size,
+                "n_groups": 0,
+                "changed": False,
+            }
+        )
+
+    updated_by_id = dict(clusters.cluster_by_id)
+    added: list[SparseCluster] = []
+    member_to_parent: dict[str, str] = {}
+    for group_idx, members in enumerate(groups):
+        key = _normalize_label(members[0].label or "", case_sensitive=case_sensitive)
+        parent_id = _unique_merge_id(
+            clusters.with_clusters(tuple(clusters.clusters) + tuple(added)),
+            phase="duplicate_label",
+            group_idx=len(added) + group_idx,
+        )
+        parent = merge_cluster_group(
+            members,
+            cluster_id=parent_id,
+            phase="duplicate_label",
+            normalize_centroid=normalize_centroids,
+        )
+        descriptions = [member.description for member in members if member.description]
+        parent = parent.with_updates(
+            label=label_by_key[key],
+            description=descriptions[0] if descriptions else None,
+            metadata={
+                **dict(parent.metadata),
+                "duplicate_label": label_by_key[key],
+                "duplicate_label_key": key,
+                "mark_children_hidden": mark_children_hidden,
+            },
+        )
+        added.append(parent)
+        for member in members:
+            member_to_parent[member.cluster_id] = parent.cluster_id
+            metadata = dict(member.metadata)
+            if mark_children_hidden:
+                metadata["render_hidden"] = True
+                metadata["render_hidden_reason"] = "duplicate_label"
+                metadata["render_hidden_parent_id"] = parent.cluster_id
+            parents = tuple(dict.fromkeys(member.parent_cluster_ids + (parent.cluster_id,)))
+            updated_by_id[member.cluster_id] = member.with_updates(parent_cluster_ids=parents, metadata=metadata)
+
+    next_active_ids: list[str] = []
+    for cluster_id in clusters.active_cluster_ids or ():
+        next_active_ids.append(member_to_parent.get(cluster_id, cluster_id))
+    next_active_ids = list(dict.fromkeys(next_active_ids))
+    all_clusters = [updated_by_id[cluster.cluster_id] for cluster in clusters.clusters] + added
+    out = clusters.with_clusters(
+        all_clusters,
+        history_entry={
+            "phase": "merge_clusters_by_duplicate_label",
+            "cluster_scope": cluster_scope,
+            "case_sensitive": case_sensitive,
+            "min_group_size": min_group_size,
+            "n_groups": len(groups),
+            "n_nodes_added": len(added),
+            "mark_children_hidden": mark_children_hidden,
+        },
+    ).with_active_cluster_ids(
+        next_active_ids,
+        history_entry={
+            "phase": "activate_duplicate_label_merges",
+            "n_active_before": len(clusters.active_cluster_ids or ()),
+            "n_active_after": len(next_active_ids),
+        },
+    )
+    if verbose:
+        print(f"[merge_clusters_by_duplicate_label] groups={len(groups)} active={len(clusters.active_clusters)} -> {len(out.active_clusters)}")
+    return out
+
+
+def compact_hidden_clusters(
+    clusters: SparseClusterSet,
+    *,
+    hidden_key: str = "render_hidden",
+    verbose: bool = False,
+) -> SparseClusterSet:
+    """Remove explicitly hidden nodes and rewire visible parents/children."""
+    by_id = clusters.cluster_by_id
+    hidden_ids = {cluster.cluster_id for cluster in clusters.clusters if bool(cluster.metadata.get(hidden_key))}
+    if not hidden_ids:
+        return clusters.append_history({"phase": "compact_hidden_clusters", "hidden_key": hidden_key, "n_removed": 0})
+
+    visible_ids = set(by_id) - hidden_ids
+
+    def visible_ancestors(cluster_id: str, seen: set[str] | None = None) -> list[str]:
+        seen = set() if seen is None else seen
+        if cluster_id in seen:
+            return []
+        seen.add(cluster_id)
+        out: list[str] = []
+        for parent_id in by_id[cluster_id].parent_cluster_ids:
+            if parent_id not in by_id:
+                continue
+            if parent_id in visible_ids:
+                out.append(parent_id)
+            else:
+                out.extend(visible_ancestors(parent_id, seen))
+        return out
+
+    def visible_descendants(cluster_id: str, seen: set[str] | None = None) -> list[str]:
+        seen = set() if seen is None else seen
+        if cluster_id in seen:
+            return []
+        seen.add(cluster_id)
+        out: list[str] = []
+        for child_id in by_id[cluster_id].child_cluster_ids:
+            if child_id not in by_id:
+                continue
+            if child_id in visible_ids:
+                out.append(child_id)
+            else:
+                out.extend(visible_descendants(child_id, seen))
+        return out
+
+    updated: list[SparseCluster] = []
+    for cluster in clusters.clusters:
+        if cluster.cluster_id in hidden_ids:
+            continue
+        parent_ids: list[str] = []
+        for parent_id in cluster.parent_cluster_ids:
+            if parent_id not in by_id:
+                continue
+            if parent_id in visible_ids:
+                parent_ids.append(parent_id)
+            else:
+                parent_ids.extend(visible_ancestors(parent_id))
+        child_ids: list[str] = []
+        for child_id in cluster.child_cluster_ids:
+            if child_id not in by_id:
+                continue
+            if child_id in visible_ids:
+                child_ids.append(child_id)
+            else:
+                child_ids.extend(visible_descendants(child_id))
+        parent_ids = [cluster_id for cluster_id in dict.fromkeys(parent_ids) if cluster_id != cluster.cluster_id]
+        child_ids = [cluster_id for cluster_id in dict.fromkeys(child_ids) if cluster_id != cluster.cluster_id]
+        updated.append(cluster.with_updates(parent_cluster_ids=tuple(parent_ids), child_cluster_ids=tuple(child_ids)))
+
+    next_active_ids: list[str] = []
+    for cluster_id in clusters.active_cluster_ids or ():
+        if cluster_id in visible_ids:
+            next_active_ids.append(cluster_id)
+        elif cluster_id in by_id:
+            replacements = visible_descendants(cluster_id) or visible_ancestors(cluster_id)
+            next_active_ids.extend(replacements)
+    next_active_ids = [cluster_id for cluster_id in dict.fromkeys(next_active_ids) if cluster_id in visible_ids]
+    out = clusters.with_clusters(
+        updated,
+        history_entry={
+            "phase": "compact_hidden_clusters",
+            "hidden_key": hidden_key,
+            "n_nodes_before": len(clusters.clusters),
+            "n_nodes_after": len(updated),
+            "n_removed": len(hidden_ids),
+        },
+    ).with_active_cluster_ids(
+        next_active_ids,
+        history_entry={
+            "phase": "activate_compacted_hidden_clusters",
+            "n_active_before": len(clusters.active_cluster_ids or ()),
+            "n_active_after": len(next_active_ids),
+        },
+    )
+    if verbose:
+        print(f"[compact_hidden_clusters] nodes={len(clusters.clusters)} -> {len(updated)} removed={len(hidden_ids)}")
+    return out
 
 
 def merge_clusters_by_entity_iou(

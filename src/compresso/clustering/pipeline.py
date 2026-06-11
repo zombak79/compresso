@@ -11,6 +11,7 @@ from compresso.params.srp import SRPTensor
 from .activation import build_activation_clusters, build_feature_path_clusters
 from .labels import label_clusters
 from .merge import (
+    compact_hidden_clusters,
     filter_clusters_by_size,
     link_clusters_by_entity_containment,
     link_clusters_by_feature_containment,
@@ -18,6 +19,7 @@ from .merge import (
     merge_clusters_by_entity_containment,
     merge_clusters_by_entity_iou,
     merge_clusters_by_feature_containment,
+    merge_clusters_by_duplicate_label,
     merge_clusters_by_tag_similarity,
     prune_redundant_active_clusters,
 )
@@ -260,6 +262,36 @@ class TagSimilarityMerge(AbstractMerging):
             verbose=self.verbose,
             show_progress=self.show_progress,
         )
+
+
+@dataclass(frozen=True)
+class LabelDuplicateMerge(AbstractMerging):
+    cluster_scope: Literal["active", "all", "leaves", "roots"] = "active"
+    case_sensitive: bool = False
+    mark_children_hidden: bool = True
+    min_group_size: int = 2
+    normalize_centroids: bool = True
+    verbose: bool = False
+
+    def __call__(self, clusters: SparseClusterSet) -> SparseClusterSet:
+        return merge_clusters_by_duplicate_label(
+            clusters,
+            cluster_scope=self.cluster_scope,
+            case_sensitive=self.case_sensitive,
+            mark_children_hidden=self.mark_children_hidden,
+            min_group_size=self.min_group_size,
+            normalize_centroids=self.normalize_centroids,
+            verbose=self.verbose,
+        )
+
+
+@dataclass(frozen=True)
+class CompactHiddenClusters(AbstractClusterTransform):
+    hidden_key: str = "render_hidden"
+    verbose: bool = False
+
+    def __call__(self, clusters: SparseClusterSet) -> SparseClusterSet:
+        return compact_hidden_clusters(clusters, hidden_key=self.hidden_key, verbose=self.verbose)
 
 
 @dataclass(frozen=True)
