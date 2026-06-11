@@ -1,5 +1,5 @@
 from .types import SparseVector, ScoredTag, SparseCluster, SparseClusterGraph, SparseClusterSet
-from .activation import build_activation_clusters, assign_to_clusters
+from .activation import build_activation_clusters, build_feature_path_clusters, assign_to_clusters
 from .io import graph_from_dict, graph_to_dict, load_cluster_graph, save_cluster_graph
 from .labels import label_clusters
 from .semantic import merge_clusters_by_semantic_similarity
@@ -27,6 +27,7 @@ from .pipeline import (
     EntityContainmentMerge,
     EntityContainmentLink,
     EntityIoUMerge,
+    FeaturePathClustering,
     FeatureContainmentMerge,
     FeatureContainmentLink,
     LabelClusters,
@@ -47,6 +48,7 @@ __all__ = [
     "SparseClusterGraph",
     "SparseClusterSet",
     "build_activation_clusters",
+    "build_feature_path_clusters",
     "assign_to_clusters",
     "graph_from_dict",
     "graph_to_dict",
@@ -77,6 +79,7 @@ __all__ = [
     "EntityContainmentMerge",
     "EntityContainmentLink",
     "EntityIoUMerge",
+    "FeaturePathClustering",
     "FeatureContainmentMerge",
     "FeatureContainmentLink",
     "LabelClusters",

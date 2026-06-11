@@ -8,7 +8,7 @@ from typing import Literal, Sequence
 import numpy as np
 
 from compresso.params.srp import SRPTensor
-from .activation import build_activation_clusters
+from .activation import build_activation_clusters, build_feature_path_clusters
 from .labels import label_clusters
 from .merge import (
     filter_clusters_by_size,
@@ -90,6 +90,23 @@ class ComboSignedClustering(AbstractClustering):
             top_m=self.top_m,
             combo_size=self.combo_size,
             min_cluster_size=self.min_cluster_size,
+            show_progress=self.show_progress,
+        )
+
+
+@dataclass(frozen=True)
+class FeaturePathClustering(AbstractClustering):
+    max_depth: int | None = None
+    min_cluster_size: int | None = None
+    min_activation: float | None = None
+    show_progress: bool = False
+
+    def __call__(self, srp: SRPTensor) -> SparseClusterSet:
+        return build_feature_path_clusters(
+            srp,
+            max_depth=self.max_depth,
+            min_cluster_size=self.min_cluster_size,
+            min_activation=self.min_activation,
             show_progress=self.show_progress,
         )
 
