@@ -8,7 +8,7 @@ from typing import Literal, Sequence
 import numpy as np
 
 from compresso.params.srp import SRPTensor
-from .activation import build_activation_clusters, build_feature_path_clusters
+from .activation import build_activation_clusters, build_feature_path_clusters, build_srp_similarity_clusters
 from .labels import label_clusters
 from .merge import (
     compact_hidden_clusters,
@@ -111,6 +111,31 @@ class FeaturePathClustering(AbstractClustering):
             max_depth=self.max_depth,
             min_cluster_size=self.min_cluster_size,
             min_activation=self.min_activation,
+            show_progress=self.show_progress,
+        )
+
+
+@dataclass(frozen=True)
+class SRPSimilarityClustering(AbstractClustering):
+    threshold: float
+    top_k: int | None = 100
+    min_cluster_size: int = 2
+    normalize_rows: bool = True
+    min_local_density: float | None = None
+    centroid_top_k: int | None = None
+    batch_size: int = 1024
+    show_progress: bool = False
+
+    def __call__(self, srp: SRPTensor) -> SparseClusterSet:
+        return build_srp_similarity_clusters(
+            srp,
+            threshold=self.threshold,
+            top_k=self.top_k,
+            min_cluster_size=self.min_cluster_size,
+            normalize_rows=self.normalize_rows,
+            min_local_density=self.min_local_density,
+            centroid_top_k=self.centroid_top_k,
+            batch_size=self.batch_size,
             show_progress=self.show_progress,
         )
 

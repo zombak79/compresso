@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import combinations
+import math
 from typing import Literal
 
 import numpy as np
@@ -344,6 +345,215 @@ def build_feature_path_clusters(
                 "min_activation": min_activation,
                 "n_clusters": len(clusters),
                 "n_active_clusters": len(terminal_ids),
+            },
+        ),
+    )
+
+
+def _connected_components_from_edges(n: int, edges: set[tuple[int, int]]) -> list[list[int]]:
+    parent = list(range(n))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: int, b: int) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    for a, b in edges:
+        union(int(a), int(b))
+
+    groups: dict[int, list[int]] = defaultdict(list)
+    for idx in range(n):
+        groups[find(idx)].append(idx)
+    return list(groups.values())
+
+
+def _sparse_centroid_from_dense_rows(
+    dense_rows: torch.Tensor,
+    row_indices: list[int],
+    *,
+    cols_total: int,
+    centroid_top_k: int | None,
+    normalize: bool,
+) -> SparseVector:
+    centroid = dense_rows[torch.as_tensor(row_indices, device=dense_rows.device, dtype=torch.long)].sum(dim=0)
+    if centroid_top_k is not None:
+        k = min(int(centroid_top_k), int(cols_total))
+        if k < 1:
+            raise ValueError("centroid_top_k must be >= 1 when provided")
+        idx = torch.topk(centroid.abs(), k=k, largest=True, sorted=True).indices
+        vals = centroid.gather(0, idx)
+        keep = vals != 0
+        idx = idx[keep]
+        vals = vals[keep]
+    else:
+        idx = torch.nonzero(centroid != 0, as_tuple=False).flatten()
+        vals = centroid[idx]
+    vector = SparseVector(
+        idx.detach().cpu().numpy().astype(np.int64),
+        vals.detach().cpu().numpy().astype(np.float32),
+        cols_total,
+    )
+    return vector.normalized() if normalize else vector
+
+
+def build_srp_similarity_clusters(
+    srp: SRPTensor,
+    *,
+    threshold: float,
+    top_k: int | None = 100,
+    min_cluster_size: int = 2,
+    normalize_rows: bool = True,
+    min_local_density: float | None = None,
+    centroid_top_k: int | None = None,
+    batch_size: int = 1024,
+    entity_ids: np.ndarray | None = None,
+    normalize_centroids: bool = True,
+    show_progress: bool = False,
+) -> SparseClusterSet:
+    """Build clusters as components of a threshold graph in SRP space."""
+    if min_cluster_size < 1:
+        raise ValueError("min_cluster_size must be >= 1")
+    if top_k is not None and top_k < 1:
+        raise ValueError("top_k must be >= 1 when provided")
+    if min_local_density is not None and not 0.0 <= min_local_density <= 1.0:
+        raise ValueError("min_local_density must be in [0, 1] when provided")
+    if batch_size < 1:
+        raise ValueError("batch_size must be >= 1")
+    if centroid_top_k is not None and centroid_top_k < 1:
+        raise ValueError("centroid_top_k must be >= 1 when provided")
+
+    srp = _as_srp_2d(srp)
+    dense = srp.to_dense()
+    if normalize_rows:
+        dense = torch.nn.functional.normalize(dense, p=2.0, dim=1)
+    dense_t = dense.T.contiguous()
+    n = int(srp.rows)
+
+    edges: set[tuple[int, int]] = set()
+    row_iter = range(0, n, batch_size)
+    for start in _progress_iter(
+        row_iter,
+        enabled=show_progress,
+        total=math.ceil(n / batch_size),
+        desc="build_srp_similarity_clusters: batches",
+    ):
+        end = min(start + batch_size, n)
+        sims = dense[start:end] @ dense_t
+        row_offsets = torch.arange(end - start, device=sims.device)
+        sims[row_offsets, torch.arange(start, end, device=sims.device)] = -torch.inf
+
+        if top_k is None:
+            row_idx, col_idx = torch.nonzero(sims >= threshold, as_tuple=True)
+            for local_row, col in zip(row_idx.detach().cpu().tolist(), col_idx.detach().cpu().tolist()):
+                a = int(start + local_row)
+                b = int(col)
+                if a == b:
+                    continue
+                edges.add((a, b) if a < b else (b, a))
+        else:
+            k = min(int(top_k), max(1, n - 1))
+            vals, idx = torch.topk(sims, k=k, dim=1, largest=True, sorted=False)
+            mask = vals >= threshold
+            row_idx, pos_idx = torch.nonzero(mask, as_tuple=True)
+            selected = idx[row_idx, pos_idx]
+            for local_row, col in zip(row_idx.detach().cpu().tolist(), selected.detach().cpu().tolist()):
+                a = int(start + local_row)
+                b = int(col)
+                if a == b:
+                    continue
+                edges.add((a, b) if a < b else (b, a))
+
+    components = _connected_components_from_edges(n, edges)
+
+    if min_local_density is not None:
+        adjacency: dict[int, set[int]] = defaultdict(set)
+        for a, b in edges:
+            adjacency[a].add(b)
+            adjacency[b].add(a)
+        refined: list[list[int]] = []
+        for component in components:
+            if len(component) < min_cluster_size:
+                refined.append(component)
+                continue
+            component_set = set(component)
+            required_degree = int(math.ceil(float(min_local_density) * max(0, len(component) - 1)))
+            kept = [
+                idx
+                for idx in component
+                if len(adjacency.get(idx, set()) & component_set) >= required_degree
+            ]
+            if not kept:
+                refined.append([])
+                continue
+            kept_set = set(kept)
+            sub_edges = {(a, b) for a, b in edges if a in kept_set and b in kept_set}
+            local_index = {global_idx: local_idx for local_idx, global_idx in enumerate(kept)}
+            local_edges = {(local_index[a], local_index[b]) for a, b in sub_edges}
+            for sub_component in _connected_components_from_edges(len(kept), local_edges):
+                refined.append([kept[local_idx] for local_idx in sub_component])
+        components = refined
+
+    clusters: list[SparseCluster] = []
+    kept_components = [sorted(component) for component in components if len(component) >= min_cluster_size]
+    kept_components.sort(key=lambda rows: (rows[0], len(rows)))
+    for cluster_idx, rows in enumerate(kept_components):
+        row_set = set(rows)
+        internal_edges = [(a, b) for a, b in edges if a in row_set and b in row_set]
+        possible_edges = len(rows) * (len(rows) - 1) / 2.0
+        density = len(internal_edges) / possible_edges if possible_edges > 0 else 0.0
+        centroid = _sparse_centroid_from_dense_rows(
+            dense,
+            rows,
+            cols_total=srp.cols_total,
+            centroid_top_k=centroid_top_k,
+            normalize=normalize_centroids,
+        )
+        cluster_id = f"srp_similarity:{cluster_idx}"
+        clusters.append(
+            SparseCluster(
+                cluster_id=cluster_id,
+                centroid=centroid,
+                entity_indices=np.asarray(rows, dtype=np.int64),
+                source_cluster_ids=(cluster_id,),
+                stats={
+                    "n_internal_edges": len(internal_edges),
+                    "density": float(density),
+                    "min_local_density": min_local_density,
+                },
+                metadata={
+                    "threshold": float(threshold),
+                    "top_k": top_k,
+                    "normalize_rows": bool(normalize_rows),
+                    "centroid_top_k": centroid_top_k,
+                    "cluster_method": "srp_similarity",
+                },
+            )
+        )
+
+    return SparseClusterSet(
+        clusters=tuple(clusters),
+        n_entities=srp.rows,
+        n_features=srp.cols_total,
+        entity_ids=entity_ids,
+        assignment_mode="srp_similarity",
+        history=(
+            {
+                "phase": "build_srp_similarity_clusters",
+                "threshold": float(threshold),
+                "top_k": top_k,
+                "min_cluster_size": min_cluster_size,
+                "normalize_rows": bool(normalize_rows),
+                "min_local_density": min_local_density,
+                "centroid_top_k": centroid_top_k,
+                "n_edges": len(edges),
+                "n_components": len(components),
+                "n_clusters": len(clusters),
             },
         ),
     )
