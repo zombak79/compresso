@@ -128,6 +128,42 @@ def _tag_cosine(a: dict[int, float], b: dict[int, float]) -> float:
     return dot / (na * nb) if na > 0 and nb > 0 else 0.0
 
 
+def _centroid_similarity_matrix(
+    clusters: tuple[SparseCluster, ...],
+    *,
+    metric: Literal["cosine", "dot"] = "cosine",
+) -> np.ndarray:
+    n = len(clusters)
+    sims = np.zeros((n, n), dtype=np.float32)
+    maps: list[dict[int, float]] = []
+    norms: list[float] = []
+    for cluster in clusters:
+        cmap = {int(i): float(v) for i, v in zip(cluster.centroid.indices.tolist(), cluster.centroid.values.tolist())}
+        maps.append(cmap)
+        norms.append(sum(v * v for v in cmap.values()) ** 0.5)
+
+    for i in range(n):
+        sims[i, i] = -np.inf
+        mi = maps[i]
+        ni = norms[i]
+        for j in range(i + 1, n):
+            mj = maps[j]
+            nj = norms[j]
+            if len(mi) <= len(mj):
+                dot = sum(v * mj.get(k, 0.0) for k, v in mi.items())
+            else:
+                dot = sum(v * mi.get(k, 0.0) for k, v in mj.items())
+            if metric == "cosine":
+                sim = dot / (ni * nj) if ni > 0.0 and nj > 0.0 else 0.0
+            elif metric == "dot":
+                sim = dot
+            else:
+                raise ValueError("metric must be 'cosine' or 'dot'")
+            sims[i, j] = sim
+            sims[j, i] = sim
+    return sims
+
+
 def merge_cluster_group(
     clusters: list[SparseCluster],
     *,
@@ -911,6 +947,99 @@ def merge_clusters_by_feature_containment(
         )
         if verbose:
             print(f"[merge_clusters_by_feature_containment] merged: {before} -> {len(out.active_clusters)}")
+    return out
+
+
+def merge_clusters_by_centroid_similarity(
+    clusters: SparseClusterSet,
+    *,
+    threshold: float,
+    metric: Literal["cosine", "dot"] = "cosine",
+    top_k: int | None = None,
+    max_rounds: int = 10,
+    min_group_size: int = 2,
+    normalize_centroids: bool = True,
+    verbose: bool = False,
+    show_progress: bool = False,
+) -> SparseClusterSet:
+    """Merge active clusters whose sparse centroids are similar.
+
+    This operates on the current active frontier, creates non-destructive
+    parent merge nodes, and preserves merged clusters as children.
+
+    With ``metric="cosine"``, ``threshold`` must be in ``[-1, 1]``. With
+    ``metric="dot"``, raw centroid dot products are compared to ``threshold``.
+    If ``top_k`` is provided, a pair can link only when either cluster is among
+    the other's top-k most similar centroid neighbors.
+    """
+    if metric not in {"cosine", "dot"}:
+        raise ValueError("metric must be 'cosine' or 'dot'")
+    if metric == "cosine" and not -1.0 <= threshold <= 1.0:
+        raise ValueError("threshold must be in [-1, 1] for cosine similarity")
+    if top_k is not None and int(top_k) < 1:
+        raise ValueError("top_k must be >= 1 when provided")
+    if min_group_size < 2:
+        raise ValueError("min_group_size must be >= 2")
+
+    out = clusters
+    for round_idx in range(1, max_rounds + 1):
+        active = out.active_clusters
+        if verbose:
+            print(
+                f"[merge_clusters_by_centroid_similarity] round={round_idx}/{max_rounds} "
+                f"active_clusters={len(active)} threshold={threshold:.6f} metric={metric} top_k={top_k}"
+            )
+        sims = _centroid_similarity_matrix(active, metric=metric)
+        allowed: np.ndarray | None = None
+        if top_k is not None and len(active) > 1:
+            k = min(int(top_k), len(active) - 1)
+            allowed = np.zeros_like(sims, dtype=bool)
+            for i in range(len(active)):
+                idx = np.argpartition(-sims[i], k - 1)[:k]
+                allowed[i, idx] = True
+
+        def should_link(i: int, j: int) -> bool:
+            if sims[i, j] < threshold:
+                return False
+            if allowed is None:
+                return True
+            return bool(allowed[i, j] or allowed[j, i])
+
+        groups = _connected_components(
+            len(active),
+            should_link,
+            show_progress=show_progress,
+            desc=f"centroid_similarity round {round_idx}",
+        )
+        expanded_groups: list[list[int]] = []
+        for group in groups:
+            if len(group) >= min_group_size:
+                expanded_groups.append(group)
+            else:
+                expanded_groups.extend([[idx] for idx in group])
+
+        if all(len(g) == 1 for g in expanded_groups):
+            if verbose:
+                print(f"[merge_clusters_by_centroid_similarity] unchanged: active_clusters={len(active)}")
+            return out.append_history(
+                {
+                    "phase": "merge_clusters_by_centroid_similarity",
+                    "threshold": threshold,
+                    "metric": metric,
+                    "top_k": top_k,
+                    "min_group_size": min_group_size,
+                    "changed": False,
+                }
+            )
+        before = len(active)
+        out = merge_cluster_set(
+            out,
+            expanded_groups,
+            phase="merge_clusters_by_centroid_similarity",
+            normalize_centroids=normalize_centroids,
+        )
+        if verbose:
+            print(f"[merge_clusters_by_centroid_similarity] merged: {before} -> {len(out.active_clusters)}")
     return out
 
 

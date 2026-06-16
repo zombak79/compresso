@@ -16,6 +16,7 @@ from .merge import (
     link_clusters_by_entity_containment,
     link_clusters_by_feature_containment,
     materialize_link_merges,
+    merge_clusters_by_centroid_similarity,
     merge_clusters_by_entity_containment,
     merge_clusters_by_entity_iou,
     merge_clusters_by_feature_containment,
@@ -265,6 +266,31 @@ class MaterializeLinkMerges(AbstractClusterTransform):
             normalize_centroids=self.normalize_centroids,
             activate=self.activate,
             verbose=self.verbose,
+        )
+
+
+@dataclass(frozen=True)
+class CentroidSimilarityMerge(AbstractMerging):
+    threshold: float
+    metric: Literal["cosine", "dot"] = "cosine"
+    top_k: int | None = None
+    max_rounds: int = 10
+    min_group_size: int = 2
+    normalize_centroids: bool = True
+    verbose: bool = False
+    show_progress: bool = False
+
+    def __call__(self, clusters: SparseClusterSet) -> SparseClusterSet:
+        return merge_clusters_by_centroid_similarity(
+            clusters,
+            threshold=self.threshold,
+            metric=self.metric,
+            top_k=self.top_k,
+            max_rounds=self.max_rounds,
+            min_group_size=self.min_group_size,
+            normalize_centroids=self.normalize_centroids,
+            verbose=self.verbose,
+            show_progress=self.show_progress,
         )
 
 
