@@ -4,10 +4,13 @@ from collections import defaultdict
 from typing import Callable, Literal
 
 import numpy as np
+import torch
 
+from compresso.params.srp import SRPTensor
 from .types import ScoredTag, SparseCluster, SparseClusterSet, SparseVector
 
 ClusterScope = Literal["active", "all", "leaves", "roots"]
+CoverageScope = Literal["active", "all"]
 
 
 def _progress_iter(iterable, *, enabled: bool, total: int | None = None, desc: str = ""):
@@ -258,6 +261,94 @@ def _scoped_clusters(clusters: SparseClusterSet, scope: ClusterScope) -> tuple[S
     if scope == "roots":
         return clusters.root_clusters
     raise ValueError("scope must be one of 'active', 'all', 'leaves', or 'roots'")
+
+
+def _covered_entity_indices(clusters: SparseClusterSet, scope: CoverageScope) -> set[int]:
+    if scope == "active":
+        candidates = clusters.active_clusters
+    elif scope == "all":
+        candidates = clusters.clusters
+    else:
+        raise ValueError("coverage_scope must be one of 'active' or 'all'")
+    covered: set[int] = set()
+    for cluster in candidates:
+        covered.update(int(idx) for idx in cluster.entity_indices.tolist())
+    return covered
+
+
+def _sparse_vector_map(vector: SparseVector) -> dict[int, float]:
+    return {int(i): float(v) for i, v in zip(vector.indices.tolist(), vector.values.tolist())}
+
+
+def _sparse_dot(a: dict[int, float], b: dict[int, float]) -> float:
+    if len(a) <= len(b):
+        return sum(v * b.get(k, 0.0) for k, v in a.items())
+    return sum(v * a.get(k, 0.0) for k, v in b.items())
+
+
+def _sparse_norm(a: dict[int, float]) -> float:
+    return sum(v * v for v in a.values()) ** 0.5
+
+
+def _srp_row_map(srp: SRPTensor, row_idx: int) -> dict[int, float]:
+    cols = srp.cols[int(row_idx)].detach().cpu().tolist()
+    vals = srp.vals[int(row_idx)].detach().cpu().tolist()
+    out: dict[int, float] = {}
+    for col, val in zip(cols, vals):
+        out[int(col)] = out.get(int(col), 0.0) + float(val)
+    return out
+
+
+def _centroid_from_srp_rows(
+    srp: SRPTensor,
+    core_rows: np.ndarray,
+    assigned_rows: np.ndarray,
+    *,
+    assigned_weight: float = 1.0,
+    centroid_top_k: int | None = None,
+    normalize: bool = True,
+) -> SparseVector:
+    if assigned_weight < 0.0:
+        raise ValueError("assigned_weight must be >= 0")
+    if centroid_top_k is not None and centroid_top_k < 1:
+        raise ValueError("centroid_top_k must be >= 1 when provided")
+    rows = torch.cat(
+        [
+            torch.as_tensor(core_rows, dtype=torch.long, device=srp.vals.device),
+            torch.as_tensor(assigned_rows, dtype=torch.long, device=srp.vals.device),
+        ],
+        dim=0,
+    )
+    if rows.numel() == 0:
+        return SparseVector(np.asarray([], dtype=np.int64), np.asarray([], dtype=np.float32), srp.cols_total)
+
+    weights = torch.ones(rows.numel(), dtype=srp.vals.dtype, device=srp.vals.device)
+    if len(assigned_rows) > 0:
+        weights[-len(assigned_rows) :] = float(assigned_weight)
+    selected_cols = srp.cols.index_select(0, rows)
+    selected_vals = srp.vals.index_select(0, rows) * weights[:, None]
+    dense = torch.zeros(srp.cols_total, dtype=srp.vals.dtype, device=srp.vals.device)
+    dense.scatter_add_(0, selected_cols.reshape(-1), selected_vals.reshape(-1))
+    denom = weights.sum()
+    if float(denom.detach().cpu().item()) > 0.0:
+        dense = dense / denom
+
+    if centroid_top_k is not None:
+        k = min(int(centroid_top_k), int(srp.cols_total))
+        idx = torch.topk(dense.abs(), k=k, largest=True, sorted=True).indices
+        vals = dense.gather(0, idx)
+        keep = vals != 0
+        idx = idx[keep]
+        vals = vals[keep]
+    else:
+        idx = torch.nonzero(dense != 0, as_tuple=False).flatten()
+        vals = dense[idx]
+    vector = SparseVector(
+        idx.detach().cpu().numpy().astype(np.int64),
+        vals.detach().cpu().numpy().astype(np.float32),
+        srp.cols_total,
+    )
+    return vector.normalized() if normalize else vector
 
 
 def _normalize_label(label: str, *, case_sensitive: bool = False) -> str:
@@ -1041,6 +1132,207 @@ def merge_clusters_by_centroid_similarity(
         if verbose:
             print(f"[merge_clusters_by_centroid_similarity] merged: {before} -> {len(out.active_clusters)}")
     return out
+
+
+def assign_unclustered_to_nearest_cluster(
+    clusters: SparseClusterSet,
+    srp: SRPTensor,
+    *,
+    metric: Literal["cosine", "dot"] = "cosine",
+    min_similarity: float | None = None,
+    top_k_clusters: int = 1,
+    cluster_scope: ClusterScope = "active",
+    coverage_scope: CoverageScope = "active",
+    assigned_weight: float = 1.0,
+    centroid_top_k: int | None = None,
+    normalize_centroids: bool = True,
+    verbose: bool = False,
+) -> SparseClusterSet:
+    """Assign uncovered entities to nearest cluster centroids.
+
+    This is a coverage-expansion step, not a discovery step. It creates one
+    non-destructive expanded parent for each cluster that receives uncovered
+    entities. Original clusters are preserved as children and newly assigned
+    entity ids are stored in parent metadata.
+    """
+    if metric not in {"cosine", "dot"}:
+        raise ValueError("metric must be 'cosine' or 'dot'")
+    if top_k_clusters < 1:
+        raise ValueError("top_k_clusters must be >= 1")
+    if assigned_weight < 0.0:
+        raise ValueError("assigned_weight must be >= 0")
+    if centroid_top_k is not None and centroid_top_k < 1:
+        raise ValueError("centroid_top_k must be >= 1 when provided")
+    if srp.rows != clusters.n_entities:
+        raise ValueError(f"srp.rows={srp.rows} must match clusters.n_entities={clusters.n_entities}")
+    if srp.cols_total != clusters.n_features:
+        raise ValueError(f"srp.cols_total={srp.cols_total} must match clusters.n_features={clusters.n_features}")
+
+    candidates = _scoped_clusters(clusters, cluster_scope)
+    if not candidates:
+        return clusters.append_history(
+            {
+                "phase": "assign_unclustered_to_nearest_cluster",
+                "changed": False,
+                "reason": "no_candidate_clusters",
+                "cluster_scope": cluster_scope,
+                "coverage_scope": coverage_scope,
+            }
+        )
+
+    covered = _covered_entity_indices(clusters, coverage_scope)
+    unclustered = [idx for idx in range(clusters.n_entities) if idx not in covered]
+    if not unclustered:
+        return clusters.append_history(
+            {
+                "phase": "assign_unclustered_to_nearest_cluster",
+                "changed": False,
+                "cluster_scope": cluster_scope,
+                "coverage_scope": coverage_scope,
+                "metric": metric,
+                "min_similarity": min_similarity,
+                "top_k_clusters": top_k_clusters,
+                "n_unclustered_before": 0,
+                "n_assigned": 0,
+                "n_unassigned_after": 0,
+                "n_expanded_clusters": 0,
+            }
+        )
+
+    candidate_maps = [_sparse_vector_map(cluster.centroid) for cluster in candidates]
+    candidate_norms = [_sparse_norm(cmap) for cmap in candidate_maps]
+    assignments: dict[str, list[tuple[int, float]]] = defaultdict(list)
+
+    k = min(int(top_k_clusters), len(candidates))
+    for entity_idx in unclustered:
+        row_map = _srp_row_map(srp, entity_idx)
+        row_norm = _sparse_norm(row_map)
+        scores: list[tuple[int, float]] = []
+        for candidate_idx, (candidate_map, candidate_norm) in enumerate(zip(candidate_maps, candidate_norms)):
+            dot = _sparse_dot(row_map, candidate_map)
+            if metric == "cosine":
+                score = dot / (row_norm * candidate_norm) if row_norm > 0.0 and candidate_norm > 0.0 else 0.0
+            else:
+                score = dot
+            scores.append((candidate_idx, float(score)))
+        scores.sort(key=lambda item: item[1], reverse=True)
+        for candidate_idx, score in scores[:k]:
+            if min_similarity is not None and score < float(min_similarity):
+                continue
+            assignments[candidates[candidate_idx].cluster_id].append((entity_idx, score))
+
+    assigned_entities = {entity_idx for values in assignments.values() for entity_idx, _ in values}
+    if not assignments:
+        return clusters.append_history(
+            {
+                "phase": "assign_unclustered_to_nearest_cluster",
+                "changed": False,
+                "cluster_scope": cluster_scope,
+                "coverage_scope": coverage_scope,
+                "metric": metric,
+                "min_similarity": min_similarity,
+                "top_k_clusters": top_k_clusters,
+                "n_unclustered_before": len(unclustered),
+                "n_assigned": 0,
+                "n_unassigned_after": len(unclustered),
+                "n_expanded_clusters": 0,
+            }
+        )
+
+    by_id = clusters.cluster_by_id
+    updated_by_id = dict(by_id)
+    added: list[SparseCluster] = []
+    expanded_by_child_id: dict[str, str] = {}
+
+    working = clusters
+    for child_idx, (child_id, assigned) in enumerate(assignments.items()):
+        child = updated_by_id[child_id]
+        assigned_rows = np.asarray([entity_idx for entity_idx, _ in assigned], dtype=np.int64)
+        assigned_scores = np.asarray([score for _, score in assigned], dtype=np.float32)
+        expanded_id = _unique_merge_id(
+            working.with_clusters(tuple(working.clusters) + tuple(added)),
+            phase="assign_unclustered_to_nearest_cluster",
+            group_idx=child_idx,
+        )
+        entity_indices = np.unique(np.concatenate([child.entity_indices, assigned_rows])).astype(np.int64)
+        centroid = _centroid_from_srp_rows(
+            srp,
+            child.entity_indices,
+            assigned_rows,
+            assigned_weight=assigned_weight,
+            centroid_top_k=centroid_top_k,
+            normalize=normalize_centroids,
+        )
+        expanded = SparseCluster(
+            cluster_id=expanded_id,
+            centroid=centroid,
+            entity_indices=entity_indices,
+            source_cluster_ids=tuple(dict.fromkeys(child.source_cluster_ids or (child.cluster_id,))),
+            child_cluster_ids=(child.cluster_id,),
+            label=None,
+            description=None,
+            stats={
+                "core_entity_count": int(child.entity_count),
+                "assigned_entity_count": int(assigned_rows.size),
+                "mean_assignment_similarity": float(assigned_scores.mean()) if assigned_scores.size else 0.0,
+                "min_assignment_similarity": float(assigned_scores.min()) if assigned_scores.size else 0.0,
+                "max_assignment_similarity": float(assigned_scores.max()) if assigned_scores.size else 0.0,
+            },
+            metadata={
+                "assignment_method": "nearest_cluster",
+                "base_cluster_id": child.cluster_id,
+                "base_label": child.label,
+                "base_description": child.description,
+                "assigned_entity_indices": tuple(int(idx) for idx in assigned_rows.tolist()),
+                "assigned_similarities": tuple(float(score) for score in assigned_scores.tolist()),
+                "metric": metric,
+                "min_similarity": min_similarity,
+                "top_k_clusters": int(top_k_clusters),
+                "assigned_weight": float(assigned_weight),
+                "centroid_mode": "mean_srp_rows",
+                "centroid_top_k": centroid_top_k,
+            },
+        )
+        added.append(expanded)
+        expanded_by_child_id[child.cluster_id] = expanded.cluster_id
+        child_parents = tuple(dict.fromkeys(child.parent_cluster_ids + (expanded.cluster_id,)))
+        updated_by_id[child.cluster_id] = child.with_updates(parent_cluster_ids=child_parents)
+
+    next_active_ids: list[str] = []
+    for cluster_id in clusters.active_cluster_ids or ():
+        next_active_ids.append(expanded_by_child_id.get(cluster_id, cluster_id))
+    for child_id, expanded_id in expanded_by_child_id.items():
+        if child_id not in set(clusters.active_cluster_ids or ()) and expanded_id not in next_active_ids:
+            next_active_ids.append(expanded_id)
+    next_active_ids = list(dict.fromkeys(next_active_ids))
+
+    all_clusters = [updated_by_id[cluster.cluster_id] for cluster in clusters.clusters] + added
+    n_unassigned_after = len([idx for idx in unclustered if idx not in assigned_entities])
+    if verbose:
+        print(
+            "[assign_unclustered_to_nearest_cluster] "
+            f"unclustered={len(unclustered)} assigned={len(assigned_entities)} "
+            f"remaining={n_unassigned_after} expanded_clusters={len(added)}"
+        )
+    return clusters.with_clusters(all_clusters).with_active_cluster_ids(
+        next_active_ids,
+        history_entry={
+            "phase": "assign_unclustered_to_nearest_cluster",
+            "changed": True,
+            "cluster_scope": cluster_scope,
+            "coverage_scope": coverage_scope,
+            "metric": metric,
+            "min_similarity": min_similarity,
+            "top_k_clusters": top_k_clusters,
+            "assigned_weight": float(assigned_weight),
+            "centroid_top_k": centroid_top_k,
+            "normalize_centroids": bool(normalize_centroids),
+            "n_unclustered_before": len(unclustered),
+            "n_assigned": len(assigned_entities),
+            "n_unassigned_after": n_unassigned_after,
+            "n_expanded_clusters": len(added),
+        },
+    )
 
 
 def merge_clusters_by_tag_similarity(
