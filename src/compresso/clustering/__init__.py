@@ -5,6 +5,7 @@ from .labels import label_clusters
 from .semantic import merge_clusters_by_semantic_similarity
 from .tags import assign_cluster_tags, compute_cluster_tag_counts, tfidf_score
 from .merge import (
+    assign_unclustered_to_nearest_cluster,
     compact_hidden_clusters,
     filter_clusters_by_size,
     link_clusters_by_entity_containment,
@@ -23,6 +24,7 @@ from .pipeline import (
     AbstractClusterTransform,
     AbstractClustering,
     AbstractMerging,
+    AssignUnclusteredToNearestCluster,
     AssignTags,
     CentroidSimilarityMerge,
     ClusteringPipeline,
@@ -58,6 +60,7 @@ __all__ = [
     "build_feature_path_clusters",
     "build_srp_similarity_clusters",
     "assign_to_clusters",
+    "assign_unclustered_to_nearest_cluster",
     "graph_from_dict",
     "graph_to_dict",
     "load_cluster_graph",
@@ -83,6 +86,7 @@ __all__ = [
     "AbstractClusterTransform",
     "AbstractClustering",
     "AbstractMerging",
+    "AssignUnclusteredToNearestCluster",
     "AssignTags",
     "CentroidSimilarityMerge",
     "ClusteringPipeline",

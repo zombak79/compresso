@@ -11,6 +11,7 @@ from compresso.params.srp import SRPTensor
 from .activation import build_activation_clusters, build_feature_path_clusters, build_srp_similarity_clusters
 from .labels import label_clusters
 from .merge import (
+    assign_unclustered_to_nearest_cluster,
     compact_hidden_clusters,
     filter_clusters_by_size,
     link_clusters_by_entity_containment,
@@ -291,6 +292,35 @@ class CentroidSimilarityMerge(AbstractMerging):
             normalize_centroids=self.normalize_centroids,
             verbose=self.verbose,
             show_progress=self.show_progress,
+        )
+
+
+@dataclass(frozen=True)
+class AssignUnclusteredToNearestCluster(AbstractClusterTransform):
+    srp: SRPTensor
+    metric: Literal["cosine", "dot"] = "cosine"
+    min_similarity: float | None = None
+    top_k_clusters: int = 1
+    cluster_scope: Literal["active", "all", "leaves", "roots"] = "active"
+    coverage_scope: Literal["active", "all"] = "active"
+    assigned_weight: float = 1.0
+    centroid_top_k: int | None = None
+    normalize_centroids: bool = True
+    verbose: bool = False
+
+    def __call__(self, clusters: SparseClusterSet) -> SparseClusterSet:
+        return assign_unclustered_to_nearest_cluster(
+            clusters,
+            self.srp,
+            metric=self.metric,
+            min_similarity=self.min_similarity,
+            top_k_clusters=self.top_k_clusters,
+            cluster_scope=self.cluster_scope,
+            coverage_scope=self.coverage_scope,
+            assigned_weight=self.assigned_weight,
+            centroid_top_k=self.centroid_top_k,
+            normalize_centroids=self.normalize_centroids,
+            verbose=self.verbose,
         )
 
 
