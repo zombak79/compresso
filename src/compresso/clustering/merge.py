@@ -305,13 +305,13 @@ def _centroid_from_srp_rows(
     assigned_rows: np.ndarray,
     *,
     assigned_weight: float = 1.0,
-    centroid_top_k: int | None = None,
+    centroid_top_m: int | None = None,
     normalize: bool = True,
 ) -> SparseVector:
     if assigned_weight < 0.0:
         raise ValueError("assigned_weight must be >= 0")
-    if centroid_top_k is not None and centroid_top_k < 1:
-        raise ValueError("centroid_top_k must be >= 1 when provided")
+    if centroid_top_m is not None and centroid_top_m < 1:
+        raise ValueError("centroid_top_m must be >= 1 when provided")
     rows = torch.cat(
         [
             torch.as_tensor(core_rows, dtype=torch.long, device=srp.vals.device),
@@ -333,8 +333,8 @@ def _centroid_from_srp_rows(
     if float(denom.detach().cpu().item()) > 0.0:
         dense = dense / denom
 
-    if centroid_top_k is not None:
-        k = min(int(centroid_top_k), int(srp.cols_total))
+    if centroid_top_m is not None:
+        k = min(int(centroid_top_m), int(srp.cols_total))
         idx = torch.topk(dense.abs(), k=k, largest=True, sorted=True).indices
         vals = dense.gather(0, idx)
         keep = vals != 0
@@ -1144,6 +1144,7 @@ def assign_unclustered_to_nearest_cluster(
     cluster_scope: ClusterScope = "active",
     coverage_scope: CoverageScope = "active",
     assigned_weight: float = 1.0,
+    centroid_top_m: int | None = None,
     centroid_top_k: int | None = None,
     normalize_centroids: bool = True,
     verbose: bool = False,
@@ -1161,8 +1162,12 @@ def assign_unclustered_to_nearest_cluster(
         raise ValueError("top_k_clusters must be >= 1")
     if assigned_weight < 0.0:
         raise ValueError("assigned_weight must be >= 0")
-    if centroid_top_k is not None and centroid_top_k < 1:
-        raise ValueError("centroid_top_k must be >= 1 when provided")
+    if centroid_top_m is not None and centroid_top_k is not None and int(centroid_top_m) != int(centroid_top_k):
+        raise ValueError("centroid_top_m and deprecated centroid_top_k must match when both are provided")
+    if centroid_top_m is None:
+        centroid_top_m = centroid_top_k
+    if centroid_top_m is not None and centroid_top_m < 1:
+        raise ValueError("centroid_top_m must be >= 1 when provided")
     if srp.rows != clusters.n_entities:
         raise ValueError(f"srp.rows={srp.rows} must match clusters.n_entities={clusters.n_entities}")
     if srp.cols_total != clusters.n_features:
@@ -1260,7 +1265,7 @@ def assign_unclustered_to_nearest_cluster(
             child.entity_indices,
             assigned_rows,
             assigned_weight=assigned_weight,
-            centroid_top_k=centroid_top_k,
+            centroid_top_m=centroid_top_m if centroid_top_m is not None else max(1, int(child.centroid.indices.size)),
             normalize=normalize_centroids,
         )
         expanded = SparseCluster(
@@ -1290,7 +1295,9 @@ def assign_unclustered_to_nearest_cluster(
                 "top_k_clusters": int(top_k_clusters),
                 "assigned_weight": float(assigned_weight),
                 "centroid_mode": "mean_srp_rows",
-                "centroid_top_k": centroid_top_k,
+                "centroid_top_m": centroid_top_m,
+                "centroid_top_k": centroid_top_m,
+                "centroid_top_m_effective": int(centroid_top_m if centroid_top_m is not None else max(1, int(child.centroid.indices.size))),
             },
         )
         added.append(expanded)
@@ -1325,7 +1332,8 @@ def assign_unclustered_to_nearest_cluster(
             "min_similarity": min_similarity,
             "top_k_clusters": top_k_clusters,
             "assigned_weight": float(assigned_weight),
-            "centroid_top_k": centroid_top_k,
+            "centroid_top_m": centroid_top_m,
+            "centroid_top_k": centroid_top_m,
             "normalize_centroids": bool(normalize_centroids),
             "n_unclustered_before": len(unclustered),
             "n_assigned": len(assigned_entities),

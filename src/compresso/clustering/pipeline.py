@@ -304,6 +304,7 @@ class AssignUnclusteredToNearestCluster(AbstractClusterTransform):
     cluster_scope: Literal["active", "all", "leaves", "roots"] = "active"
     coverage_scope: Literal["active", "all"] = "active"
     assigned_weight: float = 1.0
+    centroid_top_m: int | None = None
     centroid_top_k: int | None = None
     normalize_centroids: bool = True
     verbose: bool = False
@@ -318,6 +319,7 @@ class AssignUnclusteredToNearestCluster(AbstractClusterTransform):
             cluster_scope=self.cluster_scope,
             coverage_scope=self.coverage_scope,
             assigned_weight=self.assigned_weight,
+            centroid_top_m=self.centroid_top_m,
             centroid_top_k=self.centroid_top_k,
             normalize_centroids=self.normalize_centroids,
             verbose=self.verbose,
