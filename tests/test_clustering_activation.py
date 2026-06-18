@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 
-from compresso.clustering import (
+from compresso.clustering.activation import (
     assign_to_clusters,
     build_activation_clusters,
     build_feature_path_clusters,

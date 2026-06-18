@@ -207,7 +207,7 @@ class SRPTensor:
         """Convert to a 2D PyTorch sparse CSC tensor."""
         return self.to_coo().to_sparse_csc()
 
-    def to_bsr(self, blocksize: tuple[int, int] = (1, 1)) -> torch.Tensor:
+    def to_bsr(self, blocksize: tuple[int, int]) -> torch.Tensor:
         """Convert to a 2D PyTorch sparse BSR tensor.
 
         Parameters
@@ -218,7 +218,7 @@ class SRPTensor:
         """
         return self.to_coo().to_sparse_bsr(blocksize)
 
-    def to_bsc(self, blocksize: tuple[int, int] = (1, 1)) -> torch.Tensor:
+    def to_bsc(self, blocksize: tuple[int, int]) -> torch.Tensor:
         """Convert to a 2D PyTorch sparse BSC tensor.
 
         Parameters

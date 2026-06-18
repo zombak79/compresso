@@ -7,37 +7,19 @@ import torch
 from scipy.sparse import csr_matrix
 
 from compresso.clustering import (
-    assign_cluster_tags,
-    build_activation_clusters,
-    compact_hidden_clusters,
-    cluster_srp,
-    assign_unclustered_to_nearest_cluster,
     AssignUnclusteredToNearestCluster,
-    CentroidSimilarityMerge,
     AssignTags,
+    CentroidSimilarityMerge,
     ClusteringPipeline,
     ComboSignedClustering,
     CompactHiddenClusters,
     EntityContainmentMerge,
     EntityContainmentLink,
     FeaturePathClustering,
-    filter_clusters_by_size,
-    label_clusters,
     LabelClusters,
     LabelDuplicateMerge,
-    link_clusters_by_entity_containment,
-    materialize_link_merges,
     MaterializeLinkMerges,
-    merge_clusters_by_centroid_similarity,
-    merge_clusters_by_duplicate_label,
-    merge_clusters_by_entity_containment,
-    merge_clusters_by_entity_iou,
-    merge_clusters_by_feature_containment,
-    merge_clusters_by_semantic_similarity,
-    merge_clusters_by_tag_similarity,
-    prune_redundant_active_clusters,
     PruneRedundantRoots,
-    run_clustering_pipeline,
     SemanticSimilarityMerge,
     SizeFilter,
     SRPSimilarityClustering,
@@ -45,7 +27,27 @@ from compresso.clustering import (
     SparseCluster,
     SparseClusterSet,
     SparseVector,
+    cluster_srp,
+    run_clustering_pipeline,
 )
+from compresso.clustering.activation import build_activation_clusters
+from compresso.clustering.labels import label_clusters
+from compresso.clustering.merge import (
+    assign_unclustered_to_nearest_cluster,
+    compact_hidden_clusters,
+    filter_clusters_by_size,
+    link_clusters_by_entity_containment,
+    materialize_link_merges,
+    merge_clusters_by_centroid_similarity,
+    merge_clusters_by_duplicate_label,
+    merge_clusters_by_entity_containment,
+    merge_clusters_by_entity_iou,
+    merge_clusters_by_feature_containment,
+    merge_clusters_by_tag_similarity,
+    prune_redundant_active_clusters,
+)
+from compresso.clustering.semantic import merge_clusters_by_semantic_similarity
+from compresso.clustering.tags import assign_cluster_tags
 from compresso.params.srp import SRPTensor
 
 

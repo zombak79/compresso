@@ -24,8 +24,8 @@ def test_srptensor_torch_sparse_conversions_match_dense():
     coo = srp.to_coo()
     csr = srp.to_csr()
     csc = srp.to_csc()
-    bsr = srp.to_bsr()
-    bsc = srp.to_bsc()
+    bsr = srp.to_bsr((1, 1))
+    bsc = srp.to_bsc((1, 1))
 
     assert coo.layout == torch.sparse_coo
     assert csr.layout == torch.sparse_csr
