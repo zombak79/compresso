@@ -334,10 +334,13 @@ class TopKSAETrainer:
             record = {key: value / max(1, n_batches) for key, value in sums.items()}
             record["epoch"] = float(epoch)
             self.history.append(record)
-            if hasattr(epoch_iter, "set_description"):
-                epoch_iter.set_description(
-                    f"LOSS: cosine {record['cosine_loss']:.4f}, "
-                    f"mse {record['reconstruction_mse']:.4E}, PROGRESS"
+            if hasattr(epoch_iter, "set_postfix"):
+                epoch_iter.set_postfix(
+                    {
+                        "loss": f"{record['loss']:.4f}",
+                        "cosine": f"{record['cosine_loss']:.4f}",
+                        "mse": f"{record['reconstruction_mse']:.4E}",
+                    }
                 )
         return self
 
