@@ -11,6 +11,7 @@ from .layers.gated import GatedMaskedParam, GatedMaskedAttentionParam, GatedMLP
 from .functional.sparsify import topk_ste
 from .nn.sparsify import TopKSparsify
 from .nn.sae import TopKSAE
+from .trainers import L1Normalize, L2Normalize, TopKSAEConfig, TopKSAETrainer
 
 from .utils.ops import srpmm
 from .utils.controllers import SparsityController
@@ -36,6 +37,10 @@ __all__ = [
     "topk_ste",
     "TopKSparsify",
     "TopKSAE",
+    "L1Normalize",
+    "L2Normalize",
+    "TopKSAEConfig",
+    "TopKSAETrainer",
     "SparsityController",
     "srpmm",
     "exponential_decay",
