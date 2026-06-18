@@ -3,7 +3,7 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "compresso"
+name = "compresso-pytorch"
 version = "0.1.0"
 description = "Compresso: structured compression in PyTorch"
 requires-python = ">=3.10"
@@ -20,9 +20,6 @@ dependencies = [
 test = [
     "pytest>=8.0",
     "numpy>=1.26",
-]
-semantic = [
-    "sentence-transformers>=3.0",
 ]
 
 [tool.setuptools]
