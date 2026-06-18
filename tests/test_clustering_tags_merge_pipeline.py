@@ -11,6 +11,9 @@ from compresso.clustering import (
     build_activation_clusters,
     compact_hidden_clusters,
     cluster_srp,
+    assign_unclustered_to_nearest_cluster,
+    AssignUnclusteredToNearestCluster,
+    CentroidSimilarityMerge,
     AssignTags,
     ClusteringPipeline,
     ComboSignedClustering,
@@ -25,6 +28,7 @@ from compresso.clustering import (
     link_clusters_by_entity_containment,
     materialize_link_merges,
     MaterializeLinkMerges,
+    merge_clusters_by_centroid_similarity,
     merge_clusters_by_duplicate_label,
     merge_clusters_by_entity_containment,
     merge_clusters_by_entity_iou,
@@ -156,6 +160,201 @@ def test_merge_clusters_by_feature_containment_uses_signed_feature_support():
     merged_cluster = next(c for c in merged.active_clusters if set(c.source_cluster_ids) == {"broad", "specific"})
     assert merged_cluster.entity_indices.tolist() == [0, 1, 2, 3, 4]
     assert any(c.cluster_id == "opposite" for c in merged.active_clusters)
+
+
+def test_merge_clusters_by_centroid_similarity_merges_similar_active_centroids():
+    clusters = SparseClusterSet(
+        clusters=(
+            _cluster("a", [0, 1], [0, 1], [1.0, 0.0], n_features=4),
+            _cluster("b", [2, 3], [0, 1], [0.95, 0.05], n_features=4),
+            _cluster("c", [4, 5], [2], [1.0], n_features=4),
+        ),
+        n_entities=6,
+        n_features=4,
+    )
+
+    merged = merge_clusters_by_centroid_similarity(clusters, threshold=0.99)
+
+    assert len(merged.active_clusters) == 2
+    assert len(merged.clusters) == 4
+    merged_cluster = next(c for c in merged.active_clusters if set(c.source_cluster_ids) == {"a", "b"})
+    assert merged_cluster.entity_indices.tolist() == [0, 1, 2, 3]
+    assert merged_cluster.child_cluster_ids == ("a", "b")
+    assert merged.parents("a")[0].cluster_id == merged_cluster.cluster_id
+    assert any(c.cluster_id == "c" for c in merged.active_clusters)
+
+
+def test_merge_clusters_by_centroid_similarity_top_k_limits_edges():
+    clusters = SparseClusterSet(
+        clusters=(
+            _cluster("a", [0], [0, 1], [1.0, 0.0], n_features=4),
+            _cluster("b", [1], [0, 1], [0.99, 0.01], n_features=4),
+            _cluster("c", [2], [0, 1], [0.8, 0.6], n_features=4),
+            _cluster("d", [3], [0, 1], [0.79, 0.61], n_features=4),
+        ),
+        n_entities=4,
+        n_features=4,
+    )
+
+    merged = merge_clusters_by_centroid_similarity(clusters, threshold=0.75, top_k=1, max_rounds=1)
+
+    assert len(merged.active_clusters) == 2
+    assert any(set(c.source_cluster_ids) == {"a", "b"} for c in merged.active_clusters)
+    assert any(set(c.source_cluster_ids) == {"c", "d"} for c in merged.active_clusters)
+
+
+def test_centroid_similarity_merge_pipeline_wrapper():
+    clusters = SparseClusterSet(
+        clusters=(
+            _cluster("a", [0], [0], [1.0], n_features=4),
+            _cluster("b", [1], [0], [1.0], n_features=4),
+            _cluster("c", [2], [3], [1.0], n_features=4),
+        ),
+        n_entities=3,
+        n_features=4,
+    )
+
+    merged = CentroidSimilarityMerge(threshold=1.0)(clusters)
+
+    assert len(merged.active_clusters) == 2
+    assert any(set(c.source_cluster_ids) == {"a", "b"} for c in merged.active_clusters)
+
+
+def test_assign_unclustered_to_nearest_cluster_expands_active_cluster():
+    srp = _srp(
+        [[0], [0], [1], [0]],
+        [[1.0], [1.0], [1.0], [0.5]],
+        n_features=2,
+    )
+    clusters = SparseClusterSet(
+        clusters=(
+            _cluster("a", [0, 1], [0], [1.0], n_features=2),
+            _cluster("b", [2], [1], [1.0], n_features=2),
+        ),
+        n_entities=4,
+        n_features=2,
+    )
+
+    expanded = assign_unclustered_to_nearest_cluster(clusters, srp)
+
+    assert len(expanded.active_clusters) == 2
+    parent = next(c for c in expanded.active_clusters if c.child_cluster_ids == ("a",))
+    assert parent.entity_indices.tolist() == [0, 1, 3]
+    assert parent.label is None
+    assert parent.metadata["base_cluster_id"] == "a"
+    assert parent.metadata["assigned_entity_indices"] == (3,)
+    assert parent.stats["core_entity_count"] == 2
+    assert parent.stats["assigned_entity_count"] == 1
+    assert expanded.parents("a")[0].cluster_id == parent.cluster_id
+    assert any(c.cluster_id == "b" for c in expanded.active_clusters)
+    assert expanded.history[-1]["n_unclustered_before"] == 1
+    assert expanded.history[-1]["n_assigned"] == 1
+    assert expanded.history[-1]["n_unassigned_after"] == 0
+
+
+def test_assign_unclustered_to_nearest_cluster_uses_centroid_top_m():
+    srp = _srp(
+        [[0, 1], [0, 2], [1, 2]],
+        [[1.0, 0.5], [1.0, 0.4], [1.0, 0.9]],
+        n_features=3,
+    )
+    clusters = SparseClusterSet(
+        clusters=(_cluster("a", [0, 1], [0], [1.0], n_features=3),),
+        n_entities=3,
+        n_features=3,
+    )
+
+    expanded = assign_unclustered_to_nearest_cluster(clusters, srp, centroid_top_m=2)
+
+    parent = expanded.active_clusters[0]
+    assert parent.child_cluster_ids == ("a",)
+    assert len(parent.centroid.indices) == 2
+    assert parent.metadata["centroid_top_m"] == 2
+    assert parent.metadata["centroid_top_m_effective"] == 2
+
+
+def test_assign_unclustered_to_nearest_cluster_defaults_to_base_centroid_width():
+    srp = _srp(
+        [[0, 1], [0, 2], [1, 2]],
+        [[1.0, 0.5], [1.0, 0.4], [1.0, 0.9]],
+        n_features=3,
+    )
+    clusters = SparseClusterSet(
+        clusters=(_cluster("a", [0, 1], [0], [1.0], n_features=3),),
+        n_entities=3,
+        n_features=3,
+    )
+
+    expanded = assign_unclustered_to_nearest_cluster(clusters, srp)
+
+    parent = expanded.active_clusters[0]
+    assert len(parent.centroid.indices) == 1
+    assert parent.metadata["centroid_top_m"] is None
+    assert parent.metadata["centroid_top_m_effective"] == 1
+
+
+def test_assign_unclustered_to_nearest_cluster_all_coverage_ignores_inactive_covered_entities():
+    srp = _srp(
+        [[0], [0], [1], [0]],
+        [[1.0], [1.0], [1.0], [1.0]],
+        n_features=2,
+    )
+    clusters = SparseClusterSet(
+        clusters=(
+            _cluster("a", [0, 1], [0], [1.0], n_features=2),
+            _cluster("inactive_cover", [2], [1], [1.0], n_features=2),
+        ),
+        n_entities=4,
+        n_features=2,
+        active_cluster_ids=("a",),
+    )
+
+    expanded = assign_unclustered_to_nearest_cluster(clusters, srp, coverage_scope="all")
+
+    parent = expanded.active_clusters[0]
+    assert parent.child_cluster_ids == ("a",)
+    assert parent.metadata["assigned_entity_indices"] == (3,)
+    assert expanded.history[-1]["n_unclustered_before"] == 1
+
+
+def test_assign_unclustered_to_nearest_cluster_min_similarity_can_leave_unassigned():
+    srp = _srp(
+        [[0], [1]],
+        [[1.0], [1.0]],
+        n_features=2,
+    )
+    clusters = SparseClusterSet(
+        clusters=(_cluster("a", [0], [0], [1.0], n_features=2),),
+        n_entities=2,
+        n_features=2,
+    )
+
+    unchanged = assign_unclustered_to_nearest_cluster(clusters, srp, min_similarity=0.5)
+
+    assert len(unchanged.clusters) == 1
+    assert unchanged.history[-1]["changed"] is False
+    assert unchanged.history[-1]["n_unclustered_before"] == 1
+    assert unchanged.history[-1]["n_assigned"] == 0
+    assert unchanged.history[-1]["n_unassigned_after"] == 1
+
+
+def test_assign_unclustered_to_nearest_cluster_pipeline_wrapper():
+    srp = _srp(
+        [[0], [0], [0]],
+        [[1.0], [1.0], [1.0]],
+        n_features=2,
+    )
+    clusters = SparseClusterSet(
+        clusters=(_cluster("a", [0, 1], [0], [1.0], n_features=2),),
+        n_entities=3,
+        n_features=2,
+    )
+
+    expanded = AssignUnclusteredToNearestCluster(srp)(clusters)
+
+    assert len(expanded.active_clusters) == 1
+    assert expanded.active_clusters[0].entity_indices.tolist() == [0, 1, 2]
+    assert expanded.active_clusters[0].child_cluster_ids == ("a",)
 
 
 def test_entity_containment_link_allows_multiple_parents_without_consuming_child():

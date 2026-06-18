@@ -171,6 +171,9 @@ class TopKSAEConfig:
         Number of training epochs.
     lr, weight_decay:
         AdamW optimizer parameters.
+    decay:
+        If ``True``, use cosine learning-rate decay from ``lr`` to zero across
+        the configured training epochs.
     compile:
         If ``True``, call ``torch.compile`` on the SAE when available.
     device:
@@ -198,6 +201,7 @@ class TopKSAEConfig:
     epochs: int = 10
     lr: float = 1e-3
     weight_decay: float = 0.0
+    decay: bool = False
     compile: bool = False
     device: str | torch.device = "cpu"
     show_progress: bool = True
@@ -294,6 +298,17 @@ class TopKSAETrainer:
             return iterable
         return tqdm(iterable, total=total)
 
+    def _set_lr(self, lr: float) -> None:
+        if self.optimizer is None:
+            raise RuntimeError("trainer must be built before setting learning rate")
+        for group in self.optimizer.param_groups:
+            group["lr"] = float(lr)
+
+    def _current_lr(self) -> float:
+        if self.optimizer is None:
+            raise RuntimeError("trainer must be built before reading learning rate")
+        return float(self.optimizer.param_groups[0]["lr"])
+
     def train_step(self, batch: torch.Tensor) -> dict[str, torch.Tensor]:
         """Run one optimization step and return detached training stats."""
         if self.sae is None or self.optimizer is None:
@@ -320,7 +335,16 @@ class TopKSAETrainer:
         """Train the SAE on dense embeddings and return ``self``."""
         dataset = self._dataset(embeddings, shuffle=bool(self.cfg.shuffle))
         self.build(dataset.dim)
-        epoch_iter = self._progress(range(1, int(self.cfg.epochs) + 1), total=int(self.cfg.epochs))
+        epochs = int(self.cfg.epochs)
+        if epochs < 1:
+            raise ValueError("epochs must be >= 1")
+        self._set_lr(float(self.cfg.lr))
+        scheduler = (
+            torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=epochs, eta_min=0.0)
+            if self.cfg.decay
+            else None
+        )
+        epoch_iter = self._progress(range(1, epochs + 1), total=epochs)
         for epoch in epoch_iter:
             dataset.on_epoch_begin()
             sums: dict[str, float] = {}
@@ -333,6 +357,7 @@ class TopKSAETrainer:
             dataset.on_epoch_end()
             record = {key: value / max(1, n_batches) for key, value in sums.items()}
             record["epoch"] = float(epoch)
+            record["lr"] = self._current_lr()
             self.history.append(record)
             if hasattr(epoch_iter, "set_postfix"):
                 epoch_iter.set_postfix(
@@ -340,8 +365,11 @@ class TopKSAETrainer:
                         "loss": f"{record['loss']:.4f}",
                         "cosine": f"{record['cosine_loss']:.4f}",
                         "mse": f"{record['reconstruction_mse']:.4E}",
+                        "lr": f"{record['lr']:.2E}",
                     }
                 )
+            if scheduler is not None:
+                scheduler.step()
         return self
 
     @torch.no_grad()
