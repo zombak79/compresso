@@ -62,6 +62,14 @@ class SRPTensor:
         return self.vals.dtype
 
     @property
+    def requires_grad(self) -> bool:
+        return bool(self.vals.requires_grad)
+
+    @property
+    def is_cuda(self) -> bool:
+        return bool(self.vals.is_cuda)
+
+    @property
     def rows(self) -> int:
         return self.shape[0]
 
@@ -73,6 +81,95 @@ class SRPTensor:
     def k(self) -> int:
         return int(self.cols.size(1))
 
+    @property
+    def nnz(self) -> int:
+        return int(self.cols.numel())
+
+    @property
+    def ndim(self) -> int:
+        return self.dim()
+
+    def __repr__(self) -> str:
+        prefix = f", prefix_shape={self.prefix_shape}" if self.prefix_shape is not None else ""
+        return (
+            "SRPTensor("
+            f"shape={self.shape}, "
+            f"k={self.k}, "
+            f"vals=Tensor(shape={tuple(self.vals.shape)}, dtype={self.vals.dtype}, device={self.vals.device}), "
+            f"cols=Tensor(shape={tuple(self.cols.shape)}, dtype={self.cols.dtype}, device={self.cols.device})"
+            f"{prefix}"
+            ")"
+        )
+
+    def dim(self) -> int:
+        return (len(self.prefix_shape) + 1) if self.prefix_shape is not None else 2
+
+    def size(self, dim: Optional[int] = None):
+        logical_shape = (*self.prefix_shape, self.cols_total) if self.prefix_shape is not None else self.shape
+        if dim is None:
+            return torch.Size(logical_shape)
+        return torch.Size(logical_shape)[dim]
+
+    def numel(self) -> int:
+        out = 1
+        for size in self.size():
+            out *= int(size)
+        return int(out)
+
+    def is_floating_point(self) -> bool:
+        return bool(torch.is_floating_point(self.vals))
+
+    def to(self, *args, **kwargs) -> "SRPTensor":
+        vals = self.vals.to(*args, **kwargs)
+        device = vals.device
+        cols = self.cols.to(device=device)
+        return SRPTensor(
+            cols=cols,
+            vals=vals,
+            shape=self.shape,
+            prefix_shape=self.prefix_shape,
+            validate=False,
+        )
+
+    def cpu(self) -> "SRPTensor":
+        return self.to("cpu")
+
+    def cuda(self, device: Optional[int | str | torch.device] = None) -> "SRPTensor":
+        if device is None:
+            return self.to("cuda")
+        return self.to(torch.device("cuda", device) if isinstance(device, int) else device)
+
+    def detach(self) -> "SRPTensor":
+        return SRPTensor(
+            cols=self.cols.detach(),
+            vals=self.vals.detach(),
+            shape=self.shape,
+            prefix_shape=self.prefix_shape,
+            validate=False,
+        )
+
+    def clone(self) -> "SRPTensor":
+        return SRPTensor(
+            cols=self.cols.clone(),
+            vals=self.vals.clone(),
+            shape=self.shape,
+            prefix_shape=self.prefix_shape,
+            validate=False,
+        )
+
+    def contiguous(self) -> "SRPTensor":
+        return SRPTensor(
+            cols=self.cols.contiguous(),
+            vals=self.vals.contiguous(),
+            shape=self.shape,
+            prefix_shape=self.prefix_shape,
+            validate=False,
+        )
+
+    def requires_grad_(self, requires_grad: bool = True) -> "SRPTensor":
+        self.vals.requires_grad_(requires_grad)
+        return self
+
     def to_dense(self) -> torch.Tensor:
         """Densify to (rows, cols_total) or (*prefix, cols_total) if prefix_shape is set."""
         rows, cols_total = self.shape
@@ -82,6 +179,102 @@ class SRPTensor:
         if self.prefix_shape is not None:
             out = out.view(*self.prefix_shape, cols_total)
         return out
+
+    def to_coo(self) -> torch.Tensor:
+        """Convert to a coalesced 2D PyTorch sparse COO tensor.
+
+        The returned tensor has logical shape ``(rows, cols_total)``. Duplicate
+        SRP columns in a row are summed by COO coalescing, matching
+        :meth:`to_dense` scatter-add semantics.
+        """
+        row_idx = torch.arange(self.rows, device=self.cols.device, dtype=torch.long).repeat_interleave(self.k)
+        col_idx = self.cols.reshape(-1)
+        indices = torch.stack((row_idx, col_idx), dim=0)
+        return torch.sparse_coo_tensor(
+            indices,
+            self.vals.reshape(-1),
+            size=self.shape,
+            device=self.device,
+            dtype=self.dtype,
+            check_invariants=False,
+        ).coalesce()
+
+    def to_csr(self) -> torch.Tensor:
+        """Convert to a 2D PyTorch sparse CSR tensor."""
+        return self.to_coo().to_sparse_csr()
+
+    def to_csc(self) -> torch.Tensor:
+        """Convert to a 2D PyTorch sparse CSC tensor."""
+        return self.to_coo().to_sparse_csc()
+
+    def to_bsr(self, blocksize: tuple[int, int] = (1, 1)) -> torch.Tensor:
+        """Convert to a 2D PyTorch sparse BSR tensor.
+
+        Parameters
+        ----------
+        blocksize:
+            Sparse block size ``(row_block, col_block)``. Both dimensions must
+            divide the logical dense shape.
+        """
+        return self.to_coo().to_sparse_bsr(blocksize)
+
+    def to_bsc(self, blocksize: tuple[int, int] = (1, 1)) -> torch.Tensor:
+        """Convert to a 2D PyTorch sparse BSC tensor.
+
+        Parameters
+        ----------
+        blocksize:
+            Sparse block size ``(row_block, col_block)``. Both dimensions must
+            divide the logical dense shape.
+        """
+        return self.to_coo().to_sparse_bsc(blocksize)
+
+    def to_scipy_coo(self):
+        """Convert to a SciPy ``coo_matrix`` on CPU.
+
+        This conversion detaches tensors and therefore does not preserve
+        autograd history.
+        """
+        from scipy import sparse
+
+        row_idx = torch.arange(self.rows, device=self.cols.device, dtype=torch.long).repeat_interleave(self.k)
+        return sparse.coo_matrix(
+            (
+                self.vals.detach().cpu().numpy().reshape(-1),
+                (row_idx.detach().cpu().numpy(), self.cols.detach().cpu().numpy().reshape(-1)),
+            ),
+            shape=self.shape,
+        )
+
+    def to_scipy_csr(self):
+        """Convert to a SciPy ``csr_matrix`` on CPU."""
+        return self.to_scipy_coo().tocsr()
+
+    def to_scipy_csc(self):
+        """Convert to a SciPy ``csc_matrix`` on CPU."""
+        return self.to_scipy_coo().tocsc()
+
+    def to_numpy_dict(self) -> dict[str, Any]:
+        """Return a structural NumPy representation.
+
+        The returned dictionary contains ``cols``, ``vals``, ``shape``, and
+        ``prefix_shape``. It is intentionally not dense; use
+        ``srp.to_dense().cpu().numpy()`` when a dense NumPy array is desired.
+        """
+        return {
+            "cols": self.cols.detach().cpu().numpy(),
+            "vals": self.vals.detach().cpu().numpy(),
+            "shape": self.shape,
+            "prefix_shape": self.prefix_shape,
+        }
+
+    def numpy(self) -> dict[str, Any]:
+        """Alias for :meth:`to_numpy_dict`.
+
+        ``SRPTensor`` is structurally represented by both ``cols`` and ``vals``,
+        so this method returns structural arrays rather than a dense matrix.
+        """
+        return self.to_numpy_dict()
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize SRPTensor to a torch-saveable payload."""
