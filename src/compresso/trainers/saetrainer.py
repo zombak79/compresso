@@ -280,6 +280,20 @@ class TopKSAETrainer:
             self.sae.to(self.device)
         return self
 
+    def _model_dtype(self) -> torch.dtype:
+        if self.sae is not None:
+            for tensor in (*self.sae.parameters(), *self.sae.buffers()):
+                if torch.is_floating_point(tensor):
+                    return tensor.dtype
+        return torch.get_default_dtype()
+
+    @staticmethod
+    def _input_dim(embeddings: np.ndarray | torch.Tensor) -> int:
+        tensor = torch.as_tensor(embeddings)
+        if tensor.ndim != 2:
+            raise ValueError(f"embeddings must be 2D, got shape {tuple(tensor.shape)}")
+        return int(tensor.shape[1])
+
     def _dataset(self, embeddings: np.ndarray | torch.Tensor, *, shuffle: bool) -> EmbeddingsDataset:
         return EmbeddingsDataset(
             embeddings,
@@ -287,6 +301,7 @@ class TopKSAETrainer:
             shuffle=shuffle,
             seed=int(self.cfg.seed),
             device=self.device,
+            dtype=self._model_dtype(),
         )
 
     def _progress(self, iterable, *, total: int | None = None):
@@ -333,8 +348,8 @@ class TopKSAETrainer:
 
     def fit(self, embeddings: np.ndarray | torch.Tensor) -> "TopKSAETrainer":
         """Train the SAE on dense embeddings and return ``self``."""
+        self.build(self._input_dim(embeddings))
         dataset = self._dataset(embeddings, shuffle=bool(self.cfg.shuffle))
-        self.build(dataset.dim)
         epochs = int(self.cfg.epochs)
         if epochs < 1:
             raise ValueError("epochs must be >= 1")
