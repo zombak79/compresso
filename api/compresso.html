@@ -1,0 +1,1168 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Core API &mdash; Compresso 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Clustering API" href="clustering.html" />
+    <link rel="prev" title="API Reference" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-from-github">Install from GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#basic-workflow">Basic Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#clustering-workflow">Clustering Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#sparse-autoencoder">Sparse Autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#saving-sparse-representations">Saving Sparse Representations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#clustering-sparse-codes">Clustering Sparse Codes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Core API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/compresso.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="core-api">
+<h1>Core API<a class="headerlink" href="#core-api" title="Link to this heading"></a></h1>
+<section id="sparsification">
+<h2>Sparsification<a class="headerlink" href="#sparsification" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.topk_ste">
+<span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">topk_ste</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ste_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/functional/sparsify.html#topk_ste"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.topk_ste" title="Link to this definition"></a></dt>
+<dd><p>Hard top-k forward with alpha-scaled STE on non-selected entries.</p>
+<p>Forward keeps exactly <code class="docutils literal notranslate"><span class="pre">k</span></code> signed values per slice (others are zero).
+Backward uses gradient scale <code class="docutils literal notranslate"><span class="pre">1.0</span></code> on selected top-k entries and
+<code class="docutils literal notranslate"><span class="pre">ste_alpha</span></code> on all non-selected entries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>x</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>k</strong> (<em>int</em>)</p></li>
+<li><p><strong>dim</strong> (<em>int</em>)</p></li>
+<li><p><strong>score_mode</strong> (<em>str</em>)</p></li>
+<li><p><strong>ste_alpha</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.TopKSparsify">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">TopKSparsify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ste_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sparsify.html#TopKSparsify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSparsify" title="Link to this definition"></a></dt>
+<dd><p>Activation layer that applies hard top-k sparsification with STE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of entries to keep along <em>dim</em>.</p></li>
+<li><p><strong>dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension along which to select (default <code class="docutils literal notranslate"><span class="pre">-1</span></code>).</p></li>
+<li><p><strong>score_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Scoring mode for top-k ranking (<code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">raw</span></code>, <code class="docutils literal notranslate"><span class="pre">relu</span></code>).</p></li>
+<li><p><strong>ste_alpha</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Backward gradient scale for non-selected positions.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSparsify.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sparsify.html#TopKSparsify.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSparsify.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>x</strong> (<em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSparsify.set_k">
+<span class="sig-name descname"><span class="pre">set_k</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sparsify.html#TopKSparsify.set_k"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSparsify.set_k" title="Link to this definition"></a></dt>
+<dd><p>Change <em>k</em> at runtime (e.g. for scheduling).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>k</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSparsify.extra_repr">
+<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sparsify.html#TopKSparsify.extra_repr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSparsify.extra_repr" title="Link to this definition"></a></dt>
+<dd><p>Return the extra representation of the module.</p>
+<p>To print customized extra information, you should re-implement
+this method in your own modules. Both single-line and multi-line
+strings are acceptable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="sparse-representations">
+<h2>Sparse Representations<a class="headerlink" href="#sparse-representations" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.SRPTensor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">SRPTensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor" title="Link to this definition"></a></dt>
+<dd><p>Minimal SRP tensor container.</p>
+<p>Stores a row-packed sparse matrix with fixed <code class="docutils literal notranslate"><span class="pre">k</span></code> nonzeros per row.
+The representation uses <code class="docutils literal notranslate"><span class="pre">cols</span></code> and <code class="docutils literal notranslate"><span class="pre">vals</span></code> tensors of shape
+<code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">k)</span></code> with logical dense shape <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">cols_total)</span></code>.</p>
+<p>Optionally carries <code class="docutils literal notranslate"><span class="pre">prefix_shape</span></code> so callers can restore
+<code class="docutils literal notranslate"><span class="pre">(*prefix,</span> <span class="pre">cols_total)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cols</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>vals</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>prefix_shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_dense">
+<span class="sig-name descname"><span class="pre">to_dense</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_dense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_dense" title="Link to this definition"></a></dt>
+<dd><p>Densify to <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">cols_total)</span></code> or <code class="docutils literal notranslate"><span class="pre">(*prefix,</span> <span class="pre">cols_total)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_coo">
+<span class="sig-name descname"><span class="pre">to_coo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_coo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_coo" title="Link to this definition"></a></dt>
+<dd><p>Convert to a coalesced 2D PyTorch sparse COO tensor.</p>
+<p>The returned tensor has logical shape <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">cols_total)</span></code>. Duplicate
+SRP columns in a row are summed by COO coalescing, matching
+<a class="reference internal" href="#compresso.SRPTensor.to_dense" title="compresso.SRPTensor.to_dense"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dense()</span></code></a> scatter-add semantics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_csr">
+<span class="sig-name descname"><span class="pre">to_csr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_csr" title="Link to this definition"></a></dt>
+<dd><p>Convert to a 2D PyTorch sparse CSR tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_csc">
+<span class="sig-name descname"><span class="pre">to_csc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_csc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_csc" title="Link to this definition"></a></dt>
+<dd><p>Convert to a 2D PyTorch sparse CSC tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_bsr">
+<span class="sig-name descname"><span class="pre">to_bsr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocksize</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_bsr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_bsr" title="Link to this definition"></a></dt>
+<dd><p>Convert to a 2D PyTorch sparse BSR tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>blocksize</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Sparse block size <code class="docutils literal notranslate"><span class="pre">(row_block,</span> <span class="pre">col_block)</span></code>. Both dimensions must
+divide the logical dense shape.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_bsc">
+<span class="sig-name descname"><span class="pre">to_bsc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocksize</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_bsc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_bsc" title="Link to this definition"></a></dt>
+<dd><p>Convert to a 2D PyTorch sparse BSC tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>blocksize</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Sparse block size <code class="docutils literal notranslate"><span class="pre">(row_block,</span> <span class="pre">col_block)</span></code>. Both dimensions must
+divide the logical dense shape.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_scipy_coo">
+<span class="sig-name descname"><span class="pre">to_scipy_coo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_scipy_coo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_scipy_coo" title="Link to this definition"></a></dt>
+<dd><p>Convert to a SciPy <code class="docutils literal notranslate"><span class="pre">coo_matrix</span></code> on CPU.</p>
+<p>This conversion detaches tensors and therefore does not preserve
+autograd history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_scipy_csr">
+<span class="sig-name descname"><span class="pre">to_scipy_csr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_scipy_csr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_scipy_csr" title="Link to this definition"></a></dt>
+<dd><p>Convert to a SciPy <code class="docutils literal notranslate"><span class="pre">csr_matrix</span></code> on CPU.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_scipy_csc">
+<span class="sig-name descname"><span class="pre">to_scipy_csc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_scipy_csc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_scipy_csc" title="Link to this definition"></a></dt>
+<dd><p>Convert to a SciPy <code class="docutils literal notranslate"><span class="pre">csc_matrix</span></code> on CPU.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_numpy_dict">
+<span class="sig-name descname"><span class="pre">to_numpy_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_numpy_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_numpy_dict" title="Link to this definition"></a></dt>
+<dd><p>Return a structural NumPy representation.</p>
+<p>The returned dictionary contains <code class="docutils literal notranslate"><span class="pre">cols</span></code>, <code class="docutils literal notranslate"><span class="pre">vals</span></code>, <code class="docutils literal notranslate"><span class="pre">shape</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">prefix_shape</span></code>. It is intentionally not dense; use
+<code class="docutils literal notranslate"><span class="pre">srp.to_dense().cpu().numpy()</span></code> when a dense NumPy array is desired.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.numpy">
+<span class="sig-name descname"><span class="pre">numpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.numpy" title="Link to this definition"></a></dt>
+<dd><p>Alias for <a class="reference internal" href="#compresso.SRPTensor.to_numpy_dict" title="compresso.SRPTensor.to_numpy_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_numpy_dict()</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code> is structurally represented by both <code class="docutils literal notranslate"><span class="pre">cols</span></code> and <code class="docutils literal notranslate"><span class="pre">vals</span></code>,
+so this method returns structural arrays rather than a dense matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.to_dict" title="Link to this definition"></a></dt>
+<dd><p>Serialize SRPTensor to a torch-saveable payload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.from_dict">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.from_dict" title="Link to this definition"></a></dt>
+<dd><p>Deserialize SRPTensor from payload produced by <a class="reference internal" href="#compresso.SRPTensor.to_dict" title="compresso.SRPTensor.to_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPTensor.from_dense">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPTensor.from_dense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPTensor.from_dense" title="Link to this definition"></a></dt>
+<dd><p>Project dense tensor to fixed-k SRP row-packed representation.</p>
+<p>Accepts shape <code class="docutils literal notranslate"><span class="pre">(*prefix,</span> <span class="pre">cols_total)</span></code> and flattens prefix dims into rows.
+Stores signed values gathered from original <code class="docutils literal notranslate"><span class="pre">x</span></code> at selected indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>x</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>k</strong> (<em>int</em>)</p></li>
+<li><p><strong>score_mode</strong> (<em>Literal</em><em>[</em><em>'abs'</em><em>, </em><em>'raw'</em><em>, </em><em>'relu'</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.SRPParam">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">SRPParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam" title="Link to this definition"></a></dt>
+<dd><p>Structured row-packed sparse parameter.</p>
+<p>Represents a matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">cols_total)</span></code> stored as
+fixed-<code class="docutils literal notranslate"><span class="pre">k</span></code> nonzeros per row.</p>
+<p>Storage:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cols</span></code>: <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">k)</span></code> int64 buffer with fixed indices per row.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">values</span></code>: <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">k)</span></code> trainable parameter.</p></li>
+</ul>
+<p>Semantics:</p>
+<p><code class="docutils literal notranslate"><span class="pre">A[r,</span> <span class="pre">cols[r,</span> <span class="pre">j]]</span> <span class="pre">+=</span> <span class="pre">values[r,</span> <span class="pre">j]</span></code></p>
+<p>Duplicates within a row accumulate with scatter-add semantics. This format
+is useful for row-packed sparse matrix multiplication against a dense
+matrix <code class="docutils literal notranslate"><span class="pre">B</span></code> with shape <code class="docutils literal notranslate"><span class="pre">(cols_total,</span> <span class="pre">out)</span></code>.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cols</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>values</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>)</p></li>
+<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPParam.extra_repr">
+<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam.extra_repr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam.extra_repr" title="Link to this definition"></a></dt>
+<dd><p>Return the extra representation of the module.</p>
+<p>To print customized extra information, you should re-implement
+this method in your own modules. Both single-line and multi-line
+strings are acceptable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPParam.build_coo">
+<span class="sig-name descname"><span class="pre">build_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coalesce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam.build_coo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam.build_coo" title="Link to this definition"></a></dt>
+<dd><p>Convert to a torch sparse COO tensor (rows, cols_total).
+Duplicates are kept; coalesce() will sum them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>dtype</strong> (<em>dtype</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>coalesce</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPParam.select_rows">
+<span class="sig-name descname"><span class="pre">select_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam.select_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam.select_rows" title="Link to this definition"></a></dt>
+<dd><p>Fast row selection, returns a NEW SRPParam with rows=len(row_indices), same cols_total and k.
+Reindexes rows to [0..R-1], structure is still row-packed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPParam" title="compresso.params.srp.SRPParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPParam</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>row_indices</strong> (<em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPParam.from_dense">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'topk_abs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_duplicates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam.from_dense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam.from_dense" title="Link to this definition"></a></dt>
+<dd><p>Build SRPParam from a dense matrix.</p>
+<p>mode:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;topk_abs&quot;</span></code>: pick top-k absolute values per row and store signed
+values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;random_k&quot;</span></code>: pick k random columns per row and store those values.</p></li>
+</ul>
+<p>Note: this is a <em>projection</em> of dense -&gt; fixed-k sparse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPParam" title="compresso.params.srp.SRPParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPParam</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>A</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>k</strong> (<em>int</em>)</p></li>
+<li><p><strong>mode</strong> (<em>Literal</em><em>[</em><em>'topk_abs'</em><em>, </em><em>'random_k'</em><em>]</em>)</p></li>
+<li><p><strong>allow_duplicates</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPParam.from_sparse_coo">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_sparse_coo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sp</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_row_packed_fixed_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam.from_sparse_coo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam.from_sparse_coo" title="Link to this definition"></a></dt>
+<dd><p>Convert from a COO sparse tensor to SRPParam.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPParam" title="compresso.params.srp.SRPParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPParam</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>sp</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>k</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>require_row_packed_fixed_k</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Cases:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>If require_row_packed_fixed_k=True:</dt><dd><p>expects exactly k nnz per row (same k for all rows), and we will pack rows.
+If k is None, we infer it. If not possible -&gt; error.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If require_row_packed_fixed_k=False:</dt><dd><p>we will <em>project</em> each row to top-k by abs value (needs k provided).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SRPParam.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/srp.html#SRPParam.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SRPParam.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="sparse-autoencoders">
+<h2>Sparse Autoencoders<a class="headerlink" href="#sparse-autoencoders" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.TopKSAE">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">TopKSAE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_sparsify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsify_score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsify_ste_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sae.html#TopKSAE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAE" title="Link to this definition"></a></dt>
+<dd><p>Sparse autoencoder with hard top-k bottleneck.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimensionality of the input (and reconstruction).</p></li>
+<li><p><strong>hidden_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Width of the sparse code layer.</p></li>
+<li><p><strong>k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of active features per sample.</p></li>
+<li><p><strong>tied</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, decoder weight is the transpose of the encoder weight.</p></li>
+<li><p><strong>pre_act</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>]</span>) – Optional activation applied to encoder output <em>before</em> sparsification.</p></li>
+<li><p><strong>decoder_bias</strong> (<em>bool</em>)</p></li>
+<li><p><strong>post_sparsify</strong> (<em>Optional</em><em>[</em><em>nn.Module</em><em>]</em>)</p></li>
+<li><p><strong>encoder</strong> (<em>Optional</em><em>[</em><em>nn.Module</em><em>]</em>)</p></li>
+<li><p><strong>decoder</strong> (<em>Optional</em><em>[</em><em>nn.Module</em><em>]</em>)</p></li>
+<li><p><strong>sparsify_score_mode</strong> (<em>str</em>)</p></li>
+<li><p><strong>sparsify_ste_alpha</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAE.get_decoder_weight">
+<span class="sig-name descname"><span class="pre">get_decoder_weight</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sae.html#TopKSAE.get_decoder_weight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAE.get_decoder_weight" title="Link to this definition"></a></dt>
+<dd><p>Return the effective decoder weight matrix <code class="docutils literal notranslate"><span class="pre">(input_dim,</span> <span class="pre">hidden_dim)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAE.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/nn/sae.html#TopKSAE.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAE.forward" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>reconstruction</strong> (Tensor  <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">input_dim)</span></code>)</p></li>
+<li><p><strong>codes</strong> (Tensor  <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">hidden_dim)</span></code>   — sparse, exactly <em>k</em> nonzeros per row)</p></li>
+<li><p><strong>stats</strong> (<em>dict[str, Tensor]</em>)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>x</strong> (<em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.TopKSAEConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">TopKSAEConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_sparsify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsify_score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsify_ste_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srp_score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAEConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAEConfig" title="Link to this definition"></a></dt>
+<dd><p>Configuration for <a class="reference internal" href="#compresso.TopKSAETrainer" title="compresso.TopKSAETrainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Width of the SAE code layer.</p></li>
+<li><p><strong>k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of active code features per row.</p></li>
+<li><p><strong>decoder_bias</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether the default decoder linear layer uses a bias.</p></li>
+<li><p><strong>pre_act</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional module applied to encoder output before sparsification.</p></li>
+<li><p><strong>post_sparsify</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional module applied to sparse codes after top-k. For example,
+<code class="docutils literal notranslate"><span class="pre">L1Normalize()</span></code>.</p></li>
+<li><p><strong>encoder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional custom modules. When omitted, <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code> uses linear encoder
+and decoder layers.</p></li>
+<li><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional custom modules. When omitted, <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code> uses linear encoder
+and decoder layers.</p></li>
+<li><p><strong>sparsify_score_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'abs'</span></code>, <code class="docutils literal notranslate"><span class="pre">'raw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'relu'</span></code>]</span>) – Top-k scoring mode: <code class="docutils literal notranslate"><span class="pre">&quot;abs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;raw&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;relu&quot;</span></code>.</p></li>
+<li><p><strong>sparsify_ste_alpha</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Straight-through estimator leakage for non-selected positions.</p></li>
+<li><p><strong>alpha_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Mixture weight for cosine loss. Training loss is
+<code class="docutils literal notranslate"><span class="pre">alpha_loss</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">cosine_similarity)</span> <span class="pre">+</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">alpha_loss)</span> <span class="pre">*</span> <span class="pre">mse</span></code>.</p></li>
+<li><p><strong>l1_penalty</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Optional penalty on mean absolute sparse code activation.</p></li>
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of embedding rows per training batch.</p></li>
+<li><p><strong>shuffle</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to shuffle training rows between epochs.</p></li>
+<li><p><strong>seed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Random seed used for row shuffling and Torch initialization.</p></li>
+<li><p><strong>epochs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of training epochs.</p></li>
+<li><p><strong>lr</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – AdamW optimizer parameters.</p></li>
+<li><p><strong>weight_decay</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – AdamW optimizer parameters.</p></li>
+<li><p><strong>decay</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use cosine learning-rate decay from <code class="docutils literal notranslate"><span class="pre">lr</span></code> to zero across
+the configured training epochs.</p></li>
+<li><p><strong>compile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, call <code class="docutils literal notranslate"><span class="pre">torch.compile</span></code> on the SAE when available.</p></li>
+<li><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">device</span></code></span>) – Device used for training and transforms.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to show a tqdm progress bar when tqdm is installed.</p></li>
+<li><p><strong>srp_score_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'abs'</span></code>, <code class="docutils literal notranslate"><span class="pre">'raw'</span></code>, <code class="docutils literal notranslate"><span class="pre">'relu'</span></code>]</span>) – Score mode used by <code class="docutils literal notranslate"><span class="pre">SRPTensor.from_dense</span></code> during <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">TopKSAETrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer" title="Link to this definition"></a></dt>
+<dd><p>Efficient fit/transform wrapper around <a class="reference internal" href="#compresso.TopKSAE" title="compresso.TopKSAE"><code class="xref py py-class docutils literal notranslate"><span class="pre">compresso.TopKSAE</span></code></a>.</p>
+<p>The trainer is intended for dense embedding matrices, such as item
+embeddings from a recommender or semantic embeddings from a text encoder.
+It exposes a compact sklearn-like API:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">trainer</span> <span class="o">=</span> <span class="n">TopKSAETrainer</span><span class="p">(</span><span class="n">TopKSAEConfig</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">300</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sparse</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">transform</span></code> returns an <code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code> containing sparse codes. Use
+<code class="docutils literal notranslate"><span class="pre">reconstruct</span></code> if dense reconstructions are needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#compresso.TopKSAEConfig" title="compresso.TopKSAEConfig"><em>TopKSAEConfig</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.is_built">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_built</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#compresso.TopKSAETrainer.is_built" title="Link to this definition"></a></dt>
+<dd><p>Whether the underlying <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code> model has been initialized.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.build" title="Link to this definition"></a></dt>
+<dd><p>Initialize model and optimizer for inputs of size <code class="docutils literal notranslate"><span class="pre">input_dim</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.TopKSAETrainer" title="compresso.trainers.saetrainer.TopKSAETrainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>input_dim</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.to">
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.to" title="Link to this definition"></a></dt>
+<dd><p>Move the underlying model to <code class="docutils literal notranslate"><span class="pre">device</span></code> and return <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.TopKSAETrainer" title="compresso.trainers.saetrainer.TopKSAETrainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>device</strong> (<em>str</em><em> | </em><em>device</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.train_step">
+<span class="sig-name descname"><span class="pre">train_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.train_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.train_step" title="Link to this definition"></a></dt>
+<dd><p>Run one optimization step and return detached training stats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>batch</strong> (<em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.fit" title="Link to this definition"></a></dt>
+<dd><p>Train the SAE on dense embeddings and return <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.TopKSAETrainer" title="compresso.trainers.saetrainer.TopKSAETrainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>embeddings</strong> (<em>ndarray</em><em> | </em><em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.encode" title="Link to this definition"></a></dt>
+<dd><p>Return dense sparse-code tensor produced by the trained SAE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>embeddings</strong> (<em>ndarray</em><em> | </em><em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.reconstruct">
+<span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.reconstruct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.reconstruct" title="Link to this definition"></a></dt>
+<dd><p>Return dense reconstructions for <code class="docutils literal notranslate"><span class="pre">embeddings</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>embeddings</strong> (<em>ndarray</em><em> | </em><em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.transform" title="Link to this definition"></a></dt>
+<dd><p>Encode <code class="docutils literal notranslate"><span class="pre">embeddings</span></code> and return sparse codes as an <code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>embeddings</strong> (<em>ndarray</em><em> | </em><em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.fit_transform">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.fit_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.fit_transform" title="Link to this definition"></a></dt>
+<dd><p>Fit the SAE and return encoded sparse codes as an <code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>embeddings</strong> (<em>ndarray</em><em> | </em><em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.TopKSAETrainer.state_dict">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#TopKSAETrainer.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.TopKSAETrainer.state_dict" title="Link to this definition"></a></dt>
+<dd><p>Return a saveable trainer state dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.L1Normalize">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">L1Normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#L1Normalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.L1Normalize" title="Link to this definition"></a></dt>
+<dd><p>Apply row-wise L1 normalization.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>Any</em>)</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.L1Normalize.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#L1Normalize.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.L1Normalize.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>x</strong> (<em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.L2Normalize">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">L2Normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#L2Normalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.L2Normalize" title="Link to this definition"></a></dt>
+<dd><p>Apply row-wise L2 normalization.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>Any</em>)</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.L2Normalize.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/trainers/saetrainer.html#L2Normalize.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.L2Normalize.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>x</strong> (<em>Tensor</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="sparse-parameters">
+<h2>Sparse Parameters<a class="headerlink" href="#sparse-parameters" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.MaskedParam">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">MaskedParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_schedule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stability_window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">change_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'row'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_regrowth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ste_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_norm_l1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam" title="Link to this definition"></a></dt>
+<dd><p>Dense parameter with a binary mask and an internal pruning schedule.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weight</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>k_target</strong> (<em>int</em>)</p></li>
+<li><p><strong>k_schedule</strong> (<em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>num_stages</strong> (<em>int</em>)</p></li>
+<li><p><strong>stability_window</strong> (<em>int</em>)</p></li>
+<li><p><strong>change_threshold</strong> (<em>float</em>)</p></li>
+<li><p><strong>sparsity</strong> (<em>Literal</em><em>[</em><em>'row'</em><em>, </em><em>'col'</em><em>]</em>)</p></li>
+<li><p><strong>score_mode</strong> (<em>Literal</em><em>[</em><em>'abs'</em><em>, </em><em>'raw'</em><em>, </em><em>'relu'</em><em>]</em>)</p></li>
+<li><p><strong>ste_alpha</strong> (<em>float</em>)</p></li>
+<li><p><strong>post_norm_l1</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.MaskedParam.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam.forward" title="Link to this definition"></a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.MaskedParam.step_mask">
+<span class="sig-name descname"><span class="pre">step_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam.step_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam.step_mask" title="Link to this definition"></a></dt>
+<dd><p>Compute mask and add history</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.MaskedParam.rewind">
+<span class="sig-name descname"><span class="pre">rewind</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam.rewind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam.rewind" title="Link to this definition"></a></dt>
+<dd><p>Back to original init with new k</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.MaskedParam.maskedparam_to_coo">
+<span class="sig-name descname"><span class="pre">maskedparam_to_coo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam.maskedparam_to_coo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam.maskedparam_to_coo" title="Link to this definition"></a></dt>
+<dd><p>Export packed fixed-k COO according to self.dim:
+- dim==1 -&gt; row-packed, fixed k per row
+- dim==0 -&gt; col-packed, fixed k per col</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.MaskedParam.maskedparam_to_srp">
+<span class="sig-name descname"><span class="pre">maskedparam_to_srp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam.maskedparam_to_srp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam.maskedparam_to_srp" title="Link to this definition"></a></dt>
+<dd><p>Export fixed-k row-packed SRPParam.</p>
+<p>Only valid for row-wise sparsity (self.dim == 1), because SRPParam stores
+exactly k entries per ROW.</p>
+<p>Uses:</p>
+<ul class="simple">
+<li><p>frozen mask if <code class="docutils literal notranslate"><span class="pre">mask_frozen</span></code></p></li>
+<li><p>otherwise current-stage top-k mask, <code class="docutils literal notranslate"><span class="pre">k_current</span></code></p></li>
+</ul>
+<p>Returns:</p>
+<p><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code> with <code class="docutils literal notranslate"><span class="pre">cols</span></code> shaped <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">k_current)</span></code>, <code class="docutils literal notranslate"><span class="pre">values</span></code>
+shaped <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">k_current)</span></code>, and shape <code class="docutils literal notranslate"><span class="pre">(rows,</span> <span class="pre">cols)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPParam" title="compresso.params.srp.SRPParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPParam</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.MaskedParam.extra_repr">
+<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/params/masked.html#MaskedParam.extra_repr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.MaskedParam.extra_repr" title="Link to this definition"></a></dt>
+<dd><p>Return the extra representation of the module.</p>
+<p>To print customized extra information, you should re-implement
+this method in your own modules. Both single-line and multi-line
+strings are acceptable.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.SparsityController">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">SparsityController</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_update_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_at_schedule_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/utils/controllers.html#SparsityController"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SparsityController" title="Link to this definition"></a></dt>
+<dd><p>Global dispatcher for MaskedParam-based pruning.</p>
+<dl class="simple">
+<dt>Responsibilities:</dt><dd><ul class="simple">
+<li><p>Keep track of global step.</p></li>
+<li><p>Every <cite>mask_update_interval</cite> steps, call <cite>step_mask()</cite> on all MaskedParams.</p></li>
+<li><p>If any MaskedParam’s stage is completed, call <cite>rewind()</cite> on all of them
+and signal that the optimizer should be reset.</p></li>
+<li><p>Once all MaskedParams have <cite>schedule_done=True</cite>, optionally freeze masks
+and stop scheduling.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Module</em>)</p></li>
+<li><p><strong>mask_update_interval</strong> (<em>int</em>)</p></li>
+<li><p><strong>freeze_at_schedule_end</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.SparsityController.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/utils/controllers.html#SparsityController.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.SparsityController.step" title="Link to this definition"></a></dt>
+<dd><p>Call this <em>once per optimizer step</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>‘rewind_triggered’: bool, whether a global rewind happened</p></li>
+<li><p>’all_schedules_done’: bool, whether all MaskedParams finished schedule</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.exponential_decay">
+<span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">exponential_decay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_final</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/utils/schedule.html#exponential_decay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.exponential_decay" title="Link to this definition"></a></dt>
+<dd><p>Smooth exponential decay from n_init to n_final across k steps,
+guaranteed never to go below n_final.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.save_srp_tensor">
+<span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">save_srp_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/io/srp.html#save_srp_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.save_srp_tensor" title="Link to this definition"></a></dt>
+<dd><p>Save SRPTensor payload with torch.save.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+<li><p><strong>srp</strong> (<a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><em>SRPTensor</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.load_srp_tensor">
+<span class="sig-prename descclassname"><span class="pre">compresso.</span></span><span class="sig-name descname"><span class="pre">load_srp_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/io/srp.html#load_srp_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.load_srp_tensor" title="Link to this definition"></a></dt>
+<dd><p>Load SRPTensor payload produced by <a class="reference internal" href="#compresso.save_srp_tensor" title="compresso.save_srp_tensor"><code class="xref py py-func docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+<li><p><strong>validate</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="clustering.html" class="btn btn-neutral float-right" title="Clustering API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

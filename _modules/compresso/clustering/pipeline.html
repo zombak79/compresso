@@ -1,0 +1,916 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>compresso.clustering.pipeline &mdash; Compresso 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-github">Install from GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#basic-workflow">Basic Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#clustering-workflow">Clustering Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples.html#sparse-autoencoder">Sparse Autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples.html#saving-sparse-representations">Saving Sparse Representations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples.html#clustering-sparse-codes">Clustering Sparse Codes</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">compresso.clustering.pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for compresso.clustering.pipeline</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso.params.srp</span><span class="w"> </span><span class="kn">import</span> <span class="n">SRPTensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.activation</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_activation_clusters</span><span class="p">,</span> <span class="n">build_feature_path_clusters</span><span class="p">,</span> <span class="n">build_srp_similarity_clusters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.labels</span><span class="w"> </span><span class="kn">import</span> <span class="n">label_clusters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.merge</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">assign_unclustered_to_nearest_cluster</span><span class="p">,</span>
+    <span class="n">compact_hidden_clusters</span><span class="p">,</span>
+    <span class="n">filter_clusters_by_size</span><span class="p">,</span>
+    <span class="n">link_clusters_by_entity_containment</span><span class="p">,</span>
+    <span class="n">link_clusters_by_feature_containment</span><span class="p">,</span>
+    <span class="n">materialize_link_merges</span><span class="p">,</span>
+    <span class="n">merge_clusters_by_centroid_similarity</span><span class="p">,</span>
+    <span class="n">merge_clusters_by_entity_containment</span><span class="p">,</span>
+    <span class="n">merge_clusters_by_entity_iou</span><span class="p">,</span>
+    <span class="n">merge_clusters_by_feature_containment</span><span class="p">,</span>
+    <span class="n">merge_clusters_by_duplicate_label</span><span class="p">,</span>
+    <span class="n">merge_clusters_by_tag_similarity</span><span class="p">,</span>
+    <span class="n">prune_redundant_active_clusters</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.semantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge_clusters_by_semantic_similarity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">assign_cluster_tags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparseCluster</span><span class="p">,</span> <span class="n">SparseClusterSet</span>
+
+
+<span class="n">ClusterBuildStep</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SRPTensor</span><span class="p">],</span> <span class="n">SparseClusterSet</span><span class="p">]</span>
+<span class="n">ClusterTransformStep</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SparseClusterSet</span><span class="p">],</span> <span class="n">SparseClusterSet</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="AbstractClustering">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.AbstractClustering">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractClustering</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+
+<div class="viewcode-block" id="AbstractClusterTransform">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.AbstractClusterTransform">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractClusterTransform</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+
+<div class="viewcode-block" id="AbstractMerging">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.AbstractMerging">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractMerging</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="DominantSignedClustering">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.DominantSignedClustering">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DominantSignedClustering</span><span class="p">(</span><span class="n">AbstractClustering</span><span class="p">):</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">build_activation_clusters</span><span class="p">(</span>
+            <span class="n">srp</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;dominant_signed&quot;</span><span class="p">,</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cluster_size</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TopMSignedClustering">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.TopMSignedClustering">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TopMSignedClustering</span><span class="p">(</span><span class="n">AbstractClustering</span><span class="p">):</span>
+    <span class="n">top_m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">build_activation_clusters</span><span class="p">(</span>
+            <span class="n">srp</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;top_m_signed&quot;</span><span class="p">,</span>
+            <span class="n">top_m</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_m</span><span class="p">,</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cluster_size</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ComboSignedClustering">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.ComboSignedClustering">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComboSignedClustering</span><span class="p">(</span><span class="n">AbstractClustering</span><span class="p">):</span>
+    <span class="n">top_m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">combo_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">build_activation_clusters</span><span class="p">(</span>
+            <span class="n">srp</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combo_signed&quot;</span><span class="p">,</span>
+            <span class="n">top_m</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_m</span><span class="p">,</span>
+            <span class="n">combo_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">combo_size</span><span class="p">,</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cluster_size</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeaturePathClustering">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.FeaturePathClustering">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeaturePathClustering</span><span class="p">(</span><span class="n">AbstractClustering</span><span class="p">):</span>
+    <span class="n">top_m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">min_activation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">build_feature_path_clusters</span><span class="p">(</span>
+            <span class="n">srp</span><span class="p">,</span>
+            <span class="n">top_m</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_m</span><span class="p">,</span>
+            <span class="n">max_depth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cluster_size</span><span class="p">,</span>
+            <span class="n">min_activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_activation</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SRPSimilarityClustering">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.SRPSimilarityClustering">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SRPSimilarityClustering</span><span class="p">(</span><span class="n">AbstractClustering</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">normalize_rows</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">min_local_density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">centroid_top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">build_srp_similarity_clusters</span><span class="p">(</span>
+            <span class="n">srp</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_k</span><span class="p">,</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cluster_size</span><span class="p">,</span>
+            <span class="n">normalize_rows</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_rows</span><span class="p">,</span>
+            <span class="n">min_local_density</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_local_density</span><span class="p">,</span>
+            <span class="n">centroid_top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_top_k</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EntityIoUMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.EntityIoUMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntityIoUMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_entity_iou</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rounds</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EntityContainmentMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.EntityContainmentMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntityContainmentMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">max_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_entity_containment</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rounds</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureContainmentMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.FeatureContainmentMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeatureContainmentMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">signed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">max_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_feature_containment</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">signed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rounds</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EntityContainmentLink">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.EntityContainmentLink">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntityContainmentLink</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">child_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;leaves&quot;</span>
+    <span class="n">parent_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span>
+    <span class="n">require_parent_larger</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">skip_existing_ancestors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">link_clusters_by_entity_containment</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">child_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">child_scope</span><span class="p">,</span>
+            <span class="n">parent_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_scope</span><span class="p">,</span>
+            <span class="n">require_parent_larger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">require_parent_larger</span><span class="p">,</span>
+            <span class="n">skip_existing_ancestors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">skip_existing_ancestors</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureContainmentLink">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.FeatureContainmentLink">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeatureContainmentLink</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">signed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">child_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;leaves&quot;</span>
+    <span class="n">parent_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span>
+    <span class="n">require_parent_larger</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">skip_existing_ancestors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">link_clusters_by_feature_containment</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">signed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">,</span>
+            <span class="n">child_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">child_scope</span><span class="p">,</span>
+            <span class="n">parent_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_scope</span><span class="p">,</span>
+            <span class="n">require_parent_larger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">require_parent_larger</span><span class="p">,</span>
+            <span class="n">skip_existing_ancestors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">skip_existing_ancestors</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="MaterializeLinkMerges">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.MaterializeLinkMerges">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MaterializeLinkMerges</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">parent_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+    <span class="n">include_descendants</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">min_children</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">materialize_link_merges</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">parent_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_scope</span><span class="p">,</span>
+            <span class="n">include_descendants</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">include_descendants</span><span class="p">,</span>
+            <span class="n">min_children</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_children</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">activate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activate</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CentroidSimilarityMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.CentroidSimilarityMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CentroidSimilarityMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cosine&quot;</span><span class="p">,</span> <span class="s2">&quot;dot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cosine&quot;</span>
+    <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_centroid_similarity</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_k</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rounds</span><span class="p">,</span>
+            <span class="n">min_group_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_group_size</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AssignUnclusteredToNearestCluster">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AssignUnclusteredToNearestCluster</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cosine&quot;</span><span class="p">,</span> <span class="s2">&quot;dot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cosine&quot;</span>
+    <span class="n">min_similarity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">top_k_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">cluster_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+    <span class="n">coverage_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+    <span class="n">assigned_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">centroid_top_m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">centroid_top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">assign_unclustered_to_nearest_cluster</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">srp</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+            <span class="n">min_similarity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_similarity</span><span class="p">,</span>
+            <span class="n">top_k_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_k_clusters</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_scope</span><span class="p">,</span>
+            <span class="n">coverage_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coverage_scope</span><span class="p">,</span>
+            <span class="n">assigned_weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assigned_weight</span><span class="p">,</span>
+            <span class="n">centroid_top_m</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_top_m</span><span class="p">,</span>
+            <span class="n">centroid_top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid_top_k</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TagSimilarityMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.TagSimilarityMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TagSimilarityMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;weighted_jaccard&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;weighted_jaccard&quot;</span>
+    <span class="n">max_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_tag_similarity</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rounds</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LabelDuplicateMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.LabelDuplicateMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LabelDuplicateMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">cluster_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+    <span class="n">case_sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">mark_children_hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">min_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_duplicate_label</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_scope</span><span class="p">,</span>
+            <span class="n">case_sensitive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">case_sensitive</span><span class="p">,</span>
+            <span class="n">mark_children_hidden</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mark_children_hidden</span><span class="p">,</span>
+            <span class="n">min_group_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_group_size</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CompactHiddenClusters">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.CompactHiddenClusters">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CompactHiddenClusters</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">hidden_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;render_hidden&quot;</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">compact_hidden_clusters</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">hidden_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_key</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SemanticSimilarityMerge">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.SemanticSimilarityMerge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SemanticSimilarityMerge</span><span class="p">(</span><span class="n">AbstractMerging</span><span class="p">):</span>
+    <span class="n">embed_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span>
+    <span class="n">text_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SparseCluster</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">label_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">object</span><span class="p">],</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">label_text_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SparseCluster</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">SparseCluster</span><span class="p">]],</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cluster_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+    <span class="n">max_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">normalize_embeddings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">normalize_centroids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">merge_clusters_by_semantic_similarity</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">embed_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">embed_fn</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">text_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text_fn</span><span class="p">,</span>
+            <span class="n">label_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_fn</span><span class="p">,</span>
+            <span class="n">label_text_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_text_fn</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_scope</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rounds</span><span class="p">,</span>
+            <span class="n">min_group_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_group_size</span><span class="p">,</span>
+            <span class="n">normalize_embeddings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_embeddings</span><span class="p">,</span>
+            <span class="n">normalize_centroids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_centroids</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AssignTags">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.AssignTags">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AssignTags</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">entity_tag_matrix</span><span class="p">:</span> <span class="nb">object</span>
+    <span class="n">tag_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tfidf&quot;</span><span class="p">,</span> <span class="s2">&quot;counts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tfidf&quot;</span>
+    <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">min_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">assign_cluster_tags</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">entity_tag_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">entity_tag_matrix</span><span class="p">,</span>
+            <span class="n">tag_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag_names</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_k</span><span class="p">,</span>
+            <span class="n">min_score</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_score</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LabelClusters">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.LabelClusters">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LabelClusters</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">entity_metadata</span><span class="p">:</span> <span class="nb">object</span>
+    <span class="n">text_extractor</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SparseCluster</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="nb">object</span><span class="p">]</span>
+    <span class="n">label_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">object</span><span class="p">],</span> <span class="nb">object</span><span class="p">]</span>
+    <span class="n">cluster_scope</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;leaves&quot;</span><span class="p">,</span> <span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">label_clusters</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">entity_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">entity_metadata</span><span class="p">,</span>
+            <span class="n">text_extractor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text_extractor</span><span class="p">,</span>
+            <span class="n">label_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_fn</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cluster_scope</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SizeFilter">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.SizeFilter">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SizeFilter</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">filter_clusters_by_size</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cluster_size</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="PruneRedundantRoots">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.PruneRedundantRoots">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PruneRedundantRoots</span><span class="p">(</span><span class="n">AbstractClusterTransform</span><span class="p">):</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">SparseClusterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">prune_redundant_active_clusters</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ClusteringPipeline">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.ClusteringPipeline">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClusteringPipeline</span><span class="p">:</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ClusterBuildStep</span> <span class="o">|</span> <span class="n">ClusterTransformStep</span><span class="p">]</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">run_clustering_pipeline</span><span class="p">(</span><span class="n">srp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">srp</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_step_name</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">&quot;func&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_step_name</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">step</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+
+<div class="viewcode-block" id="run_clustering_pipeline">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.run_clustering_pipeline">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_clustering_pipeline</span><span class="p">(</span>
+    <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">,</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ClusterBuildStep</span> <span class="o">|</span> <span class="n">ClusterTransformStep</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run an explicit sparse clustering pipeline.</span>
+
+<span class="sd">    The first step consumes an ``SRPTensor`` and must return a</span>
+<span class="sd">    ``SparseClusterSet``. Every following step consumes and returns a</span>
+<span class="sd">    ``SparseClusterSet``. This keeps base cluster construction separate from</span>
+<span class="sd">    optional merge/tag/filter phases while staying easy to compose with</span>
+<span class="sd">    ``functools.partial`` or small lambdas.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">steps</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;steps must contain at least one SRP -&gt; SparseClusterSet function&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_pipeline] step 1/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_step_name</span><span class="p">(</span><span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">srp</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">SparseClusterSet</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;first pipeline step must return SparseClusterSet&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_pipeline] step 1/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="si">}</span><span class="s2"> done: active_clusters=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">first</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">start</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_pipeline] step </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_step_name</span><span class="p">(</span><span class="n">step</span><span class="p">)</span><span class="si">}</span><span class="s2"> active_clusters_in=</span><span class="si">{</span><span class="n">before</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">step</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">SparseClusterSet</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;cluster pipeline transform steps must return SparseClusterSet&quot;</span><span class="p">)</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">out</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_pipeline] step </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="si">}</span><span class="s2"> done: active_clusters=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">clusters</span></div>
+
+
+
+<div class="viewcode-block" id="cluster_srp">
+<a class="viewcode-back" href="../../../api/clustering.html#compresso.clustering.cluster_srp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cluster_srp</span><span class="p">(</span>
+    <span class="n">srp</span><span class="p">:</span> <span class="n">SRPTensor</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;dominant_signed&quot;</span><span class="p">,</span> <span class="s2">&quot;top_m_signed&quot;</span><span class="p">,</span> <span class="s2">&quot;combo_signed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dominant_signed&quot;</span><span class="p">,</span>
+    <span class="n">top_m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">combo_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">post_merge_min_cluster_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">entity_ids</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">activation_iou_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">entity_tag_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tag_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tag_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tfidf&quot;</span><span class="p">,</span> <span class="s2">&quot;counts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tfidf&quot;</span><span class="p">,</span>
+    <span class="n">top_k_tags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">tag_similarity_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tag_similarity_metric</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;weighted_jaccard&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;weighted_jaccard&quot;</span><span class="p">,</span>
+    <span class="n">max_merge_rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparseClusterSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience pipeline for sparse clustering.</span>
+
+<span class="sd">    Semantic labeling/merging is intentionally not part of v1; callers can add</span>
+<span class="sd">    it later as callbacks operating on the returned SparseClusterSet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">build_activation_clusters</span><span class="p">(</span>
+        <span class="n">srp</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+        <span class="n">top_m</span><span class="o">=</span><span class="n">top_m</span><span class="p">,</span>
+        <span class="n">combo_size</span><span class="o">=</span><span class="n">combo_size</span><span class="p">,</span>
+        <span class="n">min_cluster_size</span><span class="o">=</span><span class="n">min_cluster_size</span><span class="p">,</span>
+        <span class="n">entity_ids</span><span class="o">=</span><span class="n">entity_ids</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_srp] build_activation_clusters: active_clusters=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">activation_iou_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">merge_clusters_by_entity_iou</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">activation_iou_threshold</span><span class="p">,</span>
+            <span class="n">max_rounds</span><span class="o">=</span><span class="n">max_merge_rounds</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_srp] merge_clusters_by_entity_iou: </span><span class="si">{</span><span class="n">before</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">entity_tag_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tag_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tag_names must be provided when entity_tag_matrix is provided&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_srp] assign_cluster_tags: active_clusters=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">assign_cluster_tags</span><span class="p">(</span>
+            <span class="n">clusters</span><span class="p">,</span>
+            <span class="n">entity_tag_matrix</span><span class="o">=</span><span class="n">entity_tag_matrix</span><span class="p">,</span>
+            <span class="n">tag_names</span><span class="o">=</span><span class="n">tag_names</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">tag_method</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="n">top_k_tags</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">tag_similarity_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_merge_rounds</span><span class="p">):</span>
+                <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span>
+                <span class="n">clusters</span> <span class="o">=</span> <span class="n">merge_clusters_by_tag_similarity</span><span class="p">(</span>
+                    <span class="n">clusters</span><span class="p">,</span>
+                    <span class="n">threshold</span><span class="o">=</span><span class="n">tag_similarity_threshold</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">tag_similarity_metric</span><span class="p">,</span>
+                    <span class="n">max_rounds</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                    <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span> <span class="o">==</span> <span class="n">before</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_srp] merge_clusters_by_tag_similarity: unchanged at </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_srp] merge_clusters_by_tag_similarity: </span><span class="si">{</span><span class="n">before</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">clusters</span> <span class="o">=</span> <span class="n">assign_cluster_tags</span><span class="p">(</span>
+                    <span class="n">clusters</span><span class="p">,</span>
+                    <span class="n">entity_tag_matrix</span><span class="o">=</span><span class="n">entity_tag_matrix</span><span class="p">,</span>
+                    <span class="n">tag_names</span><span class="o">=</span><span class="n">tag_names</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">tag_method</span><span class="p">,</span>
+                    <span class="n">top_k</span><span class="o">=</span><span class="n">top_k_tags</span><span class="p">,</span>
+                <span class="p">)</span>
+    <span class="k">if</span> <span class="n">post_merge_min_cluster_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">filter_clusters_by_size</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="n">post_merge_min_cluster_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[cluster_srp] filter_clusters_by_size: </span><span class="si">{</span><span class="n">before</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">clusters</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
