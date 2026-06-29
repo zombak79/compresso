@@ -16,7 +16,7 @@ from compresso import SRPTensor, TopKSAE, TopKSAETrainer
 Until the first PyPI release is published, install directly from GitHub:
 
 ```bash
-pip install "compresso-pytorch @ git+https://github.com/zombak79/compresso.git"
+pip install "compresso-pytorch@git+https://github.com/zombak79/compresso.git"
 ```
 
 For local development:
@@ -25,6 +25,23 @@ For local development:
 git clone https://github.com/zombak79/compresso.git
 cd compresso
 pip install -e ".[test]"
+```
+
+## Documentation
+
+The documentation can be built locally with Sphinx:
+
+```bash
+pip install -r docs/requirements.txt
+pip install -e .
+sphinx-build -b html docs/source docs/build/html
+```
+
+After GitHub Pages is enabled for the `gh-pages` branch, release documentation
+will be available at:
+
+```text
+https://zombak79.github.io/compresso/
 ```
 
 ## First-Release Scope
@@ -90,7 +107,7 @@ print(srp)
 ## Project Split
 
 Compresso is the core sparse-learning library. Recommender-system experiments,
-datasets, ELSA/CompressedELSA pipelines, and checkpoint tooling are moving to a
+datasets, ELSA/CompressedELSA pipelines, and checkpoint tooling live in a
 separate companion package:
 
 ```text
