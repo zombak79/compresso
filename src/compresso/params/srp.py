@@ -5,12 +5,14 @@ from typing import Any, Optional, Literal, Tuple
 InitMode = Literal["topk_abs", "random_k"]
 
 class SRPTensor:
-    """
-    Minimal SRP tensor container:
-      - row-packed sparse matrix with fixed k nnz per row
-      - represented by (cols, vals) of shape (rows, k)
-      - logical dense shape is (rows, cols_total)
-    Optionally carries prefix_shape so we can restore (*prefix, cols_total).
+    """Minimal SRP tensor container.
+
+    Stores a row-packed sparse matrix with fixed ``k`` nonzeros per row.
+    The representation uses ``cols`` and ``vals`` tensors of shape
+    ``(rows, k)`` with logical dense shape ``(rows, cols_total)``.
+
+    Optionally carries ``prefix_shape`` so callers can restore
+    ``(*prefix, cols_total)``.
     """
     __slots__ = ("cols", "vals", "shape", "prefix_shape")
 
@@ -171,7 +173,7 @@ class SRPTensor:
         return self
 
     def to_dense(self) -> torch.Tensor:
-        """Densify to (rows, cols_total) or (*prefix, cols_total) if prefix_shape is set."""
+        """Densify to ``(rows, cols_total)`` or ``(*prefix, cols_total)``."""
         rows, cols_total = self.shape
         out = torch.zeros((rows, cols_total), device=self.device, dtype=self.dtype)
         # Duplicates in a row accumulate by design.
@@ -351,23 +353,23 @@ class SRPTensor:
         )
 
 class SRPParam(nn.Module):
-    """
-    Structured Row-Packed sparse parameter: a matrix A of shape (rows, cols_total)
-    stored as fixed-k nonzeros per row.
+    """Structured row-packed sparse parameter.
+
+    Represents a matrix ``A`` of shape ``(rows, cols_total)`` stored as
+    fixed-``k`` nonzeros per row.
 
     Storage:
-      - cols:   (rows, k) int64 buffer, fixed indices per row
-      - values: (rows, k) trainable parameter
 
-    Semantics (important!):
-      A[r, cols[r, j]] += values[r, j]   # duplicates within a row accumulate (scatter_add semantics)
+    * ``cols``: ``(rows, k)`` int64 buffer with fixed indices per row.
+    * ``values``: ``(rows, k)`` trainable parameter.
 
-    This format is ideal for SRPMM kernels like:
-      Y = A @ B  where B is dense (cols_total, out)
+    Semantics:
 
-    because you can do:
-      B_sel = B[cols] -> (rows, k, out)
-      Y = sum_j values[...,j] * B_sel[...,j,:]
+    ``A[r, cols[r, j]] += values[r, j]``
+
+    Duplicates within a row accumulate with scatter-add semantics. This format
+    is useful for row-packed sparse matrix multiplication against a dense
+    matrix ``B`` with shape ``(cols_total, out)``.
     """
 
     def __init__(
@@ -483,12 +485,13 @@ class SRPParam(nn.Module):
         mode: InitMode = "topk_abs",
         allow_duplicates: bool = False,  # if False, enforced by construction
     ) -> "SRPParam":
-        """
-        Build SRPParam from a dense matrix.
+        """Build SRPParam from a dense matrix.
 
         mode:
-          - "topk_abs": pick top-k |A[r,:]| per row, store signed values.
-          - "random_k": pick k random cols per row, store those values.
+
+        * ``"topk_abs"``: pick top-k absolute values per row and store signed
+          values.
+        * ``"random_k"``: pick k random columns per row and store those values.
 
         Note: this is a *projection* of dense -> fixed-k sparse.
         """

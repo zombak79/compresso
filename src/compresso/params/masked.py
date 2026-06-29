@@ -306,20 +306,20 @@ class MaskedParam(nn.Module):
 
     @torch.no_grad()
     def maskedparam_to_srp(self) -> "SRPParam":
-        """
-        Export fixed-k row-packed SRPParam.
+        """Export fixed-k row-packed SRPParam.
 
         Only valid for row-wise sparsity (self.dim == 1), because SRPParam stores
         exactly k entries per ROW.
 
         Uses:
-        - frozen mask if mask_frozen
-        - otherwise current-stage topk mask (k_current)
+
+        * frozen mask if ``mask_frozen``
+        * otherwise current-stage top-k mask, ``k_current``
+
         Returns:
-        SRPParam with:
-            cols   : (rows, k_current) long
-            values : (rows, k_current) same dtype/device as self.weight
-            shape  : (rows, cols)
+
+        ``SRPParam`` with ``cols`` shaped ``(rows, k_current)``, ``values``
+        shaped ``(rows, k_current)``, and shape ``(rows, cols)``.
         """
         if self.dim != 1:
             raise ValueError(
