@@ -43,23 +43,15 @@ round-trip sparse representation tensors:
 
    assert restored.shape == srp.shape
 
-Clustering Sparse Codes
------------------------
+Clustering
+----------
 
-The clustering API works with sparse representations produced by Compresso:
+This notebook walks through an end-to-end clustering workflow using Compresso
+and Compresso Recsys: building a checkpoint, embedding item metadata, training
+a sparse autoencoder, discovering clusters, labeling them with an LLM, and
+visualizing example items.
 
-.. code-block:: python
+.. toctree::
+   :maxdepth: 1
 
-   import compresso.clustering as cc
-
-   graph = cc.ClusteringPipeline(
-       [
-           cc.TopMSignedClustering(top_m=4, min_cluster_size=5),
-           cc.EntityContainmentLink(threshold=1.0),
-           cc.MaterializeLinkMerges(parent_scope="active"),
-           cc.PruneRedundantRoots(),
-           cc.SizeFilter(min_cluster_size=20),
-       ]
-   ).fit(srp)
-
-   print(len(graph.clusters))
+   clustering

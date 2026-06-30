@@ -4,10 +4,18 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 from importlib.metadata import PackageNotFoundError, version as package_version
 
 
 sys.path.insert(0, os.path.abspath("../../src"))
+try:
+    import pypandoc
+
+    pandoc_dir = Path(pypandoc.get_pandoc_path()).parent
+    os.environ["PATH"] = f"{pandoc_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+except Exception:
+    pass
 
 project = "Compresso"
 author = "Compresso contributors"
@@ -26,12 +34,14 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "myst_parser",
+    "nbsphinx",
 ]
 
 autosummary_generate = True
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
 autoclass_content = "both"
+nbsphinx_execute = "never"
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
