@@ -5,3 +5,4 @@ myst-parser>=4.0
 nbsphinx>=0.9
 pypandoc-binary>=1.15
 sphinx-autobuild>=2024.0
+ipython-pygments-lexers>=1.0
