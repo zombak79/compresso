@@ -207,32 +207,32 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import compresso
-import compresso_recsys as cr
-import pandas as pd
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">compresso</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">compresso_recsys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-from compresso import clustering as cc
-from compresso import TopKSAETrainer, TopKSAEConfig, L1Normalize
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">clustering</span> <span class="k">as</span> <span class="n">cc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAETrainer</span><span class="p">,</span> <span class="n">TopKSAEConfig</span><span class="p">,</span> <span class="n">L1Normalize</span>
 
-checkpoint_path = cr.build_recsys_checkpoint(
-    dataset=&quot;amazon2023&quot;,
-    amazon_category=&quot;Office_Products&quot;,
-    checkpoint_path=&quot;artifacts/amazon_office.zip&quot;,
-    metadata_text_fields=[&quot;title&quot;, &quot;features&quot;, &quot;description&quot;, &quot;categories&quot;],
-    split_mode=&quot;item_split&quot;,
-    min_entity_text_words=20,
-    val_items=500,
-    test_items=1000,
-    min_user_support=10,
-    item_min_support=10,
-    min_value_to_keep=1.0,
-    set_all_values_to=1.0,
-    min_source_items=1,
-    min_target_items=1,
-    annotation_source=&quot;none&quot;,
-    show_progress=True,
-    include_image_urls=True,
-)
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">build_recsys_checkpoint</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;amazon2023&quot;</span><span class="p">,</span>
+    <span class="n">amazon_category</span><span class="o">=</span><span class="s2">&quot;Office_Products&quot;</span><span class="p">,</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;artifacts/amazon_office.zip&quot;</span><span class="p">,</span>
+    <span class="n">metadata_text_fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;categories&quot;</span><span class="p">],</span>
+    <span class="n">split_mode</span><span class="o">=</span><span class="s2">&quot;item_split&quot;</span><span class="p">,</span>
+    <span class="n">min_entity_text_words</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">val_items</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">test_items</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">min_user_support</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">item_min_support</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">min_value_to_keep</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">set_all_values_to</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">min_source_items</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">min_target_items</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">annotation_source</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_image_urls</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -247,11 +247,11 @@ checkpoint_path = cr.build_recsys_checkpoint(
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>with cr.read_checkpoint(checkpoint_path) as root:
-    split = cr.load_recsys_split(root)
-    meta = split[&quot;entity_metadata&quot;]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">cr</span><span class="o">.</span><span class="n">read_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">root</span><span class="p">:</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">load_recsys_split</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="s2">&quot;entity_metadata&quot;</span><span class="p">]</span>
 
-meta[[&quot;item_id&quot;, &quot;title&quot;, &quot;entity_text&quot;, &quot;image_url&quot;]].sample(5)
+<span class="n">meta</span><span class="p">[[</span><span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;entity_text&quot;</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -329,18 +329,18 @@ meta[[&quot;item_id&quot;, &quot;title&quot;, &quot;entity_text&quot;, &quot;ima
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from sentence_transformers import SentenceTransformer
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sentence_transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SentenceTransformer</span>
 
-sbert = SentenceTransformer(&quot;sentence-transformers/all-MiniLM-L6-v2&quot;)
+<span class="n">sbert</span> <span class="o">=</span> <span class="n">SentenceTransformer</span><span class="p">(</span><span class="s2">&quot;sentence-transformers/all-MiniLM-L6-v2&quot;</span><span class="p">)</span>
 
-item_embeddings = sbert.encode(
-    meta.entity_text,
-    convert_to_numpy=True,
-    normalize_embeddings=True,
-    show_progress_bar=True
-)
+<span class="n">item_embeddings</span> <span class="o">=</span> <span class="n">sbert</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">meta</span><span class="o">.</span><span class="n">entity_text</span><span class="p">,</span>
+    <span class="n">convert_to_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">show_progress_bar</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 
-item_embeddings.shape
+<span class="n">item_embeddings</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
 </div>
@@ -378,24 +378,24 @@ Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sae = TopKSAETrainer(
-    TopKSAEConfig(
-        hidden_dim=4096,
-        k=32,
-        batch_size=1024,
-        epochs=100,
-        lr=1e-3,
-        decay=True,
-        post_sparsify=L1Normalize(),
-        sparsify_score_mode=&quot;abs&quot;,
-        sparsify_ste_alpha=0.01,
-        device=&quot;cpu&quot;,
-    )
-)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sae</span> <span class="o">=</span> <span class="n">TopKSAETrainer</span><span class="p">(</span>
+    <span class="n">TopKSAEConfig</span><span class="p">(</span>
+        <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+        <span class="n">k</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+        <span class="n">decay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">post_sparsify</span><span class="o">=</span><span class="n">L1Normalize</span><span class="p">(),</span>
+        <span class="n">sparsify_score_mode</span><span class="o">=</span><span class="s2">&quot;abs&quot;</span><span class="p">,</span>
+        <span class="n">sparsify_ste_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
 
-sparse_embeddings = sae.fit_transform(item_embeddings)
+<span class="n">sparse_embeddings</span> <span class="o">=</span> <span class="n">sae</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">item_embeddings</span><span class="p">)</span>
 
-sparse_embeddings.shape
+<span class="n">sparse_embeddings</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
 </div>
@@ -425,18 +425,18 @@ sparse_embeddings.shape
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cluster_graph = cc.SRPSimilarityClustering(
-            threshold=0.5,            # minimum semantic similarity between items inside a cluster
-            top_k=None,               # None = all pairs above threshold
-            min_cluster_size=20,      # smaller clusters are discarded
-            normalize_rows=True,      # centroids of the cluster will be normalized
-            min_local_density=None,   # optional cleanup
-            centroid_top_k=8,         # how many top features are included in centroid definition
-            batch_size=32,
-            show_progress=True,
-        )(sparse_embeddings)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cluster_graph</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">SRPSimilarityClustering</span><span class="p">(</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>            <span class="c1"># minimum semantic similarity between items inside a cluster</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>               <span class="c1"># None = all pairs above threshold</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>      <span class="c1"># smaller clusters are discarded</span>
+            <span class="n">normalize_rows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>      <span class="c1"># centroids of the cluster will be normalized</span>
+            <span class="n">min_local_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>   <span class="c1"># optional cleanup</span>
+            <span class="n">centroid_top_k</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>         <span class="c1"># how many top features are included in centroid definition</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">sparse_embeddings</span><span class="p">)</span>
 
-print(f&quot;Number of discovered clusters: {len(cluster_graph.clusters)}, active_clusters: {len(cluster_graph.active_clusters)}, root clusters: {len(cluster_graph.root_clusters)}&quot;)
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of discovered clusters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">, active_clusters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">, root clusters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">root_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -465,67 +465,67 @@ Number of discovered clusters: 28, active_clusters: 28, root clusters: 28
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ollama
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ollama</span>
 
-MODEL = &quot;gpt-oss:20b&quot;
+<span class="n">MODEL</span> <span class="o">=</span> <span class="s2">&quot;gpt-oss:20b&quot;</span>
 
-def label_cluster(items: str) -&gt; str:
+<span class="k">def</span><span class="w"> </span><span class="nf">label_cluster</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 
-    prompt = f&quot;&quot;&quot;You are given a list of items, each with metadata.
+    <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are given a list of items, each with metadata.</span>
 
-    1. Identify the most common concept that links all the items
-    2. Convert that concept into a segment name suitable for a recommendation system.
+<span class="s2">    1. Identify the most common concept that links all the items</span>
+<span class="s2">    2. Convert that concept into a segment name suitable for a recommendation system.</span>
 
-    The segment name must be title-case, concise (2-5 words), and sound natural — like a content
-    category. Prefer distinctive labels over generic ones.
+<span class="s2">    The segment name must be title-case, concise (2-5 words), and sound natural — like a content</span>
+<span class="s2">    category. Prefer distinctive labels over generic ones.</span>
 
-    Output: Only the final segment name, nothing else.
+<span class="s2">    Output: Only the final segment name, nothing else.</span>
 
-    Items:
-    {items}
+<span class="s2">    Items:</span>
+<span class="s2">    </span><span class="si">{</span><span class="n">items</span><span class="si">}</span>
 
-    Segment name:&quot;&quot;&quot;
+<span class="s2">    Segment name:&quot;&quot;&quot;</span>
 
-    response = ollama.chat(
-        model=MODEL,
-        messages=[
-            {
-                &quot;role&quot;: &quot;system&quot;,
-                &quot;content&quot;: (
-                    &quot;You are a strict classification model. &quot;
-                    &quot;Return only one segment name. Never explain.&quot;
-                ),
-            },
-            {
-                &quot;role&quot;: &quot;user&quot;,
-                &quot;content&quot;: prompt,
-            },
-        ],
-        options={
-            &quot;temperature&quot;: 0.0,
-            &quot;num_predict&quot;: 1000,
-            &quot;num_ctx&quot;: 8192,
-        },
-        think=&quot;low&quot;,
-        stream=False,
-    )
+    <span class="n">response</span> <span class="o">=</span> <span class="n">ollama</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
+        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;You are a strict classification model. &quot;</span>
+                    <span class="s2">&quot;Return only one segment name. Never explain.&quot;</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">prompt</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">],</span>
+        <span class="n">options</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;num_predict&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="s2">&quot;num_ctx&quot;</span><span class="p">:</span> <span class="mi">8192</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">think</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">,</span>
+        <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    content = response[&quot;message&quot;][&quot;content&quot;] if response[&quot;message&quot;][&quot;content&quot;] is not None else None
+    <span class="n">content</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-    return content
+    <span class="k">return</span> <span class="n">content</span>
 
-def item_texts(cluster: compresso.clustering.types.SparseCluster, metadata: pd.DataFrame, limit: int = 50) -&gt; str:
-    rows = metadata.iloc[cluster.entity_indices] # select rows with items that are members of the cluster
-    if len(rows) &gt; limit: # optionally sample maximum allowed number of items to save tokens
-        rows = rows.sample(limit)
-    return &quot;\n&quot;.join(rows[&quot;title&quot;].fillna(&quot;&quot;).tolist()) # just return item titles, one per row
+<span class="k">def</span><span class="w"> </span><span class="nf">item_texts</span><span class="p">(</span><span class="n">cluster</span><span class="p">:</span> <span class="n">compresso</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">SparseCluster</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">cluster</span><span class="o">.</span><span class="n">entity_indices</span><span class="p">]</span> <span class="c1"># select rows with items that are members of the cluster</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span> <span class="c1"># optionally sample maximum allowed number of items to save tokens</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="c1"># just return item titles, one per row</span>
 
 
-print(&quot;Items texts for the first cluster in the graph:\n&quot;)
-texts = item_texts(cluster_graph.clusters[0], meta, limit=10)
-print(texts)
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Items texts for the first cluster in the graph:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">texts</span> <span class="o">=</span> <span class="n">item_texts</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">meta</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
 
-print(&quot;\nLLM label for the first cluster:&quot;, label_cluster(texts))
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">LLM label for the first cluster:&quot;</span><span class="p">,</span> <span class="n">label_cluster</span><span class="p">(</span><span class="n">texts</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -555,13 +555,13 @@ LLM label for the first cluster: Calculator Devices
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cluster_graph = cc.LabelClusters(
-            entity_metadata=meta,
-            text_extractor=item_texts,
-            label_fn=label_cluster,
-            cluster_scope=&quot;all&quot;,
-            show_progress=True,
-        )(cluster_graph)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cluster_graph</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">LabelClusters</span><span class="p">(</span>
+            <span class="n">entity_metadata</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span>
+            <span class="n">text_extractor</span><span class="o">=</span><span class="n">item_texts</span><span class="p">,</span>
+            <span class="n">label_fn</span><span class="o">=</span><span class="n">label_cluster</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">cluster_graph</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -576,38 +576,38 @@ LLM label for the first cluster: Calculator Devices
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import pandas as pd
-from IPython.display import HTML
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>
 
-# construct a dataframe with cluster label and 5 random sampled item images belonging to the cluster
-def visualize_clusters(cluster_graph):
-    data = [
-        (
-            cluster_graph.clusters[i].label,
-            meta.iloc[cluster_graph.clusters[i].entity_indices].image_url.sample(5).to_list()
-        ) for i in range(len(cluster_graph.clusters))
-    ]
+<span class="c1"># construct a dataframe with cluster label and 5 random sampled item images belonging to the cluster</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">visualize_clusters</span><span class="p">(</span><span class="n">cluster_graph</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span>
+            <span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">entity_indices</span><span class="p">]</span><span class="o">.</span><span class="n">image_url</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">))</span>
+    <span class="p">]</span>
 
-    df = pd.DataFrame(data, columns=[&quot;Cluster&quot;, &quot;image_urls&quot;])
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;image_urls&quot;</span><span class="p">])</span>
 
-    def image_gallery(urls):
-        imgs = [
-            f&#39;&lt;img src=&quot;{url}&quot; style=&quot;height:80px; margin:4px; object-fit:contain;&quot;&gt;&#39;
-            for url in urls
-        ]
-        return &quot;&lt;div style=&#39;display:flex; flex-wrap:wrap; gap:6px;&#39;&gt;&quot; + &quot;&quot;.join(imgs) + &quot;&lt;/div&gt;&quot;
+    <span class="k">def</span><span class="w"> </span><span class="nf">image_gallery</span><span class="p">(</span><span class="n">urls</span><span class="p">):</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s1">&#39;&lt;img src=&quot;</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">&quot; style=&quot;height:80px; margin:4px; object-fit:contain;&quot;&gt;&#39;</span>
+            <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;div style=&#39;display:flex; flex-wrap:wrap; gap:6px;&#39;&gt;&quot;</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&quot;</span>
 
-    df_render = df.copy()
-    df_render[&quot;Items (sample)&quot;] = df_render[&quot;image_urls&quot;].map(image_gallery)
+    <span class="n">df_render</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">df_render</span><span class="p">[</span><span class="s2">&quot;Items (sample)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_render</span><span class="p">[</span><span class="s2">&quot;image_urls&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">image_gallery</span><span class="p">)</span>
 
-    html = df_render[[&quot;Cluster&quot;, &quot;Items (sample)&quot;]].to_html(
-        escape=False,
-        index=False
-    )
+    <span class="n">html</span> <span class="o">=</span> <span class="n">df_render</span><span class="p">[[</span><span class="s2">&quot;Cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;Items (sample)&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span>
+        <span class="n">escape</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
 
-    return HTML(html)
+    <span class="k">return</span> <span class="n">HTML</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
 
-visualize_clusters(cluster_graph)
+<span class="n">visualize_clusters</span><span class="p">(</span><span class="n">cluster_graph</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -744,29 +744,29 @@ visualize_clusters(cluster_graph)
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pipeline_cluster_graph = cc.ClusteringPipeline(
-    [
-        cc.SRPSimilarityClustering(
-            threshold=0.5,            # minimum semantic similarity between items inside a cluster
-            top_k=None,               # None = all pairs above threshold
-            min_cluster_size=20,      # smaller clusters are discarded
-            normalize_rows=True,      # centroids of the cluster will be normalized
-            min_local_density=None,   # optional cleanup
-            centroid_top_k=8,         # how many top features are included in centroid definition
-            batch_size=32,
-            show_progress=True,
-        ),
-        cc.LabelClusters(
-            entity_metadata=meta,
-            text_extractor=item_texts,
-            label_fn=label_cluster,
-            cluster_scope=&quot;all&quot;,
-            show_progress=True,
-        ),
-    ]
-)(sparse_embeddings)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline_cluster_graph</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">ClusteringPipeline</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">cc</span><span class="o">.</span><span class="n">SRPSimilarityClustering</span><span class="p">(</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>            <span class="c1"># minimum semantic similarity between items inside a cluster</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>               <span class="c1"># None = all pairs above threshold</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>      <span class="c1"># smaller clusters are discarded</span>
+            <span class="n">normalize_rows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>      <span class="c1"># centroids of the cluster will be normalized</span>
+            <span class="n">min_local_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>   <span class="c1"># optional cleanup</span>
+            <span class="n">centroid_top_k</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>         <span class="c1"># how many top features are included in centroid definition</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">cc</span><span class="o">.</span><span class="n">LabelClusters</span><span class="p">(</span>
+            <span class="n">entity_metadata</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span>
+            <span class="n">text_extractor</span><span class="o">=</span><span class="n">item_texts</span><span class="p">,</span>
+            <span class="n">label_fn</span><span class="o">=</span><span class="n">label_cluster</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)(</span><span class="n">sparse_embeddings</span><span class="p">)</span>
 
-visualize_clusters(pipeline_cluster_graph)
+<span class="n">visualize_clusters</span><span class="p">(</span><span class="n">pipeline_cluster_graph</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
