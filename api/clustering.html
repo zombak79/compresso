@@ -52,23 +52,57 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#basic-workflow">Basic Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#clustering-workflow">Clustering Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#what-s-next">What’s next</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../examples.html#sparse-autoencoder">Sparse Autoencoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../examples.html#saving-sparse-representations">Saving Sparse Representations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../examples.html#clustering">Clustering</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#where-to-go-next">Where to go next</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../clustering.html">Clustering - real world example</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
