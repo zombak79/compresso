@@ -31,10 +31,10 @@ to *see* what a sparse autoencoder learns.
    :caption: User Guide
 
    basic-example
-   examples
    advanced-usage
    io
    clustering-visualization
+   clustering
 
 .. toctree::
    :maxdepth: 2
