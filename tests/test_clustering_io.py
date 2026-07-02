@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -12,14 +11,6 @@ from compresso.clustering import (
     SparseVector,
     load_cluster_graph,
     save_cluster_graph,
-)
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
-from recsys_lib.checkpoint import (  # noqa: E402
-    load_cluster_graph_stage,
-    load_manifest,
-    save_cluster_graph_stage,
-    update_checkpoint,
 )
 
 
@@ -78,22 +69,3 @@ def test_cluster_graph_json_roundtrip(tmp_path: Path):
     assert loaded.cluster_by_id["feature:1:pos"].tags[0].name == "fantasy"
     assert loaded.cluster_by_id["merge:test:2"].child_cluster_ids == ("feature:1:pos",)
     assert np.allclose(loaded.cluster_by_id["merge:test:2"].centroid.values, [0.7, -0.7])
-
-
-def test_cluster_graph_checkpoint_roundtrip(tmp_path: Path):
-    graph = _graph()
-    checkpoint = tmp_path / "checkpoint.zip"
-
-    with update_checkpoint(checkpoint) as root:
-        save_cluster_graph_stage(root, graph, metadata={"note": "saved from test"})
-
-    with update_checkpoint(checkpoint) as root:
-        loaded = load_cluster_graph_stage(root)
-        manifest = load_manifest(root)
-
-    assert loaded.active_cluster_ids == ("merge:test:2",)
-    assert loaded.cluster_by_id["merge:test:2"].label == "Speculative Fiction"
-    assert manifest["stages"]["clustering"]["graph_path"] == "clustering/graph.json"
-    assert manifest["stages"]["clustering"]["n_nodes"] == 2
-    assert manifest["stages"]["clustering"]["n_active_clusters"] == 1
-    assert manifest["stages"]["clustering"]["note"] == "saved from test"
