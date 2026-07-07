@@ -46,6 +46,27 @@ def test_topk_sae_trainer_fit_transform_returns_srp():
     assert torch.allclose(srp.vals.abs().sum(dim=1), torch.ones(24), atol=1e-5)
 
 
+def test_topk_sae_trainer_fit_transform_accepts_float64_numpy_embeddings():
+    rng = np.random.default_rng(1)
+    x = rng.normal(size=(20, 6))
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=12,
+            k=3,
+            batch_size=5,
+            epochs=1,
+            show_progress=False,
+            seed=321,
+        )
+    )
+
+    srp = trainer.fit_transform(x)
+
+    assert isinstance(srp, SRPTensor)
+    assert srp.shape == (20, 12)
+    assert srp.vals.dtype == torch.float32
+
+
 def test_topk_sae_trainer_encode_and_reconstruct_shapes():
     x = torch.randn(10, 6)
     trainer = TopKSAETrainer(
@@ -65,6 +86,26 @@ def test_topk_sae_trainer_encode_and_reconstruct_shapes():
     assert codes.shape == (10, 12)
     assert recon.shape == (10, 6)
     assert (codes != 0).sum(dim=1).tolist() == [2] * 10
+
+
+def test_topk_sae_trainer_transform_accepts_float64_torch_embeddings():
+    x = torch.randn(10, 6)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=12,
+            k=2,
+            batch_size=5,
+            epochs=1,
+            show_progress=False,
+            seed=17,
+        )
+    ).fit(x)
+
+    srp = trainer.transform(x.double())
+
+    assert isinstance(srp, SRPTensor)
+    assert srp.shape == (10, 12)
+    assert srp.vals.dtype == torch.float32
 
 
 def test_topk_sae_trainer_cosine_lr_decay_records_learning_rate():
