@@ -1,0 +1,8 @@
+sphinx>=8.0
+sphinx-rtd-theme>=3.0
+sphinx-autodoc-typehints>=2.0
+myst-parser>=4.0
+nbsphinx>=0.9
+pypandoc-binary>=1.15
+sphinx-autobuild>=2024.0
+ipython-pygments-lexers>=1.0

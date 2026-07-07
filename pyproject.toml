@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compresso-pytorch"
+version = "0.1.0"
+description = "A PyTorch framework for sparse representation learning"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Vojtech Vancura" },
+    { name = "Giacomo Medda" },
+    { name = "Martin Spisak" },
+    { name = "Ladislav Peska" },
+]
+keywords = [
+    "pytorch",
+    "sparse-representations",
+    "sparse-autoencoders",
+    "representation-learning",
+    "machine-learning",
+    "interpretability",
+    "clustering",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "torch>=2.1",
+    "numpy>=1.26",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+]
+docs = [
+    "sphinx>=8.0",
+    "sphinx-rtd-theme>=3.0",
+    "sphinx-autodoc-typehints>=2.0",
+    "myst-parser>=4.0",
+    "nbsphinx>=0.9",
+    "pypandoc-binary>=1.15",
+    "ipython-pygments-lexers>=1.0",
+]
+dev = [
+    "build>=1.2",
+    "twine>=6.0",
+    "pytest>=8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/zombak79/compresso"
+Documentation = "https://zombak79.github.io/compresso/"
+Repository = "https://github.com/zombak79/compresso"
+Issues = "https://github.com/zombak79/compresso/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
