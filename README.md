@@ -1,4 +1,4 @@
-# Compresso
+# Compresso: A PyTorch Framework for Sparse Representation Learning
 
 Compresso is a small PyTorch library for fixed-k sparse representations,
 sparse autoencoders, sparse parameters, and sparse-representation clustering.
