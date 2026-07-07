@@ -63,7 +63,7 @@ from compresso import clustering as cc
 cluster_graph = cc.ClusteringPipeline(
     [
         cc.SRPSimilarityClustering(
-            threshold=0.5,            # minimum semantic similarity between items inside a cluster
+            threshold=0.5,            # minimum similarity between items inside a cluster
             top_k=None,               # None = all pairs above threshold
             min_cluster_size=20,      # smaller clusters are discarded
             normalize_rows=True,      # centroids of the cluster will be normalized
