@@ -1,3 +1,5 @@
+:orphan:
+
 Examples
 ========
 
@@ -51,7 +53,4 @@ and Compresso Recsys: building a checkpoint, embedding item metadata, training
 a sparse autoencoder, discovering clusters, labeling them with an LLM, and
 visualizing example items.
 
-.. toctree::
-   :maxdepth: 1
-
-   clustering
+Open the full walkthrough in :doc:`clustering`.
