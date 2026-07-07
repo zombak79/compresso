@@ -15,9 +15,6 @@ Sparse Representations
 .. autoclass:: compresso.SRPTensor
    :members:
 
-.. autoclass:: compresso.SRPParam
-   :members:
-
 Sparse Autoencoders
 -------------------
 
@@ -42,6 +39,9 @@ Sparse Parameters
 .. autoclass:: compresso.MaskedParam
    :members:
 
+.. autoclass:: compresso.SRPParam
+   :members:
+   
 Utilities
 ---------
 
