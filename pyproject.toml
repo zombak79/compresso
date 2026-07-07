@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "compresso-pytorch"
 version = "0.1.0"
-description = "Compresso: structured compression in PyTorch"
+description = "Compresso: A PyTorch Framework for Sparse Representation Learning"
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.1",
