@@ -92,7 +92,7 @@ If you find this project helpful or use it in your academic work, please conside
 ```bibtex
 @misc{compresso,
   title  = {Compresso: A PyTorch Framework for Sparse Representation Learning},
-  author = {Vojtech Vancura, Giacomo Medda, Martin Spišák and Ladislav Peška},
+  author = {Van{\v{c}}ura, Vojt{\v{e}}ch and Giacomo Medda and Spi{\v{s}}{\'a}k, Martin and Ladislav Pe{\v{s}}ka},
   year   = {2026},
   url    = {https://github.com/zombak79/compresso}
 }
