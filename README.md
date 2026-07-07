@@ -1,5 +1,5 @@
 # Compresso: A PyTorch Framework for Sparse Representation Learning
-
+ 
 Compresso is an open-source PyTorch framework for sparse representation learning. It provides reusable building blocks for learning sparse neural representations, dynamic sparsification, sparse inference, and semantic analysis, enabling researchers to rapidly prototype sparse neural architectures while focusing on models rather than infrastructure.
 
 ## Why Compresso?
