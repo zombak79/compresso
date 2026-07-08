@@ -41,5 +41,5 @@ jobs:
           publish_dir: docs/build/html
           force_orphan: true
           user_name: zombak79
-          user_email: zombak79@gmail.com
+          user_email: zombak79@users.noreply.github.com
           commit_message: Deploy documentation
