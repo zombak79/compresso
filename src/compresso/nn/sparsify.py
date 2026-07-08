@@ -39,6 +39,24 @@ class TopKSparsify(nn.Module):
         self.ste_alpha = ste_alpha
 
     def forward(self, x: Tensor) -> Tensor:
+        """Apply top-k sparsification to an input tensor.
+
+        The forward pass keeps the ``k`` highest-scoring entries along
+        ``dim`` and sets all other entries to zero. Ranking is controlled by
+        ``score_mode`` and gradients for non-selected entries are scaled by
+        ``ste_alpha`` through the straight-through estimator.
+
+        Parameters
+        ----------
+        x : Tensor
+            Input tensor to sparsify.
+
+        Returns
+        -------
+        Tensor
+            Tensor with the same shape as ``x`` and at most ``k`` non-zero
+            entries along ``dim``.
+        """
         return topk_ste(
             x,
             k=self.k,
