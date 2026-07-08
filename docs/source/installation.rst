@@ -4,14 +4,12 @@ Installation
 Compresso is published as the ``compresso-pytorch`` distribution and imported
 as ``compresso`` in Python code.
 
-Install from GitHub
+Install from PyPI
 -------------------
-
-Until the first PyPI release is published, install directly from the repository:
 
 .. code-block:: bash
 
-   pip install "compresso-pytorch@git+https://github.com/zombak79/compresso.git"
+   pip install compresso-pytorch
 
 Install from Source
 -------------------
