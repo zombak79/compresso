@@ -122,6 +122,19 @@ class L1Normalize(nn.Module):
     """Apply row-wise L1 normalization."""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Normalize each row by its L1 norm.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor whose last dimension is normalized.
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor with the same shape as ``x`` and unit L1 norm along the
+            last dimension where possible.
+        """
         return F.normalize(x, p=1.0, dim=-1)
 
 
@@ -129,6 +142,19 @@ class L2Normalize(nn.Module):
     """Apply row-wise L2 normalization."""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Normalize each row by its L2 norm.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor whose last dimension is normalized.
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor with the same shape as ``x`` and unit L2 norm along the
+            last dimension where possible.
+        """
         return F.normalize(x, p=2.0, dim=-1)
 
 

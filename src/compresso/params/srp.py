@@ -631,6 +631,14 @@ class SRPParam(nn.Module):
 
     # convenience forward
     def forward(self) -> SRPTensor:
+        """Return the sparse representation as an :class:`SRPTensor`.
+
+        Returns
+        -------
+        SRPTensor
+            Row-packed sparse representation backed by this parameter's
+            column indices and trainable values.
+        """
         return SRPTensor(
             cols=self.cols,          # (rows, k) long
             vals=self.values,            # (rows, k) float

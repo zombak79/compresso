@@ -130,6 +130,18 @@ class MaskedParam(nn.Module):
         return self.topk_weights_with_mask(k=k, return_mask=True)[1]
 
     def forward(self):
+        """Return the current masked or top-k-projected weight tensor.
+
+        When the mask is frozen, the stored binary mask is applied directly to
+        ``weight``. Otherwise, a differentiable top-k projection is computed
+        using the current pruning stage and straight-through estimator
+        settings.
+
+        Returns
+        -------
+        torch.Tensor
+            Dense weight tensor with inactive entries set to zero.
+        """
         if self.mask_frozen:
             out = self.weight * self.mask.to(self.weight.dtype)
             if self.post_norm_l1:
