@@ -59,10 +59,6 @@ trainer = TopKSAETrainer(
     TopKSAEConfig(
         hidden_dim=4096,
         k=32,
-        batch_size=1024,
-        epochs=50,
-        sparsify_score_mode="abs",
-        sparsify_ste_alpha=0.01,
     )
 )
 
@@ -77,23 +73,8 @@ from compresso import clustering as cc
 
 cluster_graph = cc.ClusteringPipeline(
     [
-        cc.SRPSimilarityClustering(
-            threshold=0.5,            # minimum similarity between items inside a cluster
-            top_k=None,               # None = all pairs above threshold
-            min_cluster_size=20,      # smaller clusters are discarded
-            normalize_rows=True,      # centroids of the cluster will be normalized
-            min_local_density=None,   # optional cleanup
-            centroid_top_k=8,         # how many top features are included in centroid definition
-            batch_size=32,
-            show_progress=True,
-        ),
-        cc.LabelClusters(
-            entity_metadata=meta,       # metadata for srp rows
-            text_extractor=texts_fn,    # function that converts entity metadata into a single string (entity description)
-            label_fn=label_cluster,     # function that converts a list of (cluster members) entity descriptions to one label
-            cluster_scope="all",        # scope of nodes in clustering graph
-            show_progress=True,
-        ),
+        cc.DominantSignedClustering(min_cluster_size=20),
+        cc.LabelClusters(...),
     ]
 )(srp)
 ```
