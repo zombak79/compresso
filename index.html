@@ -1,0 +1,375 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Compresso’s documentation! &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=92734c54"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to Compresso’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-compresso-s-documentation">
+<h1>Welcome to Compresso’s documentation!<a class="headerlink" href="#welcome-to-compresso-s-documentation" title="Link to this heading"></a></h1>
+<p>Compresso is a small PyTorch library for fixed-k sparse representations,
+sparse autoencoders, sparse parameters, and sparse-representation clustering.</p>
+<p>The project distribution is named <code class="docutils literal notranslate"><span class="pre">compresso-pytorch</span></code> and the Python package
+is imported as <code class="docutils literal notranslate"><span class="pre">compresso</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAEConfig</span><span class="p">,</span> <span class="n">TopKSAETrainer</span>
+
+<span class="n">embeddings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">10_000</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+<span class="n">srp</span> <span class="o">=</span> <span class="n">TopKSAETrainer</span><span class="p">(</span><span class="n">TopKSAEConfig</span><span class="p">(</span><span class="n">hidden_dim</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">50</span><span class="p">))</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">srp</span><span class="p">)</span>   <span class="c1"># SRPTensor(shape=(10000, 4096), k=32, ...)</span>
+</pre></div>
+</div>
+<p>New here? Read <a class="reference internal" href="getting-started.html"><span class="doc">Getting Started</span></a> for the concepts, then <a class="reference internal" href="basic-example.html"><span class="doc">A First Example: Seeing What an SAE Learns</span></a>
+to <em>see</em> what a sparse autoencoder learns.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/compresso.html">Core API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/clustering.html">Clustering API</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and Tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

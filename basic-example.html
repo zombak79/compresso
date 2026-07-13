@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A First Example: Seeing What an SAE Learns &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=92734c54"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced Usage" href="advanced-usage.html" />
+    <link rel="prev" title="Getting Started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">A First Example: Seeing What an SAE Learns</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/basic-example.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="a-first-example-seeing-what-an-sae-learns">
+<h1>A First Example: Seeing What an SAE Learns<a class="headerlink" href="#a-first-example-seeing-what-an-sae-learns" title="Link to this heading"></a></h1>
+<p>The quickest way to build intuition for a top-k sparse autoencoder is to train
+one on <strong>images</strong> and look at the result, because every learned feature can be
+drawn as a picture. This example uses MNIST, the classic handwritten-digit
+images (28×28 grayscale, available through the <code class="docutils literal notranslate"><span class="pre">datasets</span></code> library), but nothing
+here is digit-specific: any dense matrix works the same way.</p>
+<p>Everything below uses only the high-level public API
+(<a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig" title="compresso.TopKSAEConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a>, <a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer" title="compresso.TopKSAETrainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This page is illustrative; you do not need to run it to use Compresso. The
+figures are regenerated by <code class="docutils literal notranslate"><span class="pre">docs/gen_figures.py</span></code> (see that script for the
+extra plotting/data dependencies).</p>
+</div>
+<section id="treat-each-image-as-a-dense-vector">
+<h2>Treat each image as a dense vector<a class="headerlink" href="#treat-each-image-as-a-dense-vector" title="Link to this heading"></a></h2>
+<p>We flatten every 28×28 image into a length-784 vector and scale it to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.
+That gives a dense matrix <code class="docutils literal notranslate"><span class="pre">X</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">784)</span></code> — exactly the input format
+the trainer expects.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s2">&quot;ylecun/mnist&quot;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">)</span>
+<span class="n">imgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">][:</span><span class="mi">20_000</span><span class="p">]])</span> <span class="o">/</span> <span class="mf">255.0</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">imgs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>   <span class="c1"># (20000, 784) dense embeddings</span>
+</pre></div>
+</div>
+</section>
+<section id="train-a-top-k-sae">
+<h2>Train a top-k SAE<a class="headerlink" href="#train-a-top-k-sae" title="Link to this heading"></a></h2>
+<p>We use a compact undercomplete code (<code class="docutils literal notranslate"><span class="pre">hidden_dim=196</span></code> features) and keep only
+<code class="docutils literal notranslate"><span class="pre">k=20</span></code> of them active per image:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAEConfig</span><span class="p">,</span> <span class="n">TopKSAETrainer</span>
+
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">TopKSAETrainer</span><span class="p">(</span>
+    <span class="n">TopKSAEConfig</span><span class="p">(</span>
+        <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">196</span><span class="p">,</span>
+        <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+        <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+        <span class="n">decay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Reconstruction quality climbs quickly. With only 20 active features the
+reconstructions are recognizably the original digits:</p>
+<a class="reference internal image-reference" href="_images/basic_reconstructions.png"><img alt="Top row original digits, bottom row their sparse reconstructions" class="align-center" src="_images/basic_reconstructions.png" style="width: 95%;" />
+</a>
+</section>
+<section id="the-decoder-is-a-dictionary">
+<h2>The decoder <em>is</em> a dictionary<a class="headerlink" href="#the-decoder-is-a-dictionary" title="Link to this heading"></a></h2>
+<p>The interesting part is <strong>what</strong> the model learned. The decoder maps each of the
+196 code features back to image space, so every column of the decoder weight is
+itself a 28×28 image — a <em>dictionary atom</em>. <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code> exposes this matrix
+directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">W</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">sae</span><span class="o">.</span><span class="n">get_decoder_weight</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>   <span class="c1"># (784, 196): each column is an atom</span>
+</pre></div>
+</div>
+<p>Plotted as images (most-used first), the atoms are clearly stroke- and
+template-like: loops, diagonals, and digit fragments that combine to form
+glyphs.</p>
+<a class="reference internal image-reference" href="_images/basic_atoms.png"><img alt="Grid of learned dictionary atoms resembling pen strokes and digit parts" class="align-center" src="_images/basic_atoms.png" style="width: 95%;" />
+</a>
+</section>
+<section id="a-code-is-a-recipe">
+<h2>A code is a recipe<a class="headerlink" href="#a-code-is-a-recipe" title="Link to this heading"></a></h2>
+<p>Because the decoder is linear, the reconstruction of any image is just the
+<strong>weighted sum of its few active atoms</strong>. We can read a single image’s sparse
+code, then watch the picture assemble atom by atom:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">code</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">X</span><span class="p">[:</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>      <span class="c1"># (196,), only 20 non-zero</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">code</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>                  <span class="c1"># which atoms fired</span>
+<span class="n">contributions</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">numpy</span><span class="p">()[:,</span> <span class="n">active</span><span class="p">]</span> <span class="o">*</span> <span class="n">code</span><span class="p">[</span><span class="n">active</span><span class="p">]</span>   <span class="c1"># (784, 20) pieces</span>
+<span class="n">reconstruction</span> <span class="o">=</span> <span class="n">contributions</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>   <span class="c1"># == trainer.reconstruct(X[:1])</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/basic_additive.png"><img alt="An input digit reconstructed as the sum of a few signed atoms" class="align-center" src="_images/basic_additive.png" style="width: 95%;" />
+</a>
+<p>This is the whole idea in one picture: a dense image becomes a short, signed
+recipe over a shared dictionary. Each ingredient is reusable across the dataset
+and individually meaningful — which is exactly what makes the codes good for
+storage (<a class="reference internal" href="io.html"><span class="doc">Input and Output</span></a>) and clustering (<a class="reference internal" href="clustering-visualization.html"><span class="doc">Clustering Sparse Codes</span></a>).</p>
+</section>
+<section id="reading-a-sparse-code">
+<h2>Reading a sparse code<a class="headerlink" href="#reading-a-sparse-code" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">transform</span></code> packages the codes as an <a class="reference internal" href="api/compresso.html#compresso.SRPTensor" title="compresso.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a>, the
+fixed-k container used throughout Compresso. Instead of a dense matrix it stores
+each row as just its <code class="docutils literal notranslate"><span class="pre">k</span></code> active <code class="docutils literal notranslate"><span class="pre">(column,</span> <span class="pre">value)</span></code> pairs, so you can read one
+image’s “recipe” straight off the tensor:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">srp</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">srp</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">srp</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>          <span class="c1"># (20000, 196) 20</span>
+
+<span class="c1"># image 0: the atoms that fired and their signed weights</span>
+<span class="n">srp</span><span class="o">.</span><span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># active feature indices,  e.g. tensor([174,  62, 149,  58,  26, ...])</span>
+<span class="n">srp</span><span class="o">.</span><span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># matching coefficients,   e.g. tensor([-5.15, -2.18, 1.92, -1.65, 1.40, ...])</span>
+</pre></div>
+</div>
+<p>Each index points to one dictionary atom from the grid above, and the paired
+value is its coefficient in the additive sum — the same numbers shown in the
+breakdown figure. When a downstream tool needs a standard layout instead,
+<code class="docutils literal notranslate"><span class="pre">srp.to_dense()</span></code> returns the padded <code class="docutils literal notranslate"><span class="pre">(20000,</span> <span class="pre">196)</span></code> matrix; torch-sparse and
+SciPy conversions, plus saving and reloading, are covered in <a class="reference internal" href="io.html"><span class="doc">Input and Output</span></a>.</p>
+</section>
+<section id="where-to-go-next">
+<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="io.html"><span class="doc">Input and Output</span></a> — how those codes are stored and how to save/reload them.</p></li>
+<li><p><a class="reference internal" href="advanced-usage.html"><span class="doc">Advanced Usage</span></a> — the same model without the trainer wrapper, plus the
+knobs (scoring mode, straight-through estimator, sparsity schedules).</p></li>
+<li><p><a class="reference internal" href="clustering-visualization.html"><span class="doc">Clustering Sparse Codes</span></a> — group sparse codes into interpretable themes at scale.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="advanced-usage.html" class="btn btn-neutral float-right" title="Advanced Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

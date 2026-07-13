@@ -1,0 +1,975 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>compresso.params.srp &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">compresso.params.srp</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for compresso.params.srp</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="n">InitMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;topk_abs&quot;</span><span class="p">,</span> <span class="s2">&quot;random_k&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SRPTensor">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SRPTensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal SRP tensor container.</span>
+
+<span class="sd">    Stores a row-packed sparse matrix with fixed ``k`` nonzeros per row.</span>
+<span class="sd">    The representation uses ``cols`` and ``vals`` tensors of shape</span>
+<span class="sd">    ``(rows, k)`` with logical dense shape ``(rows, cols_total)``.</span>
+
+<span class="sd">    Optionally carries ``prefix_shape`` so callers can restore</span>
+<span class="sd">    ``(*prefix, cols_total)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;cols&quot;</span><span class="p">,</span> <span class="s2">&quot;vals&quot;</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">,</span> <span class="s2">&quot;prefix_shape&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cols</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>          <span class="c1"># (rows, k) long</span>
+        <span class="n">vals</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>          <span class="c1"># (rows, k) float</span>
+        <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>      <span class="c1"># (rows, cols_total)</span>
+        <span class="n">prefix_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SRPTensor.cols must be torch.long&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">vals</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SRPTensor.cols and SRPTensor.vals must be 2D (rows, k)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cols.shape </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2"> != vals.shape </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;shape[0]=</span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> must equal rows=</span><span class="si">{</span><span class="n">rows</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">cols_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">cols_total</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;shape[1] (cols_total) must be &gt;= 1&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">validate</span> <span class="ow">and</span> <span class="n">cols</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cmin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="n">cmax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">cmin</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">cmax</span> <span class="o">&gt;=</span> <span class="n">cols_total</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cols out of bounds: min=</span><span class="si">{</span><span class="n">cmin</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">cmax</span><span class="si">}</span><span class="s2">, allowed [0, </span><span class="si">{</span><span class="n">cols_total</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prefix_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows_from_prefix</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">prefix_shape</span><span class="p">:</span>
+                <span class="n">rows_from_prefix</span> <span class="o">*=</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rows_from_prefix</span> <span class="o">!=</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;prefix_shape=</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">prefix_shape</span><span class="p">)</span><span class="si">}</span><span class="s2"> implies rows=</span><span class="si">{</span><span class="n">rows_from_prefix</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="n">rows</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="n">cols</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">cols_total</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">prefix_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">prefix_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">device</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">requires_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_cuda</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">is_cuda</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cols_total</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">k</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nnz</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">numel</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;, prefix_shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;SRPTensor(&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;k=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;vals=Tensor(shape=</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">, dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">, device=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">), &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;cols=Tensor(shape=</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">, dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">, device=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">logical_shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">logical_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">logical_shape</span><span class="p">)[</span><span class="n">dim</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">numel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
+            <span class="n">out</span> <span class="o">*=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_floating_point</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span>
+            <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">prefix_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cpu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cuda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">device</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+            <span class="n">vals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">prefix_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
+            <span class="n">vals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">prefix_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">contiguous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+            <span class="n">vals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">prefix_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">requires_grad_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requires_grad</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="n">requires_grad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="SRPTensor.to_dense">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_dense">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dense</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Densify to ``(rows, cols_total)`` or ``(*prefix, cols_total)``.&quot;&quot;&quot;</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="c1"># Duplicates in a row accumulate by design.</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">scatter_add_</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_coo">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_coo">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_coo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a coalesced 2D PyTorch sparse COO tensor.</span>
+
+<span class="sd">        The returned tensor has logical shape ``(rows, cols_total)``. Duplicate</span>
+<span class="sd">        SRP columns in a row are summed by COO coalescing, matching</span>
+<span class="sd">        :meth:`to_dense` scatter-add semantics.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">row_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">col_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">row_idx</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sparse_coo_tensor</span><span class="p">(</span>
+            <span class="n">indices</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">check_invariants</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">coalesce</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_csr">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_csr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_csr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a 2D PyTorch sparse CSR tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">to_sparse_csr</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_csc">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_csc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_csc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a 2D PyTorch sparse CSC tensor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">to_sparse_csc</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_bsr">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_bsr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_bsr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocksize</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a 2D PyTorch sparse BSR tensor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        blocksize:</span>
+<span class="sd">            Sparse block size ``(row_block, col_block)``. Both dimensions must</span>
+<span class="sd">            divide the logical dense shape.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">to_sparse_bsr</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_bsc">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_bsc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_bsc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocksize</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a 2D PyTorch sparse BSC tensor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        blocksize:</span>
+<span class="sd">            Sparse block size ``(row_block, col_block)``. Both dimensions must</span>
+<span class="sd">            divide the logical dense shape.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">to_sparse_bsc</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_scipy_coo">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_scipy_coo">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_scipy_coo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a SciPy ``coo_matrix`` on CPU.</span>
+
+<span class="sd">        This conversion detaches tensors and therefore does not preserve</span>
+<span class="sd">        autograd history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sparse</span>
+
+        <span class="n">row_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">row_idx</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_scipy_csr">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_scipy_csr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_scipy_csr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a SciPy ``csr_matrix`` on CPU.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_scipy_coo</span><span class="p">()</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_scipy_csc">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_scipy_csc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_scipy_csc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a SciPy ``csc_matrix`` on CPU.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_scipy_coo</span><span class="p">()</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_numpy_dict">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_numpy_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a structural NumPy representation.</span>
+
+<span class="sd">        The returned dictionary contains ``cols``, ``vals``, ``shape``, and</span>
+<span class="sd">        ``prefix_shape``. It is intentionally not dense; use</span>
+<span class="sd">        ``srp.to_dense().cpu().numpy()`` when a dense NumPy array is desired.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;cols&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="s2">&quot;prefix_shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.numpy">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.numpy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for :meth:`to_numpy_dict`.</span>
+
+<span class="sd">        ``SRPTensor`` is structurally represented by both ``cols`` and ``vals``,</span>
+<span class="sd">        so this method returns structural arrays rather than a dense matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_numpy_dict</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.to_dict">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serialize SRPTensor to a torch-saveable payload.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;layout&quot;</span><span class="p">:</span> <span class="s2">&quot;srp&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="s2">&quot;prefix_shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix_shape</span><span class="p">,</span>
+            <span class="s2">&quot;cols&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span>
+            <span class="s2">&quot;vals&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.from_dict">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.from_dict">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserialize SRPTensor from payload produced by :meth:`to_dict`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;payload must be a dict&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;srp&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;srp&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported layout: </span><span class="si">{</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;layout&#39;</span><span class="p">)</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported SRP payload version: </span><span class="si">{</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">)</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cols&quot;</span><span class="p">,</span> <span class="s2">&quot;vals&quot;</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">}</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">required</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing payload keys: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;cols&quot;</span><span class="p">],</span>
+            <span class="n">vals</span><span class="o">=</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;vals&quot;</span><span class="p">],</span>
+            <span class="n">shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">]),</span>
+            <span class="n">prefix_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;prefix_shape&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prefix_shape&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SRPTensor.from_dense">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPTensor.from_dense">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dense</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">score_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;abs&quot;</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;abs&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPTensor&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Project dense tensor to fixed-k SRP row-packed representation.</span>
+
+<span class="sd">        Accepts shape ``(*prefix, cols_total)`` and flattens prefix dims into rows.</span>
+<span class="sd">        Stores signed values gathered from original ``x`` at selected indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x must have at least 2 dims, got </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">cols_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">cols_total</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;k must be in [1, </span><span class="si">{</span><span class="n">cols_total</span><span class="si">}</span><span class="s2">], got </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">prefix_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">prefix_shape</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">*=</span> <span class="n">d</span>
+        <span class="n">x2d</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">score_mode</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">x2d</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">score_mode</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">x2d</span>
+        <span class="k">elif</span> <span class="n">score_mode</span> <span class="o">==</span> <span class="s2">&quot;relu&quot;</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">x2d</span><span class="o">.</span><span class="n">relu</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;score_mode must be one of {&#39;abs&#39;, &#39;raw&#39;, &#39;relu&#39;}&quot;</span><span class="p">)</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">largest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">x2d</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="n">idx</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span>
+            <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">),</span>
+            <span class="n">prefix_shape</span><span class="o">=</span><span class="n">prefix_shape</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prefix_shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SRPParam">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SRPParam</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured row-packed sparse parameter.</span>
+
+<span class="sd">    Represents a matrix ``A`` of shape ``(rows, cols_total)`` stored as</span>
+<span class="sd">    fixed-``k`` nonzeros per row.</span>
+
+<span class="sd">    Storage:</span>
+
+<span class="sd">    * ``cols``: ``(rows, k)`` int64 buffer with fixed indices per row.</span>
+<span class="sd">    * ``values``: ``(rows, k)`` trainable parameter.</span>
+
+<span class="sd">    Semantics:</span>
+
+<span class="sd">    ``A[r, cols[r, j]] += values[r, j]``</span>
+
+<span class="sd">    Duplicates within a row accumulate with scatter-add semantics. This format</span>
+<span class="sd">    is useful for row-packed sparse matrix multiplication against a dense</span>
+<span class="sd">    matrix ``B`` with shape ``(cols_total, out)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cols</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>           <span class="c1"># (rows, k) long</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>         <span class="c1"># (rows, k) float/bf16/fp16/fp32</span>
+        <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>       <span class="c1"># (rows, cols_total)</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cols must be torch.long&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cols must be 2D (rows,k), got </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;values must be 2D (rows,k), got </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">rows</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;cols/values first dim must equal rows=</span><span class="si">{</span><span class="n">rows</span><span class="si">}</span><span class="s2">, got cols=</span><span class="si">{</span><span class="n">cols</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">, values=</span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cols and values must have same shape, got </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;k must be &gt;= 1&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span> <span class="o">=</span> <span class="n">cols_total</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cmin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+                <span class="n">cmax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">cmin</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">cmax</span> <span class="o">&gt;=</span> <span class="n">cols_total</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cols out of bounds: min=</span><span class="si">{</span><span class="n">cmin</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">cmax</span><span class="si">}</span><span class="s2">, allowed [0, </span><span class="si">{</span><span class="n">cols_total</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+        <span class="c1"># structure is fixed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;cols&quot;</span><span class="p">,</span> <span class="n">cols</span><span class="o">.</span><span class="n">clone</span><span class="p">())</span>
+        <span class="c1"># values are trained</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">clone</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SRPParam.extra_repr">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam.extra_repr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extra_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;shape=(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span><span class="si">}</span><span class="s2">), k=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="si">}</span><span class="s2">, dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+    <span class="c1">#@torch.no_grad()</span>
+    <span class="c1">#def to_dense(self, *, dtype: Optional[torch.dtype] = None) -&gt; torch.Tensor:</span>
+    <span class="c1">#    &quot;&quot;&quot;</span>
+    <span class="c1">#    Materialize dense matrix A (rows, cols_total) with scatter_add semantics.</span>
+    <span class="c1">#    Mainly for debugging/tests.</span>
+    <span class="c1">#    &quot;&quot;&quot;</span>
+    <span class="c1">#    device = self.values.device</span>
+    <span class="c1">#    dt = dtype if dtype is not None else self.values.dtype</span>
+    <span class="c1">#</span>
+    <span class="c1">#    A = torch.zeros(self.rows, self.cols_total, device=device, dtype=dt)</span>
+    <span class="c1">#    A.scatter_add_(1, self.cols.to(device=device), self.values.to(dtype=dt))</span>
+    <span class="c1">#    return A</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dense</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">scatter_add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="c1">#@torch.no_grad()</span>
+<div class="viewcode-block" id="SRPParam.build_coo">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam.build_coo">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_coo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coalesce</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert to a torch sparse COO tensor (rows, cols_total).</span>
+<span class="sd">        Duplicates are kept; coalesce() will sum them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">dtype</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (2, rows*k)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sparse_coo_tensor</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">coalesce</span><span class="p">()</span> <span class="k">if</span> <span class="n">coalesce</span> <span class="k">else</span> <span class="n">sp</span></div>
+
+
+    <span class="c1">#@torch.no_grad()</span>
+<div class="viewcode-block" id="SRPParam.select_rows">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam.select_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_indices</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPParam&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fast row selection, returns a NEW SRPParam with rows=len(row_indices), same cols_total and k.</span>
+<span class="sd">        Reindexes rows to [0..R-1], structure is still row-packed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">row_indices</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">:</span>
+            <span class="n">row_indices</span> <span class="o">=</span> <span class="n">row_indices</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="n">row_indices</span> <span class="o">=</span> <span class="n">row_indices</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="n">cols_sel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">row_indices</span><span class="p">)</span>
+        <span class="n">vals_sel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">row_indices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SRPParam</span><span class="p">(</span><span class="n">cols_sel</span><span class="p">,</span> <span class="n">vals_sel</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">cols_sel</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+    <span class="c1"># --------------------------</span>
+    <span class="c1"># constructors / converters</span>
+    <span class="c1"># --------------------------</span>
+
+<div class="viewcode-block" id="SRPParam.from_dense">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam.from_dense">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dense</span><span class="p">(</span>
+        <span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>                 <span class="c1"># (rows, cols_total)</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="n">InitMode</span> <span class="o">=</span> <span class="s2">&quot;topk_abs&quot;</span><span class="p">,</span>
+        <span class="n">allow_duplicates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># if False, enforced by construction</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPParam&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build SRPParam from a dense matrix.</span>
+
+<span class="sd">        mode:</span>
+
+<span class="sd">        * ``&quot;topk_abs&quot;``: pick top-k absolute values per row and store signed</span>
+<span class="sd">          values.</span>
+<span class="sd">        * ``&quot;random_k&quot;``: pick k random columns per row and store those values.</span>
+
+<span class="sd">        Note: this is a *projection* of dense -&gt; fixed-k sparse.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A must be 2D, got </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rows</span><span class="p">);</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cols_total</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">cols_total</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;k must be in [1, cols_total], got k=</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">, cols_total=</span><span class="si">{</span><span class="n">cols_total</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">device</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;topk_abs&quot;</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">abs</span><span class="p">(),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">largest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>  <span class="c1"># (rows,k)</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;random_k&quot;</span><span class="p">:</span>
+            <span class="c1"># sample without replacement per row</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">cols_total</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_duplicates</span><span class="p">:</span>
+            <span class="c1"># topk and randperm are already unique; keep this for future modes</span>
+            <span class="k">pass</span>
+
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SRPParam</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SRPParam.from_sparse_coo">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam.from_sparse_coo">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_sparse_coo</span><span class="p">(</span>
+        <span class="n">sp</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>          <span class="c1"># sparse_coo (rows, cols_total)</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">require_row_packed_fixed_k</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SRPParam&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert from a COO sparse tensor to SRPParam.</span>
+
+<span class="sd">        Cases:</span>
+<span class="sd">          - If require_row_packed_fixed_k=True:</span>
+<span class="sd">              expects exactly k nnz per row (same k for all rows), and we will pack rows.</span>
+<span class="sd">              If k is None, we infer it. If not possible -&gt; error.</span>
+<span class="sd">          - If require_row_packed_fixed_k=False:</span>
+<span class="sd">              we will *project* each row to top-k by abs value (needs k provided).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sp</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;sp must be a sparse COO tensor&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">layout</span> <span class="o">!=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sparse_coo</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sp must be sparse_coo, got </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">layout</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">coalesce</span><span class="p">()</span>
+
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rows</span><span class="p">);</span> <span class="n">cols_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cols_total</span><span class="p">)</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">indices</span><span class="p">()</span>   <span class="c1"># (2, nnz)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>    <span class="c1"># (nnz,)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># count nnz per row</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">minlength</span><span class="o">=</span><span class="n">rows</span><span class="p">)</span>  <span class="c1"># (rows,)</span>
+
+        <span class="k">if</span> <span class="n">require_row_packed_fixed_k</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># infer k if all rows have same count</span>
+                <span class="n">unique</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">unique</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot infer fixed k: nnz per row vary: </span><span class="si">{</span><span class="n">unique</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[:</span><span class="mi">10</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">unique</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">counts</span> <span class="o">==</span> <span class="n">k</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not fixed-k: expected </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> nnz per row, got min=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># pack into (rows,k) by sorting by row then taking chunks</span>
+            <span class="c1"># ensure stable order: sort by (row, col)</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">cols_total</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">r2</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+            <span class="n">v2</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+
+            <span class="c1"># now rows are grouped; reshape should work because each row has exactly k entries</span>
+            <span class="n">cols</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">v2</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">SRPParam</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># projection: need k</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;k must be provided when require_row_packed_fixed_k=False&quot;</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+            <span class="c1"># build per-row dense-ish topk using scatter into padded lists (not super fast; fine for conversion)</span>
+            <span class="c1"># We&#39;ll do: for each row, take its entries and topk by abs.</span>
+            <span class="n">cols_out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">sp</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+            <span class="n">vals_out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">sp</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+            <span class="c1"># build row-wise lists via sorting by row</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">r_sorted</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+            <span class="n">c_sorted</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+            <span class="n">v_sorted</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+
+            <span class="c1"># pointers per row</span>
+            <span class="n">ptr</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">sp</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+            <span class="n">ptr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ptr</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ptr</span><span class="p">[</span><span class="n">row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">end</span><span class="p">:</span>
+                    <span class="c1"># empty row: fill with zeros (columns arbitrary)</span>
+                    <span class="n">cols_out</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+                    <span class="n">vals_out</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+                    <span class="k">continue</span>
+                <span class="n">c_row</span> <span class="o">=</span> <span class="n">c_sorted</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+                <span class="n">v_row</span> <span class="o">=</span> <span class="n">v_sorted</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+                <span class="n">kk</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">c_row</span><span class="o">.</span><span class="n">numel</span><span class="p">())</span>
+                <span class="n">top</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">v_row</span><span class="o">.</span><span class="n">abs</span><span class="p">(),</span> <span class="n">k</span><span class="o">=</span><span class="n">kk</span><span class="p">,</span> <span class="n">largest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
+                <span class="n">cols_sel</span> <span class="o">=</span> <span class="n">c_row</span><span class="p">[</span><span class="n">top</span><span class="p">]</span>
+                <span class="n">vals_sel</span> <span class="o">=</span> <span class="n">v_row</span><span class="p">[</span><span class="n">top</span><span class="p">]</span>
+                <span class="c1"># pad if needed</span>
+                <span class="k">if</span> <span class="n">kk</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+                    <span class="n">pad</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="n">kk</span>
+                    <span class="n">cols_sel</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">cols_sel</span><span class="p">,</span> <span class="n">cols_sel</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">pad</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">vals_sel</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">vals_sel</span><span class="p">,</span> <span class="n">vals_sel</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">pad</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">cols_out</span><span class="p">[</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">cols_sel</span>
+                <span class="n">vals_out</span><span class="p">[</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals_sel</span>
+
+            <span class="k">return</span> <span class="n">SRPParam</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="n">cols_out</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">vals_out</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols_total</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+    <span class="c1"># convenience forward</span>
+<div class="viewcode-block" id="SRPParam.forward">
+<a class="viewcode-back" href="../../../api/compresso.html#compresso.SRPParam.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SRPTensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sparse representation as an :class:`SRPTensor`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SRPTensor</span>
+<span class="sd">            Row-packed sparse representation backed by this parameter&#39;s</span>
+<span class="sd">            column indices and trainable values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SRPTensor</span><span class="p">(</span>
+            <span class="n">cols</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span>          <span class="c1"># (rows, k) long</span>
+            <span class="n">vals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>            <span class="c1"># (rows, k) float</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_total</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

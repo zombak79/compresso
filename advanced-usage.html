@@ -1,0 +1,506 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Usage &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=92734c54"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Input and Output" href="io.html" />
+    <link rel="prev" title="A First Example: Seeing What an SAE Learns" href="basic-example.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Advanced Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/advanced-usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="advanced-usage">
+<h1>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer" title="compresso.TopKSAETrainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a> is the easy path, but it is a thin wrapper.
+When you need a custom training loop, a different loss, a non-linear encoder, or
+direct control over the sparsification, drop down to the building blocks. This
+page covers the lower-level objects exported at the top level of <code class="docutils literal notranslate"><span class="pre">compresso</span></code>.</p>
+<section id="the-raw-model-topksae">
+<h2>The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code><a class="headerlink" href="#the-raw-model-topksae" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="api/compresso.html#compresso.TopKSAE" title="compresso.TopKSAE"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAE</span></code></a> is a plain <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code>. Its <code class="docutils literal notranslate"><span class="pre">forward</span></code> returns a
+<code class="docutils literal notranslate"><span class="pre">(reconstruction,</span> <span class="pre">codes,</span> <span class="pre">stats)</span></code> triple, where <code class="docutils literal notranslate"><span class="pre">codes</span></code> already has exactly
+<code class="docutils literal notranslate"><span class="pre">k</span></code> non-zeros per row and <code class="docutils literal notranslate"><span class="pre">stats</span></code> is a dict of monitoring metrics:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAE</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">TopKSAE</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">tied</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+
+<span class="n">reconstruction</span><span class="p">,</span> <span class="n">codes</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="c1"># stats keys: reconstruction_mse, cosine_similarity,</span>
+<span class="c1">#             active_count, activation_freq, dead_features</span>
+</pre></div>
+</div>
+<p>Writing your own training loop is then completely standard PyTorch:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">opt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="mi">128</span><span class="p">):</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">128</span><span class="p">]]</span>
+        <span class="n">_recon</span><span class="p">,</span> <span class="n">_codes</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;reconstruction_mse&quot;</span><span class="p">]</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="the-stats-dictionary">
+<h2>The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary<a class="headerlink" href="#the-stats-dictionary" title="Link to this heading"></a></h2>
+<p>The metrics returned each forward pass are useful both as losses and as health
+checks:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">reconstruction_mse</span></code></dt><dd><p>Mean squared error between input and reconstruction.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">cosine_similarity</span></code></dt><dd><p>Mean per-row cosine similarity; the trainer optimizes a blend of
+<code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">-</span> <span class="pre">cosine_similarity)</span></code> and MSE (see <code class="docutils literal notranslate"><span class="pre">alpha_loss</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">active_count</span></code></dt><dd><p>Mean number of active features per row (equals <code class="docutils literal notranslate"><span class="pre">k</span></code> for a standard
+top-k SAE).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">activation_freq</span></code></dt><dd><p>Per-feature firing rate over the batch, shape <code class="docutils literal notranslate"><span class="pre">(hidden_dim,)</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">dead_features</span></code></dt><dd><p>Count of features that never fired in the batch. A large value means part of
+your dictionary is wasted — lower <code class="docutils literal notranslate"><span class="pre">k</span></code>, lower <code class="docutils literal notranslate"><span class="pre">hidden_dim</span></code>, or train
+longer.</p>
+</dd>
+</dl>
+</section>
+<section id="encoder-decoder-and-tied-weights">
+<h2>Encoder, decoder, and tied weights<a class="headerlink" href="#encoder-decoder-and-tied-weights" title="Link to this heading"></a></h2>
+<p>By default the encoder and decoder are single <code class="docutils literal notranslate"><span class="pre">nn.Linear</span></code> layers, but you can
+supply any modules — for example a deeper, non-linear encoder — as long as the
+shapes line up:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAE</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">GELU</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">TopKSAE</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="mi">784</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">encoder</span><span class="o">=</span><span class="n">encoder</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Set <code class="docutils literal notranslate"><span class="pre">tied=True</span></code> to make the decoder reuse the encoder weight (transposed),
+which halves the parameter count and is common for SAEs. Use
+<code class="docutils literal notranslate"><span class="pre">model.get_decoder_weight()</span></code> to fetch the effective decoder matrix in either
+case (this is what the <a class="reference internal" href="basic-example.html"><span class="doc">A First Example: Seeing What an SAE Learns</span></a> plots as dictionary atoms).</p>
+</section>
+<section id="controlling-sparsification">
+<h2>Controlling sparsification<a class="headerlink" href="#controlling-sparsification" title="Link to this heading"></a></h2>
+<p>The bottleneck is a reusable layer, <a class="reference internal" href="api/compresso.html#compresso.TopKSparsify" title="compresso.TopKSparsify"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a>, backed by
+the functional <a class="reference internal" href="api/compresso.html#compresso.topk_ste" title="compresso.topk_ste"><code class="xref py py-func docutils literal notranslate"><span class="pre">topk_ste()</span></code></a>. You can drop either into any model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSparsify</span><span class="p">,</span> <span class="n">topk_ste</span>
+
+<span class="n">sparsify</span> <span class="o">=</span> <span class="n">TopKSparsify</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">score_mode</span><span class="o">=</span><span class="s2">&quot;abs&quot;</span><span class="p">,</span> <span class="n">ste_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">sparsify</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>     <span class="c1"># exactly 8 non-zeros per row</span>
+
+<span class="n">z2</span> <span class="o">=</span> <span class="n">topk_ste</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">score_mode</span><span class="o">=</span><span class="s2">&quot;abs&quot;</span><span class="p">,</span> <span class="n">ste_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Two knobs matter:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">score_mode</span></code> selects <em>which</em> entries survive the top-k:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;abs&quot;</span></code> keeps the largest-magnitude values (signed features; the default).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;raw&quot;</span></code> keeps the largest signed values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;relu&quot;</span></code> keeps the largest positive values and discards negatives.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ste_alpha</span></code> is the <strong>straight-through estimator</strong> leak. The forward pass is a
+hard top-k (non-differentiable), so the backward pass routes a fraction
+<code class="docutils literal notranslate"><span class="pre">ste_alpha</span></code> of the gradient to the <em>non-selected</em> entries and full gradient
+to the selected ones. <code class="docutils literal notranslate"><span class="pre">ste_alpha=0</span></code> is a pure hard mask; a small value such
+as <code class="docutils literal notranslate"><span class="pre">0.01</span></code> keeps unused features learning and reduces dead features.</p></li>
+</ul>
+<p>These are surfaced on the config as <code class="docutils literal notranslate"><span class="pre">sparsify_score_mode</span></code> /
+<code class="docutils literal notranslate"><span class="pre">sparsify_ste_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">srp_score_mode</span></code> (the latter is used by
+<code class="docutils literal notranslate"><span class="pre">transform</span></code> when packing into an <a class="reference internal" href="api/compresso.html#compresso.SRPTensor" title="compresso.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a>).</p>
+</section>
+<section id="post-sparsification-hooks">
+<h2>Post-sparsification hooks<a class="headerlink" href="#post-sparsification-hooks" title="Link to this heading"></a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">post_sparsify</span></code> module runs on the codes <em>after</em> the top-k. The built-in
+<a class="reference internal" href="api/compresso.html#compresso.L1Normalize" title="compresso.L1Normalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">L1Normalize</span></code></a> and <a class="reference internal" href="api/compresso.html#compresso.L2Normalize" title="compresso.L2Normalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">L2Normalize</span></code></a> rescale each
+code to unit L1/L2 norm, which is handy when codes feed a downstream similarity
+or retrieval step:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAEConfig</span><span class="p">,</span> <span class="n">TopKSAETrainer</span><span class="p">,</span> <span class="n">L1Normalize</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">TopKSAEConfig</span><span class="p">(</span><span class="n">hidden_dim</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">post_sparsify</span><span class="o">=</span><span class="n">L1Normalize</span><span class="p">())</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">TopKSAETrainer</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="full-config-reference">
+<h2>Full config reference<a class="headerlink" href="#full-config-reference" title="Link to this heading"></a></h2>
+<p>Every trainer hyperparameter lives on <a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig" title="compresso.TopKSAEConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hidden_dim</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4096</span></code></p></td>
+<td><p>Number of dictionary features <code class="docutils literal notranslate"><span class="pre">H</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">k</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">128</span></code></p></td>
+<td><p>Active features kept per row.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decoder_bias</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Add a bias to the default decoder.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pre_act</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Module applied before sparsification.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">post_sparsify</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Module applied to codes after top-k.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">encoder</span></code> / <code class="docutils literal notranslate"><span class="pre">decoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Custom modules (else linear layers).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sparsify_score_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;abs&quot;</span></code></p></td>
+<td><p>Top-k scoring: <code class="docutils literal notranslate"><span class="pre">abs</span></code> / <code class="docutils literal notranslate"><span class="pre">raw</span></code> / <code class="docutils literal notranslate"><span class="pre">relu</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sparsify_ste_alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.01</span></code></p></td>
+<td><p>Straight-through leak for non-selected entries.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha_loss</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.01</span></code></p></td>
+<td><p>Cosine/MSE mixture weight in the training loss.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_penalty</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p>Extra L1 penalty on code activations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">128</span></code></p></td>
+<td><p>Rows per batch.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shuffle</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Shuffle rows between epochs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
+<td><p>Seed for shuffling and init.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">epochs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p>Training epochs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lr</span></code> / <code class="docutils literal notranslate"><span class="pre">weight_decay</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-3</span></code> / 0</p></td>
+<td><p>AdamW parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decay</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Cosine LR decay to zero over training.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compile</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torch.compile</span></code> the model when available.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">device</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code></p></td>
+<td><p>Training/transform device.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">show_progress</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>tqdm progress bar when tqdm is installed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">srp_score_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;abs&quot;</span></code></p></td>
+<td><p>Score mode for <code class="docutils literal notranslate"><span class="pre">SRPTensor.from_dense</span></code> in transform.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sparse-parameters-and-pruning">
+<h2>Sparse parameters and pruning<a class="headerlink" href="#sparse-parameters-and-pruning" title="Link to this heading"></a></h2>
+<p>Beyond representation learning, Compresso ships sparse <em>parameter</em> types for
+compressing model weights:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/compresso.html#compresso.MaskedParam" title="compresso.MaskedParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaskedParam</span></code></a> — a weight with a learned/scheduled binary
+mask for magnitude pruning.</p></li>
+<li><p><a class="reference internal" href="api/compresso.html#compresso.SRPParam" title="compresso.SRPParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPParam</span></code></a> — a parameter backed by the same fixed-k sparse
+layout as <a class="reference internal" href="api/compresso.html#compresso.SRPTensor" title="compresso.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="api/compresso.html#compresso.SparsityController" title="compresso.SparsityController"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparsityController</span></code></a> — a global dispatcher that advances and
+rewinds <a class="reference internal" href="api/compresso.html#compresso.MaskedParam" title="compresso.MaskedParam"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaskedParam</span></code></a> masks during training, and
+<a class="reference internal" href="api/compresso.html#compresso.exponential_decay" title="compresso.exponential_decay"><code class="xref py py-func docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a>, a helper for sparsity schedules.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pruning stack (and the broader <code class="docutils literal notranslate"><span class="pre">compresso.layers</span></code> package of sparse
+<code class="docutils literal notranslate"><span class="pre">Linear</span></code>/<code class="docutils literal notranslate"><span class="pre">Embedding</span></code>/attention layers) is <strong>experimental</strong> and not part
+of the stable first-release surface. The representation-learning API on this
+page and in <a class="reference internal" href="io.html"><span class="doc">Input and Output</span></a> is the supported path; expect the parameter/pruning
+APIs to change.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="basic-example.html" class="btn btn-neutral float-left" title="A First Example: Seeing What an SAE Learns" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="io.html" class="btn btn-neutral float-right" title="Input and Output" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

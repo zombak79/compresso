@@ -1,0 +1,1013 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clustering Example &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=92734c54"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api/index.html" />
+    <link rel="prev" title="Clustering Sparse Codes" href="clustering-visualization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Clustering Example</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/clustering.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Clustering-Example">
+<h1>Clustering Example<a class="headerlink" href="#Clustering-Example" title="Link to this heading"></a></h1>
+<p>This example assumes that the <code class="docutils literal notranslate"><span class="pre">compresso-pytorch</span></code> and <code class="docutils literal notranslate"><span class="pre">compresso-recsys</span></code> packages are installed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>compresso-pytorch
+pip<span class="w"> </span>install<span class="w"> </span>compresso-recsys
+</pre></div>
+</div>
+<p>This notebook demonstrates a basic clustering workflow. We first import Compresso and its recommender-system extension, then download Amazon metadata and build a checkpoint for the experiment.</p>
+<section id="Build-checkpoint-&amp;-encode-item-descriptions">
+<h2>Build checkpoint &amp; encode item descriptions<a class="headerlink" href="#Build-checkpoint-&-encode-item-descriptions" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">compresso</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">compresso_recsys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">clustering</span> <span class="k">as</span> <span class="n">cc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">compresso</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopKSAETrainer</span><span class="p">,</span> <span class="n">TopKSAEConfig</span><span class="p">,</span> <span class="n">L1Normalize</span>
+
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">build_recsys_checkpoint</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;amazon2023&quot;</span><span class="p">,</span>
+    <span class="n">amazon_category</span><span class="o">=</span><span class="s2">&quot;Office_Products&quot;</span><span class="p">,</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;artifacts/amazon_office.zip&quot;</span><span class="p">,</span>
+    <span class="n">metadata_text_fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;categories&quot;</span><span class="p">],</span>
+    <span class="n">split_mode</span><span class="o">=</span><span class="s2">&quot;item_split&quot;</span><span class="p">,</span>
+    <span class="n">min_entity_text_words</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">val_items</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">test_items</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">min_user_support</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">item_min_support</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">min_value_to_keep</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">set_all_values_to</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">min_source_items</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">min_target_items</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">annotation_source</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_image_urls</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "24f594fa87f946a3b48813417c18c719", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>Now let’s load the item metadata from the checkpoint and inspect a sample of the data.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">cr</span><span class="o">.</span><span class="n">read_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">root</span><span class="p">:</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">load_recsys_split</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="s2">&quot;entity_metadata&quot;</span><span class="p">]</span>
+
+<span class="n">meta</span><span class="p">[[</span><span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;entity_text&quot;</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>item_id</th>
+      <th>title</th>
+      <th>entity_text</th>
+      <th>image_url</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1448</th>
+      <td>B01BYKUI9C</td>
+      <td>HP 65 Black Ink Cartridge | Works with HP AMP ...</td>
+      <td>Title: HP 65 Black Ink Cartridge | Works with ...</td>
+      <td>https://m.media-amazon.com/images/I/61GAiSy74W...</td>
+    </tr>
+    <tr>
+      <th>2115</th>
+      <td>B07F9SVWXW</td>
+      <td>Quartet Dry Erase Markers, Whiteboard Markers,...</td>
+      <td>Title: Quartet Dry Erase Markers, Whiteboard M...</td>
+      <td>https://m.media-amazon.com/images/I/61b1qTIOLB...</td>
+    </tr>
+    <tr>
+      <th>1921</th>
+      <td>B078Z65VQY</td>
+      <td>Canon PIXMA G4210 Wireless All-In-One Supertan...</td>
+      <td>Title: Canon PIXMA G4210 Wireless All-In-One S...</td>
+      <td>https://m.media-amazon.com/images/I/81sbe681tY...</td>
+    </tr>
+    <tr>
+      <th>4175</th>
+      <td>B0BXR5F7LS</td>
+      <td>Westcott B-70 8ths Graph Beveled Ruler, 12 in</td>
+      <td>Title: Westcott B-70 8ths Graph Beveled Ruler,...</td>
+      <td>https://m.media-amazon.com/images/I/81e+DtAFL5...</td>
+    </tr>
+    <tr>
+      <th>134</th>
+      <td>B0003WN0DO</td>
+      <td>Sharpie Fine Electro Pop Marker, Fine Point, A...</td>
+      <td>Title: Sharpie Fine Electro Pop Marker, Fine P...</td>
+      <td>https://m.media-amazon.com/images/I/81W3-nzwxi...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>Next, we create semantic embeddings with the <code class="docutils literal notranslate"><span class="pre">sentence_transformers</span></code> library.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sentence_transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SentenceTransformer</span>
+
+<span class="n">sbert</span> <span class="o">=</span> <span class="n">SentenceTransformer</span><span class="p">(</span><span class="s2">&quot;sentence-transformers/all-MiniLM-L6-v2&quot;</span><span class="p">)</span>
+
+<span class="n">item_embeddings</span> <span class="o">=</span> <span class="n">sbert</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+    <span class="n">meta</span><span class="o">.</span><span class="n">entity_text</span><span class="p">,</span>
+    <span class="n">convert_to_numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">show_progress_bar</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">item_embeddings</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "044a7771f90e4f8e998f29d54de1254d", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7a9fd39cf9ce4bb6ae05d153a9c44826", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(4445, 384)
+</pre></div></div>
+</div>
+<p>Now let’s create a sparse autoencoder, train it, and obtain sparse item embeddings.</p>
+</section>
+<section id="Train-sparse-autoencoder-and-obtain-sparse-codes">
+<h2>Train sparse autoencoder and obtain sparse codes<a class="headerlink" href="#Train-sparse-autoencoder-and-obtain-sparse-codes" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sae</span> <span class="o">=</span> <span class="n">TopKSAETrainer</span><span class="p">(</span>
+    <span class="n">TopKSAEConfig</span><span class="p">(</span>
+        <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+        <span class="n">k</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+        <span class="n">decay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">post_sparsify</span><span class="o">=</span><span class="n">L1Normalize</span><span class="p">(),</span>
+        <span class="n">sparsify_score_mode</span><span class="o">=</span><span class="s2">&quot;abs&quot;</span><span class="p">,</span>
+        <span class="n">sparsify_ste_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">sparse_embeddings</span> <span class="o">=</span> <span class="n">sae</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">item_embeddings</span><span class="p">)</span>
+
+<span class="n">sparse_embeddings</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9a761ef7ea15467abfe7c7af3037bded", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "dcfc6eb9301941a8bb391e1c96435452", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(4445, 4096)
+</pre></div></div>
+</div>
+</section>
+<section id="Clustering">
+<h2>Clustering<a class="headerlink" href="#Clustering" title="Link to this heading"></a></h2>
+<p>Next, we create clusters based on sparse-representation similarity.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cluster_graph</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">SRPSimilarityClustering</span><span class="p">(</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>            <span class="c1"># minimum semantic similarity between items inside a cluster</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>               <span class="c1"># None = all pairs above threshold</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>      <span class="c1"># smaller clusters are discarded</span>
+            <span class="n">normalize_rows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>      <span class="c1"># centroids of the cluster will be normalized</span>
+            <span class="n">min_local_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>   <span class="c1"># optional cleanup</span>
+            <span class="n">centroid_top_k</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>         <span class="c1"># how many top features are included in centroid definition</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">sparse_embeddings</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of discovered clusters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">, active_clusters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">active_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">, root clusters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">root_clusters</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "239f69ee808d45f59b8ae17cd6a834ad", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Number of discovered clusters: 28, active_clusters: 28, root clusters: 28
+</pre></div></div>
+</div>
+</section>
+<section id="Labeling">
+<h2>Labeling<a class="headerlink" href="#Labeling" title="Link to this heading"></a></h2>
+<p>Next, we label the discovered clusters.</p>
+<p>For labeling, we need two functions:</p>
+<ul class="simple">
+<li><p>a text extractor that receives a cluster and the item metadata dataframe, then returns item descriptions as a string</p></li>
+<li><p>a labeling function that receives those item descriptions and returns a concise cluster name</p></li>
+</ul>
+<p>This example uses a locally running <code class="docutils literal notranslate"><span class="pre">gpt-oss:20b</span></code> model through Ollama. The same pattern can be adapted to another local model or provider API.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ollama</span>
+
+<span class="n">MODEL</span> <span class="o">=</span> <span class="s2">&quot;gpt-oss:20b&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">label_cluster</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+    <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are given a list of items, each with metadata.</span>
+
+<span class="s2">    1. Identify the most common concept that links all the items</span>
+<span class="s2">    2. Convert that concept into a segment name suitable for a recommendation system.</span>
+
+<span class="s2">    The segment name must be title-case, concise (2-5 words), and sound natural — like a content</span>
+<span class="s2">    category. Prefer distinctive labels over generic ones.</span>
+
+<span class="s2">    Output: Only the final segment name, nothing else.</span>
+
+<span class="s2">    Items:</span>
+<span class="s2">    </span><span class="si">{</span><span class="n">items</span><span class="si">}</span>
+
+<span class="s2">    Segment name:&quot;&quot;&quot;</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">ollama</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
+        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;You are a strict classification model. &quot;</span>
+                    <span class="s2">&quot;Return only one segment name. Never explain.&quot;</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">prompt</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">],</span>
+        <span class="n">options</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;num_predict&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="s2">&quot;num_ctx&quot;</span><span class="p">:</span> <span class="mi">8192</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">think</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">,</span>
+        <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">content</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">content</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">item_texts</span><span class="p">(</span><span class="n">cluster</span><span class="p">:</span> <span class="n">compresso</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">SparseCluster</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">cluster</span><span class="o">.</span><span class="n">entity_indices</span><span class="p">]</span> <span class="c1"># select rows with items that are members of the cluster</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span> <span class="c1"># optionally sample maximum allowed number of items to save tokens</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="c1"># just return item titles, one per row</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Items texts for the first cluster in the graph:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">texts</span> <span class="o">=</span> <span class="n">item_texts</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">meta</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">LLM label for the first cluster:&quot;</span><span class="p">,</span> <span class="n">label_cluster</span><span class="p">(</span><span class="n">texts</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Items texts for the first cluster in the graph:
+
+Sharp EL-1901 Paperless Printing Calculator with Check and Correct, 12-Digit LCD Primary Display, Functions the Same as a Printing Calculator/Adding Machine with Scrolling LCD Display Instead of Paper
+Texas Instruments TI-1795 SV Standard Function Calculator
+Victor 1180-3A 12-Digit Standard Function Calculator, Battery and Solar Hybrid Powered Adjustable Angle LCD Display, Great for Home and Office Desks, Black
+Sharp EL233SB Standard Function Calculator
+Sharp El-1501 Compact Cordless Paperless Large 12-Digit Display Desktop Printing Calculator That Utilizes Printing Calculator Logic
+Sharp EL-M335 10-Digit Extra Large Desktop Calculator with Currency Conversion Functions, Tax, Percent and Backspace Keys, and a Large Angled LCD Display, Perfect for Home or Office Use
+Casio SL-100L Basic Solar Folding Compact Calculator, Multicolor
+Sharp EL-1611V Handheld Portable Cordless 12 Digit Large LCD Display Two-Color Printing Calculator with Tax Functions, 191 x 99 x 42 mm
+Casio SL-300VC Standard Function Calculator, Orange 2.75 x 4.63
+Casio HS-8VA, Solar Powered Standard Function Calculator
+
+LLM label for the first cluster: Calculator Devices
+</pre></div></div>
+</div>
+<p>Now we can apply the labeling function to the full cluster graph.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cluster_graph</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">LabelClusters</span><span class="p">(</span>
+            <span class="n">entity_metadata</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span>
+            <span class="n">text_extractor</span><span class="o">=</span><span class="n">item_texts</span><span class="p">,</span>
+            <span class="n">label_fn</span><span class="o">=</span><span class="n">label_cluster</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">cluster_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "711f0b9b34b04666a7dc4cc847d72ada", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Visualization">
+<h2>Visualization<a class="headerlink" href="#Visualization" title="Link to this heading"></a></h2>
+<p>We can also visualize clusters alongside a sample of their items.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>
+
+<span class="c1"># construct a dataframe with cluster label and 5 random sampled item images belonging to the cluster</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">visualize_clusters</span><span class="p">(</span><span class="n">cluster_graph</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span>
+            <span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">entity_indices</span><span class="p">]</span><span class="o">.</span><span class="n">image_url</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_graph</span><span class="o">.</span><span class="n">clusters</span><span class="p">))</span>
+    <span class="p">]</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;image_urls&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">image_gallery</span><span class="p">(</span><span class="n">urls</span><span class="p">):</span>
+        <span class="n">imgs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s1">&#39;&lt;img src=&quot;</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">&quot; style=&quot;height:80px; margin:4px; object-fit:contain;&quot;&gt;&#39;</span>
+            <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;div style=&#39;display:flex; flex-wrap:wrap; gap:6px;&#39;&gt;&quot;</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&quot;</span>
+
+    <span class="n">df_render</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">df_render</span><span class="p">[</span><span class="s2">&quot;Items (sample)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_render</span><span class="p">[</span><span class="s2">&quot;image_urls&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">image_gallery</span><span class="p">)</span>
+
+    <span class="n">html</span> <span class="o">=</span> <span class="n">df_render</span><span class="p">[[</span><span class="s2">&quot;Cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;Items (sample)&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span>
+        <span class="n">escape</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">HTML</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+
+<span class="n">visualize_clusters</span><span class="p">(</span><span class="n">cluster_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Cluster</th>
+      <th>Items (sample)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Desktop & Handheld Calculators</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61oK13Rp7TL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71qw3HGfiML._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71lI+RFqP9S._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41hsyKd-fLS._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61la9N0vMFL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Organization Essentials</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61RmxAyqC3L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81potiMj8-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71DkQfqpbwL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71T2VbY8ehL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61AjZJ-MjaL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office & Packaging Supplies</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61BB-BPAhYL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51WTQtYVxOL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71ZB1Mze01S._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61aqmo7dE2L._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61vBrItq3RL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Photo Printing Paper</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81pYi2gl+cL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51enerMACML._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91+Rj9b03mL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51oIZ54ovVL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91Tn9Mgb35L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>HP Printer Ink</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61XHsW859NL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81JS6uIImBS._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81kMLX+wubL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71xYG2YuwES._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71dncPbANKL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Paper Trimmers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/51paHAalEbL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71lX1mSsl-L._AC_SL1300_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51k8FAUaoCL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81wQVvqTF-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71EWBa-lwGL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Dry Erase & Marker Supplies</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/91s-kd7CylL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/613SjiVp0mL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61xx2zVVmoL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41FWEWOzPsL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51zyU7avVtS._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Binder Tab Dividers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/819H0tqgdBL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81ieZaz+KoL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/710Zcp6tvZL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61iT-EVk0xL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71djDMExKKL._AC_SL1300_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Notebook & Paper</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/819q8ZVMBgL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71fetydzOVL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81tO6GeljtL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61pOLhpTS-S._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/716P0g7Y9oL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Pens & Pencils</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71x4Ptp8L1L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81A4M6aRn7L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71FDUzkPP2L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41y9s4C3HlL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81d7KNLiDhL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Pencil Sharpeners</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71+FzTjBAyL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91ZHCe0zeGL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81s1xTGne5L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61l4+SfUWVL._SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71XWvS7zSxL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Premium Colored Pencils</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/914pSkQa8ML._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81lPuQqksOL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61l1DLbwYRL._AC_SL1152_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81aURyHzs1L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/818x00dCDKL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Label & File Organization</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/7127LSG1tvL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/A1cxoUluOzL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71oVfdyhXRL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/616-WicZXbL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71yTtHxNq4L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Index Card Sets</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61gg+vIKDRL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61BE6PdFyVL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71CfxqcFonL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61JLUEi33-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/710qCBNmjCL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Staplers & Staples</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/810vlUjvAdL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71VJgwsef4L._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/712yKtfRdPS._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81VxJgCqmfL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81UOjQo5fuL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Envelopes\n\n</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/91fTPHLoO7L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81dB4TWWYYL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61aJvkRa6qL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71uQVpXT0JL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/31nZcKoM4vL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Wireless All‑In‑One Printers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61fMa7T9JNL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81tLMygr5jL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71Rpc42LauL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71L4MXAZ7WL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61Tg0wjXynL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Thermal Laminators & Pouches</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71QA8mWXcIL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61JwSEfHaTL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71XGMq0HJML._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61Br8CyCZJL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61DxFVh-UuL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Printer Paper</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/7146-DGmEuL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/713xihj+reL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71J0Ozq68sL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71RF9Km1CNL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71qXvg7rmCL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Ergonomic Gaming Desk Mat</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71OVZpzECQL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91mu+TVDy9L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61VRcd45uuL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71YgeuzEvjL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61gtenCSQaL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Cordless Home Phone Systems</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81WX7bH5e8L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91dAEJPLTWL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81BAHFVmgEL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/714qxcFPhmL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/711xkGYCY2L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Epson All‑In‑One Printing Solutions</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71iVQMFvuXL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81ilcfepO9L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61GvC3npLeL._AC_SL1152_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91sCV5m5MvL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/810P-yhHV7L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Tombow Mono Stationery Essentials</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71lzkM-if0S._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81taok6zd-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51FAuAamjaL._AC_SL1001_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/615pG6mAkXL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71g-o9+qO2L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Multi‑Compartment Desk Caddy</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61VvPVZPWdL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/A1awrH9cjEL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71JtoSfc+kL._AC_SL1080_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71eUGBCK0OL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81m+HLvDBoL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Electric Pencil Sharpeners</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71zLDb8iP2L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/619OewZb9CL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/718aAcYXCgL._AC_SL1373_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61lCXYeebxL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61kZN6Y+r9L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Paper Shredders</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61702KRcu9L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61-Sz6WbH6L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81HM1ZlI23L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81uieoPhSzL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61ZNh1ammRL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Planner & Calendar Collection</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/41SdMRIYsaL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51FcpMWlNOL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71ox2lSMQQL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/31W8tgDMomL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71QdsjXVDsL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Chair Mats</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61D4cfIWfeL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/612f3a7Ap8L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81x3ibvvNxL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61sBgdn77ML._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51YM4NbehYL._AC_SL1440_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+</section>
+<section id="Using-clustering-pipelines">
+<h2>Using clustering pipelines<a class="headerlink" href="#Using-clustering-pipelines" title="Link to this heading"></a></h2>
+<p>The same steps can be combined with <code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code>. Results should be similar, although labels may vary because they are generated by an LLM.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline_cluster_graph</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">ClusteringPipeline</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">cc</span><span class="o">.</span><span class="n">SRPSimilarityClustering</span><span class="p">(</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>            <span class="c1"># minimum semantic similarity between items inside a cluster</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>               <span class="c1"># None = all pairs above threshold</span>
+            <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>      <span class="c1"># smaller clusters are discarded</span>
+            <span class="n">normalize_rows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>      <span class="c1"># centroids of the cluster will be normalized</span>
+            <span class="n">min_local_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>   <span class="c1"># optional cleanup</span>
+            <span class="n">centroid_top_k</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>         <span class="c1"># how many top features are included in centroid definition</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">cc</span><span class="o">.</span><span class="n">LabelClusters</span><span class="p">(</span>
+            <span class="n">entity_metadata</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span>
+            <span class="n">text_extractor</span><span class="o">=</span><span class="n">item_texts</span><span class="p">,</span>
+            <span class="n">label_fn</span><span class="o">=</span><span class="n">label_cluster</span><span class="p">,</span>
+            <span class="n">cluster_scope</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)(</span><span class="n">sparse_embeddings</span><span class="p">)</span>
+
+<span class="n">visualize_clusters</span><span class="p">(</span><span class="n">pipeline_cluster_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "1c02e6daa51046cd9689773be30386d0", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "829004d2ecc847f7b7268f82cd9bc163", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Cluster</th>
+      <th>Items (sample)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Office & Home Standard Calculators</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/41hsyKd-fLS._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71GjKVS44dL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51LQnvlWl5L._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81FaTTYSE4L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71ge49LSQ0L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Organization Essentials</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/91XaFlTseCL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41S9Jb-qfYL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61lhCity+NL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/715levebAXL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81l88-gMmkL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Stationery & Packing</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71pwuc5D+iL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61F-77PtSRL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41qJgS+fh9L._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41sSXFn6LtL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41QTfwroruL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Photo Printing Paper</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/91+Rj9b03mL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51iW1yDgvJL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71kR-LJ8H1L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51enerMACML._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41xm+Heil6L._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>HP Printer Ink</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71Kq0BZpXdL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/717HcIgX-gL._AC_SL1484_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71FA-DoWzrL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71Lx7vGOvGS._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71uhraUK9BL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Paper Trimmers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61ZptbnKEBL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81Q3f+h2HvL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51M6PEttbcL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81wQVvqTF-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71lX1mSsl-L._AC_SL1300_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Dry Erase & Whiteboard Supplies</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81X4xNzKHyL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81dovu7qYRL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71BF17X3OKL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/615uWvp7lbL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71g-zeNhqoL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Binder Tab Organizers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71xYVCbFvmL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91LWB2W5srL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/918Uyu4JQDL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81zuwE0PofL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81+qW408WgL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Notebook & Paper</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/615D5GLQxNL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71V9cv-W9XL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91PS2AJyGhL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81qWI1ELHpL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71+E63cYH9S._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Pens & Pencils</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71+2R+wAKGL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81InT8NEzrL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61Kqzni4I7L._SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/4101O81FscL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81rWnV7TOjL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>School & Office Pencil Sharpeners</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61l4+SfUWVL._SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71ONRQIk5RL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71wuwtnK9ZL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71rI6x3LUES._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/710dkSChi5L._SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Premium Colored Pencils</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/91GaA2+V8NL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71B434n7jkL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91wpIY2y4QL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/914pSkQa8ML._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/A1LYFRjWLNL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Labeling & Filing Essentials</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81KHLO926pL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61lspz0clHL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/719qTXHNKYL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61jBU0IxaZL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81+zHM71gpL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Index Card Essentials</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61-Rs6hVpiL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/517JZEtrmdL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61JLUEi33-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71QjuRP67UL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71PP7kQ0f3L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Staplers & Accessories</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61lvG1Jl9gL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/712yKtfRdPS._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/613glzBZXcL._AC_SL1307_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61ED7jQCO-L._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61hTrvFzw8L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Secure Mailing Envelopes</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81dB4TWWYYL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61oKSTdE+eL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81LqIYRZpNL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61ShsCvcj2L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61mWHwBU+wL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Ink & Toner Supplies</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61T1qHTlPCL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71qHo8yyHTL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61S+R5SLmrL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61cN07Ir0CL._AC_SL1300_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41VWdVh3cUL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Thermal Laminators & Pouches</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61dTcgN0svL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/8179l5xrWNL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61fIfK835gL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61gPhiBFzVL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71uKq+eEyGL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Printing Paper</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71d9zBNDC3L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71byAOqouuL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/714hidtaXUL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61AdgPrSqCL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81PsAPhbA4L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Ergonomic Gaming Desk Mat</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/61py3enITkL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81yO22+IF0L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81SlOVw-68L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81vSI+Baa6S._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41OOnXR9tVL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Cordless Home Phone Systems</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81+pnSPxKAL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61KYttzFkqL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81LKcwVYrSL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91Q0GI2S1IL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61CgM5jhAlL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office All‑In‑One Printers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/81J-loTxGnL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71aM+W15EzL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/41jf8La7ODL._AC_SL1000_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81vQ8BWOJ6L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/810bjlyWK9L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Mono Stationery Essentials</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71m1hvuLXZL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/31pKdONKHCL._AC_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81taok6zd-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61Vcvge5fVL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/615pG6mAkXL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Desk Organizers</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71XhGca+AGL._AC_SL1200_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71eUGBCK0OL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/A1awrH9cjEL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81pq1DcmySL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91MZTyBY6FL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Electric Pencil Sharpeners</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/711LhgtWa9L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71zLDb8iP2L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71NYKAV12NL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51+TnBY4r0L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71N2bW+9E3L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Paper Shredder</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/718V8fl2DkL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81-+V1TXIKL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51v33DR6bwL._AC_SL1001_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81HM1ZlI23L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61OlstLyi-L._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Planner & Calendar Collection</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/71GL0MOOZPL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91wODR5kdxL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/71qkLzhRgpL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/91dUVn4OCqL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81BjvPItlfL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+    <tr>
+      <td>Office Chair Mats</td>
+      <td><div style='display:flex; flex-wrap:wrap; gap:6px;'><img src="https://m.media-amazon.com/images/I/A1VvHkzsNPL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/715iBNrqtGL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/61sBgdn77ML._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/51YM4NbehYL._AC_SL1440_.jpg" style="height:80px; margin:4px; object-fit:contain;"><img src="https://m.media-amazon.com/images/I/81x3ibvvNxL._AC_SL1500_.jpg" style="height:80px; margin:4px; object-fit:contain;"></div></td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="clustering-visualization.html" class="btn btn-neutral float-left" title="Clustering Sparse Codes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

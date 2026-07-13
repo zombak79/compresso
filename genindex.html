@@ -1,0 +1,592 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Index &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=92734c54"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/clustering.html">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/clustering.html#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/clustering.html#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Index</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ 
+</div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.AbstractClustering">AbstractClustering (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.AbstractClusterTransform">AbstractClusterTransform (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.AbstractMerging">AbstractMerging (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.AssignTags">AssignTags (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.AssignUnclusteredToNearestCluster">AssignUnclusteredToNearestCluster (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.build">build() (compresso.TopKSAETrainer method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.SRPParam.build_coo">build_coo() (compresso.SRPParam method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.CentroidSimilarityMerge">CentroidSimilarityMerge (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.cluster_srp">cluster_srp() (in module compresso.clustering)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.ClusteringPipeline">ClusteringPipeline (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.ComboSignedClustering">ComboSignedClustering (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.CompactHiddenClusters">CompactHiddenClusters (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.DominantSignedClustering">DominantSignedClustering (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.encode">encode() (compresso.TopKSAETrainer method)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SparseClusterSet.entity_to_cluster_ids">entity_to_cluster_ids (compresso.clustering.SparseClusterSet property)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.EntityContainmentLink">EntityContainmentLink (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.EntityContainmentMerge">EntityContainmentMerge (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.EntityIoUMerge">EntityIoUMerge (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.exponential_decay">exponential_decay() (in module compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.MaskedParam.extra_repr">extra_repr() (compresso.MaskedParam method)</a>
+
+      <ul>
+        <li><a href="api/compresso.html#compresso.SRPParam.extra_repr">(compresso.SRPParam method)</a>
+</li>
+        <li><a href="api/compresso.html#compresso.TopKSparsify.extra_repr">(compresso.TopKSparsify method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.FeatureContainmentLink">FeatureContainmentLink (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.FeatureContainmentMerge">FeatureContainmentMerge (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.FeaturePathClustering">FeaturePathClustering (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SparseClusterSet.fill_missing_cluster_labels">fill_missing_cluster_labels() (compresso.clustering.SparseClusterSet method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.fit">fit() (compresso.TopKSAETrainer method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.fit_transform">fit_transform() (compresso.TopKSAETrainer method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.L1Normalize.forward">forward() (compresso.L1Normalize method)</a>
+
+      <ul>
+        <li><a href="api/compresso.html#compresso.L2Normalize.forward">(compresso.L2Normalize method)</a>
+</li>
+        <li><a href="api/compresso.html#compresso.MaskedParam.forward">(compresso.MaskedParam method)</a>
+</li>
+        <li><a href="api/compresso.html#compresso.SRPParam.forward">(compresso.SRPParam method)</a>
+</li>
+        <li><a href="api/compresso.html#compresso.TopKSAE.forward">(compresso.TopKSAE method)</a>
+</li>
+        <li><a href="api/compresso.html#compresso.TopKSparsify.forward">(compresso.TopKSparsify method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.SRPParam.from_dense">from_dense() (compresso.SRPParam static method)</a>
+
+      <ul>
+        <li><a href="api/compresso.html#compresso.SRPTensor.from_dense">(compresso.SRPTensor static method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.from_dict">from_dict() (compresso.SRPTensor static method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPParam.from_sparse_coo">from_sparse_coo() (compresso.SRPParam static method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.TopKSAE.get_decoder_weight">get_decoder_weight() (compresso.TopKSAE method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.graph_from_dict">graph_from_dict() (in module compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.graph_to_dict">graph_to_dict() (in module compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.is_built">is_built (compresso.TopKSAETrainer property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.L1Normalize">L1Normalize (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.L2Normalize">L2Normalize (class in compresso)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.LabelClusters">LabelClusters (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.LabelDuplicateMerge">LabelDuplicateMerge (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.load_cluster_graph">load_cluster_graph() (in module compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.load_srp_tensor">load_srp_tensor() (in module compresso)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.MaskedParam">MaskedParam (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.MaskedParam.maskedparam_to_coo">maskedparam_to_coo() (compresso.MaskedParam method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.MaskedParam.maskedparam_to_srp">maskedparam_to_srp() (compresso.MaskedParam method)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.MaterializeLinkMerges">MaterializeLinkMerges (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.SRPTensor.numpy">numpy() (compresso.SRPTensor method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.PruneRedundantRoots">PruneRedundantRoots (class in compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.reconstruct">reconstruct() (compresso.TopKSAETrainer method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.MaskedParam.rewind">rewind() (compresso.MaskedParam method)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.run_clustering_pipeline">run_clustering_pipeline() (in module compresso.clustering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.save_cluster_graph">save_cluster_graph() (in module compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.save_srp_tensor">save_srp_tensor() (in module compresso)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.ScoredTag">ScoredTag (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPParam.select_rows">select_rows() (compresso.SRPParam method)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SemanticSimilarityMerge">SemanticSimilarityMerge (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSparsify.set_k">set_k() (compresso.TopKSparsify method)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SizeFilter">SizeFilter (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SparseCluster">SparseCluster (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SparseClusterGraph">SparseClusterGraph (in module compresso.clustering)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.SparseClusterSet">SparseClusterSet (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SparseVector">SparseVector (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SparsityController">SparsityController (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPParam">SRPParam (class in compresso)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.SRPSimilarityClustering">SRPSimilarityClustering (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor">SRPTensor (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.state_dict">state_dict() (compresso.TopKSAETrainer method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SparsityController.step">step() (compresso.SparsityController method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.MaskedParam.step_mask">step_mask() (compresso.MaskedParam method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/clustering.html#compresso.clustering.TagSimilarityMerge">TagSimilarityMerge (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.to">to() (compresso.TopKSAETrainer method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_bsc">to_bsc() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_bsr">to_bsr() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_coo">to_coo() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_csc">to_csc() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_csr">to_csr() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_dense">to_dense() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_dict">to_dict() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_numpy_dict">to_numpy_dict() (compresso.SRPTensor method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_scipy_coo">to_scipy_coo() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_scipy_csc">to_scipy_csc() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.SRPTensor.to_scipy_csr">to_scipy_csr() (compresso.SRPTensor method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.topk_ste">topk_ste() (in module compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAE">TopKSAE (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAEConfig">TopKSAEConfig (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer">TopKSAETrainer (class in compresso)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSparsify">TopKSparsify (class in compresso)</a>
+</li>
+      <li><a href="api/clustering.html#compresso.clustering.TopMSignedClustering">TopMSignedClustering (class in compresso.clustering)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.train_step">train_step() (compresso.TopKSAETrainer method)</a>
+</li>
+      <li><a href="api/compresso.html#compresso.TopKSAETrainer.transform">transform() (compresso.TopKSAETrainer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

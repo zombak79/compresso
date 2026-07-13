@@ -1,0 +1,1018 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clustering API &mdash; Compresso 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Core API" href="compresso.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Compresso
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-from-pypi">Install from PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#development-install">Development Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#build-the-documentation-locally">Build the Documentation Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#why-sparse-representations">Why sparse representations?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#the-top-k-sparse-autoencoder">The top-k sparse autoencoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#key-objects">Key objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#your-first-run">Your first run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#fit-and-transform-separately">Fit and transform separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-example.html">A First Example: Seeing What an SAE Learns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#treat-each-image-as-a-dense-vector">Treat each image as a dense vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#train-a-top-k-sae">Train a top-k SAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#the-decoder-is-a-dictionary">The decoder <em>is</em> a dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#a-code-is-a-recipe">A code is a recipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#reading-a-sparse-code">Reading a sparse code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic-example.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced-usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#the-raw-model-topksae">The raw model: <code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#the-stats-dictionary">The <code class="docutils literal notranslate"><span class="pre">stats</span></code> dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#encoder-decoder-and-tied-weights">Encoder, decoder, and tied weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#controlling-sparsification">Controlling sparsification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#post-sparsification-hooks">Post-sparsification hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#full-config-reference">Full config reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced-usage.html#sparse-parameters-and-pruning">Sparse parameters and pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../io.html">Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#input-data">Input data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#the-srptensor-format">The SRPTensor format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#building-one-directly">Building one directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#converting-to-other-formats">Converting to other formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io.html#using-codes-in-another-run-or-project">Using codes in another run or project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../clustering-visualization.html">Clustering Sparse Codes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#the-idea">The idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#step-1-from-text-to-sparse-codes">Step 1 — from text to sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#step-2-build-a-clustering-pipeline">Step 2 — build a clustering pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#step-3-the-entity-tag-matrix-optional-labels">Step 3 — the entity-tag matrix (optional labels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#what-you-get">What you get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#inspecting-clusters">Inspecting clusters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#saving-cluster-graphs">Saving cluster graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering-visualization.html#other-building-blocks">Other building blocks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../clustering.html">Clustering Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../clustering.html#Build-checkpoint-&amp;-encode-item-descriptions">Build checkpoint &amp; encode item descriptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering.html#Train-sparse-autoencoder-and-obtain-sparse-codes">Train sparse autoencoder and obtain sparse codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering.html#Clustering">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering.html#Labeling">Labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering.html#Using-clustering-pipelines">Using clustering pipelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="compresso.html">Core API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="compresso.html#sparsification">Sparsification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.topk_ste"><code class="docutils literal notranslate"><span class="pre">topk_ste()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.TopKSparsify"><code class="docutils literal notranslate"><span class="pre">TopKSparsify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="compresso.html#sparse-representations">Sparse Representations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.SRPTensor"><code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="compresso.html#sparse-autoencoders">Sparse Autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.TopKSAE"><code class="docutils literal notranslate"><span class="pre">TopKSAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.TopKSAEConfig"><code class="docutils literal notranslate"><span class="pre">TopKSAEConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.TopKSAETrainer"><code class="docutils literal notranslate"><span class="pre">TopKSAETrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.L1Normalize"><code class="docutils literal notranslate"><span class="pre">L1Normalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.L2Normalize"><code class="docutils literal notranslate"><span class="pre">L2Normalize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="compresso.html#sparse-parameters">Sparse Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.MaskedParam"><code class="docutils literal notranslate"><span class="pre">MaskedParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.SRPParam"><code class="docutils literal notranslate"><span class="pre">SRPParam</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="compresso.html#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.SparsityController"><code class="docutils literal notranslate"><span class="pre">SparsityController</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.exponential_decay"><code class="docutils literal notranslate"><span class="pre">exponential_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.save_srp_tensor"><code class="docutils literal notranslate"><span class="pre">save_srp_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="compresso.html#compresso.load_srp_tensor"><code class="docutils literal notranslate"><span class="pre">load_srp_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Clustering API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types">Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SparseVector"><code class="docutils literal notranslate"><span class="pre">SparseVector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.ScoredTag"><code class="docutils literal notranslate"><span class="pre">ScoredTag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SparseCluster"><code class="docutils literal notranslate"><span class="pre">SparseCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SparseClusterGraph"><code class="docutils literal notranslate"><span class="pre">SparseClusterGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SparseClusterSet"><code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pipeline">Pipeline</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.ClusteringPipeline"><code class="docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.AbstractClusterTransform"><code class="docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.AbstractClustering"><code class="docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.AbstractMerging"><code class="docutils literal notranslate"><span class="pre">AbstractMerging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#clustering-steps">Clustering Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.DominantSignedClustering"><code class="docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.TopMSignedClustering"><code class="docutils literal notranslate"><span class="pre">TopMSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.ComboSignedClustering"><code class="docutils literal notranslate"><span class="pre">ComboSignedClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.FeaturePathClustering"><code class="docutils literal notranslate"><span class="pre">FeaturePathClustering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SRPSimilarityClustering"><code class="docutils literal notranslate"><span class="pre">SRPSimilarityClustering</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#linking-and-merging">Linking and Merging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.EntityContainmentLink"><code class="docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.FeatureContainmentLink"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentLink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.MaterializeLinkMerges"><code class="docutils literal notranslate"><span class="pre">MaterializeLinkMerges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.EntityIoUMerge"><code class="docutils literal notranslate"><span class="pre">EntityIoUMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.EntityContainmentMerge"><code class="docutils literal notranslate"><span class="pre">EntityContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.FeatureContainmentMerge"><code class="docutils literal notranslate"><span class="pre">FeatureContainmentMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.CentroidSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">CentroidSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.LabelDuplicateMerge"><code class="docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SemanticSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">SemanticSimilarityMerge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.TagSimilarityMerge"><code class="docutils literal notranslate"><span class="pre">TagSimilarityMerge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#post-processing">Post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.CompactHiddenClusters"><code class="docutils literal notranslate"><span class="pre">CompactHiddenClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.PruneRedundantRoots"><code class="docutils literal notranslate"><span class="pre">PruneRedundantRoots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.AssignTags"><code class="docutils literal notranslate"><span class="pre">AssignTags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.LabelClusters"><code class="docutils literal notranslate"><span class="pre">LabelClusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.AssignUnclusteredToNearestCluster"><code class="docutils literal notranslate"><span class="pre">AssignUnclusteredToNearestCluster</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.SizeFilter"><code class="docutils literal notranslate"><span class="pre">SizeFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#persistence-and-helpers">Persistence and Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.save_cluster_graph"><code class="docutils literal notranslate"><span class="pre">save_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.load_cluster_graph"><code class="docutils literal notranslate"><span class="pre">load_cluster_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.graph_to_dict"><code class="docutils literal notranslate"><span class="pre">graph_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.graph_from_dict"><code class="docutils literal notranslate"><span class="pre">graph_from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.cluster_srp"><code class="docutils literal notranslate"><span class="pre">cluster_srp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compresso.clustering.run_clustering_pipeline"><code class="docutils literal notranslate"><span class="pre">run_clustering_pipeline()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Compresso</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Clustering API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/clustering.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="clustering-api">
+<h1>Clustering API<a class="headerlink" href="#clustering-api" title="Link to this heading"></a></h1>
+<p>The clustering API is under active development. The objects documented here are
+the intended public entry points exported by <code class="xref py py-mod docutils literal notranslate"><span class="pre">compresso.clustering</span></code>.</p>
+<section id="types">
+<h2>Types<a class="headerlink" href="#types" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.SparseVector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SparseVector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/types.html#SparseVector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SparseVector" title="Link to this definition"></a></dt>
+<dd><p>Small sparse vector used as a reusable cluster handle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>values</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>size</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.ScoredTag">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">ScoredTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/types.html#ScoredTag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.ScoredTag" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tag_id</strong> (<em>int</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+<li><p><strong>score</strong> (<em>float</em>)</p></li>
+<li><p><strong>count</strong> (<em>float</em>)</p></li>
+<li><p><strong>metadata</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.SparseCluster">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SparseCluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_cluster_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_cluster_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_cluster_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/types.html#SparseCluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SparseCluster" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_id</strong> (<em>str</em>)</p></li>
+<li><p><strong>centroid</strong> (<a class="reference internal" href="#compresso.clustering.SparseVector" title="compresso.clustering.types.SparseVector"><em>SparseVector</em></a>)</p></li>
+<li><p><strong>entity_indices</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>source_cluster_ids</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>parent_cluster_ids</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>child_cluster_ids</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>tags</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#compresso.clustering.ScoredTag" title="compresso.clustering.types.ScoredTag"><em>ScoredTag</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>label</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>description</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>stats</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>metadata</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="compresso.clustering.SparseClusterGraph">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SparseClusterGraph</span></span><a class="headerlink" href="#compresso.clustering.SparseClusterGraph" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.SparseClusterSet">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SparseClusterSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clusters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_cluster_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assignment_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dominant_signed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/types.html#SparseClusterSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SparseClusterSet" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>clusters</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><em>SparseCluster</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>n_entities</strong> (<em>int</em>)</p></li>
+<li><p><strong>n_features</strong> (<em>int</em>)</p></li>
+<li><p><strong>active_cluster_ids</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>entity_ids</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>feature_ids</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>assignment_mode</strong> (<em>str</em>)</p></li>
+<li><p><strong>history</strong> (<em>tuple</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>metadata</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="compresso.clustering.SparseClusterSet.entity_to_cluster_ids">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">entity_to_cluster_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#compresso.clustering.SparseClusterSet.entity_to_cluster_ids" title="Link to this definition"></a></dt>
+<dd><p>Map entity index to active cluster ids.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="compresso.clustering.SparseClusterSet.fill_missing_cluster_labels">
+<span class="sig-name descname"><span class="pre">fill_missing_cluster_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">roots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_roots_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/types.html#SparseClusterSet.fill_missing_cluster_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SparseClusterSet.fill_missing_cluster_labels" title="Link to this definition"></a></dt>
+<dd><p>Count or fill missing labels below selected graph roots.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">label_fn</span></code> is not provided this is a count-only traversal. When
+<code class="docutils literal notranslate"><span class="pre">label_fn</span></code> is provided, the method returns a new graph with filled
+labels and leaves the original graph unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>label_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>object</em><em>]</em><em>, </em><em>object</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>text_fn</strong> (<em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><em>SparseCluster</em></a><em>]</em><em>, </em><em>object</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>roots</strong> (<em>Iterable</em><em>[</em><em>str</em><em> | </em><a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><em>SparseCluster</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>active_roots_only</strong> (<em>bool</em>)</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>)</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="pipeline">
+<h2>Pipeline<a class="headerlink" href="#pipeline" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.ClusteringPipeline">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">ClusteringPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#ClusteringPipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.ClusteringPipeline" title="Link to this definition"></a></dt>
+<dd><p>Composable class-based sparse clustering pipeline.</p>
+<p>A pipeline starts with one clustering step that consumes an
+<a class="reference internal" href="compresso.html#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a>. Every later step consumes and
+returns a <a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>. This separates discovery from optional
+graph linking, merging, labeling, tagging, and filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>steps</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="compresso.html#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a>], <a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>] | <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>], <a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>]]</span>) – Sequence of class-based steps. The first must be an
+<a class="reference internal" href="#compresso.clustering.AbstractClustering" title="compresso.clustering.AbstractClustering"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractClustering</span></code></a>; later steps are usually
+<a class="reference internal" href="#compresso.clustering.AbstractClusterTransform" title="compresso.clustering.AbstractClusterTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractClusterTransform</span></code></a> instances.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print one-line progress for each pipeline step.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">ClusteringPipeline</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="n">TopMSignedClustering</span><span class="p">(</span><span class="n">top_m</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">EntityContainmentLink</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">MaterializeLinkMerges</span><span class="p">(),</span>
+<span class="gp">... </span>    <span class="n">SizeFilter</span><span class="p">(</span><span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">srp</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.AbstractClusterTransform">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">AbstractClusterTransform</span></span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#AbstractClusterTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.AbstractClusterTransform" title="Link to this definition"></a></dt>
+<dd><p>Base class for pipeline steps that transform an existing cluster graph.</p>
+<p>Transform steps consume and return a <a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>. They are
+used after a clustering step for linking, merging, labeling, tagging, or
+filtering clusters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.AbstractClustering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">AbstractClustering</span></span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#AbstractClustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.AbstractClustering" title="Link to this definition"></a></dt>
+<dd><p>Base class for pipeline steps that build clusters from an <code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code>.</p>
+<p>Clustering steps are the first step in a <a class="reference internal" href="#compresso.clustering.ClusteringPipeline" title="compresso.clustering.ClusteringPipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusteringPipeline</span></code></a>.
+They consume sparse entity representations and return a
+<a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.AbstractMerging">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">AbstractMerging</span></span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#AbstractMerging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.AbstractMerging" title="Link to this definition"></a></dt>
+<dd><p>Base class for transforms that create merge-parent clusters.</p>
+<p>Merge steps are non-destructive by convention: original clusters remain in
+the graph as children and new parent nodes become the active frontier.</p>
+</dd></dl>
+
+</section>
+<section id="clustering-steps">
+<h2>Clustering Steps<a class="headerlink" href="#clustering-steps" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.DominantSignedClustering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">DominantSignedClustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#DominantSignedClustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.DominantSignedClustering" title="Link to this definition"></a></dt>
+<dd><p>Cluster each entity by its single strongest signed feature.</p>
+<p>This is the simplest activation clustering mode. For every SRP row, the
+feature with largest absolute activation is selected, including its sign.
+Entities with the same <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">sign)</span></code> key form one cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_cluster_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Drop clusters with fewer entities than this value during construction.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show a tqdm progress bar while assigning rows.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.TopMSignedClustering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">TopMSignedClustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#TopMSignedClustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.TopMSignedClustering" title="Link to this definition"></a></dt>
+<dd><p>Cluster each entity by each of its top-m signed features.</p>
+<p>Every entity may belong to multiple clusters: one for each of its
+strongest <code class="docutils literal notranslate"><span class="pre">top_m</span></code> signed feature activations. With <code class="docutils literal notranslate"><span class="pre">top_m=1</span></code> this is
+equivalent to <a class="reference internal" href="#compresso.clustering.DominantSignedClustering" title="compresso.clustering.DominantSignedClustering"><code class="xref py py-class docutils literal notranslate"><span class="pre">DominantSignedClustering</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>top_m</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of strongest features per entity to use.</p></li>
+<li><p><strong>min_cluster_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Drop clusters with fewer entities than this value.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while building clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.ComboSignedClustering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">ComboSignedClustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combo_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#ComboSignedClustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.ComboSignedClustering" title="Link to this definition"></a></dt>
+<dd><p>Cluster entities by exact combinations of signed features.</p>
+<p>For each entity, take its top <code class="docutils literal notranslate"><span class="pre">top_m</span></code> signed features and create exact
+AND-combination keys of length <code class="docutils literal notranslate"><span class="pre">combo_size</span></code>. Two entities share a cluster
+only when they contain the same signed feature combination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>top_m</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Candidate feature pool size for each entity.</p></li>
+<li><p><strong>combo_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Size of exact signed-feature combinations.</p></li>
+<li><p><strong>min_cluster_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Drop clusters with fewer entities than this value.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while building clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.FeaturePathClustering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">FeaturePathClustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#FeaturePathClustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.FeaturePathClustering" title="Link to this definition"></a></dt>
+<dd><p>Build a hierarchy by recursively splitting on next strongest features.</p>
+<p>At the root level each entity starts from one of its top <code class="docutils literal notranslate"><span class="pre">top_m</span></code> signed
+features. Inside each cluster, entities are split again by the next
+strongest feature not already used in the path. This creates an explicit
+feature-path hierarchy such as <code class="docutils literal notranslate"><span class="pre">feature</span> <span class="pre">A</span> <span class="pre">-&gt;</span> <span class="pre">feature</span> <span class="pre">B</span> <span class="pre">-&gt;</span> <span class="pre">feature</span> <span class="pre">C</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>top_m</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of starting signed features per entity.</p></li>
+<li><p><strong>max_depth</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Maximum feature-path depth. <code class="docutils literal notranslate"><span class="pre">None</span></code> allows paths up to available
+sparse features.</p></li>
+<li><p><strong>min_cluster_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Stop or drop nodes smaller than this size. <code class="docutils literal notranslate"><span class="pre">None</span></code> disables the size
+stop.</p></li>
+<li><p><strong>min_activation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Ignore candidate features whose absolute activation is below this
+value. <code class="docutils literal notranslate"><span class="pre">None</span></code> disables the threshold.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while building paths.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.SRPSimilarityClustering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SRPSimilarityClustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_local_density</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#SRPSimilarityClustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SRPSimilarityClustering" title="Link to this definition"></a></dt>
+<dd><p>Build clusters as connected components in SRP similarity space.</p>
+<p>The SRP rows are compared by dense similarity, edges with similarity above
+<code class="docutils literal notranslate"><span class="pre">threshold</span></code> are kept, and connected components become clusters. This is
+useful when the cluster should be defined by representation similarity
+rather than by a shared feature id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum pairwise similarity for an edge.</p></li>
+<li><p><strong>top_k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Limit each row to its top-k nearest neighbors before thresholding.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> compares against all rows.</p></li>
+<li><p><strong>min_cluster_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Drop connected components smaller than this size.</p></li>
+<li><p><strong>normalize_rows</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, L2-normalize rows before similarity computation.</p></li>
+<li><p><strong>min_local_density</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional fraction of within-component neighbors an entity must keep to
+remain in a component.</p></li>
+<li><p><strong>centroid_top_k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If provided, keep only this many largest centroid features.</p></li>
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of rows scored per matrix multiplication batch.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while scoring batches.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="linking-and-merging">
+<h2>Linking and Merging<a class="headerlink" href="#linking-and-merging" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.EntityContainmentLink">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">EntityContainmentLink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'leaves'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_parent_larger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing_ancestors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#EntityContainmentLink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.EntityContainmentLink" title="Link to this definition"></a></dt>
+<dd><p>Add parent-child links based on entity containment without merging nodes.</p>
+<p>This is a graph-linking step, not a merge step. It preserves the active
+frontier and only adds DAG edges from contained child clusters to broader
+parent clusters. A child may receive multiple parents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum entity containment score in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>child_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters may become children: <code class="docutils literal notranslate"><span class="pre">&quot;active&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;leaves&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;roots&quot;</span></code>.</p></li>
+<li><p><strong>parent_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters may become parents.</p></li>
+<li><p><strong>require_parent_larger</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Require the parent candidate to contain more entities than the child.</p></li>
+<li><p><strong>skip_existing_ancestors</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Avoid adding links that are already implied by existing ancestry.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print linking progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while scanning child clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.FeatureContainmentLink">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">FeatureContainmentLink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'leaves'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_parent_larger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing_ancestors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#FeatureContainmentLink"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.FeatureContainmentLink" title="Link to this definition"></a></dt>
+<dd><p>Add parent-child links based on feature-support containment.</p>
+<p>This is the feature analogue of <a class="reference internal" href="#compresso.clustering.EntityContainmentLink" title="compresso.clustering.EntityContainmentLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityContainmentLink</span></code></a>. It creates
+graph edges without creating merge nodes or changing the active frontier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum feature-containment score in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>signed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Compare signed <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">sign)</span></code> pairs instead of feature ids only.</p></li>
+<li><p><strong>child_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters may become children.</p></li>
+<li><p><strong>parent_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters may become parents.</p></li>
+<li><p><strong>require_parent_larger</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Require the parent candidate to have a larger feature support.</p></li>
+<li><p><strong>skip_existing_ancestors</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Avoid adding links already implied by existing ancestry.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print linking progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while scanning child clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.MaterializeLinkMerges">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">MaterializeLinkMerges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_descendants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_children</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#MaterializeLinkMerges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.MaterializeLinkMerges" title="Link to this definition"></a></dt>
+<dd><p>Convert existing links into explicit merge-parent nodes.</p>
+<p>Link steps create edges only. This transform adds a new non-destructive
+parent node for linked structures so that downstream renderers and
+recommendation code can treat the linked group as a concrete cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which linked parent clusters should be materialized.</p></li>
+<li><p><strong>include_descendants</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, include all descendants of a linked parent, not just its
+direct children.</p></li>
+<li><p><strong>min_children</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimum number of linked children required to create a materialized
+node.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize materialized parent centroids.</p></li>
+<li><p><strong>activate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, add materialized nodes to the active frontier.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print materialization details.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.EntityIoUMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">EntityIoUMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#EntityIoUMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.EntityIoUMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge active clusters whose entity sets have high intersection-over-union.</p>
+<p>Active clusters are treated as nodes in a similarity graph. Pairs with
+entity IoU greater than or equal to <code class="docutils literal notranslate"><span class="pre">threshold</span></code> are connected, connected
+components are materialized as new parent clusters, and the process repeats
+until convergence or <code class="docutils literal notranslate"><span class="pre">max_rounds</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum entity IoU in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>max_rounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum iterative merge rounds.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while comparing clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.EntityContainmentMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">EntityContainmentMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#EntityContainmentMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.EntityContainmentMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge active clusters when one entity set is mostly contained in another.</p>
+<p>Containment is <code class="docutils literal notranslate"><span class="pre">|A</span> <span class="pre">intersection</span> <span class="pre">B|</span> <span class="pre">/</span> <span class="pre">min(|A|,</span> <span class="pre">|B|)</span></code>. A strict subset has
+score <code class="docutils literal notranslate"><span class="pre">1.0</span></code> even when IoU is small. This is useful for collapsing small
+highly-specific clusters into broader parents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum containment score in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>max_rounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum iterative merge rounds.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while comparing clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.FeatureContainmentMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">FeatureContainmentMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#FeatureContainmentMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.FeatureContainmentMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge active clusters when feature supports are mostly contained.</p>
+<p>Feature containment is <code class="docutils literal notranslate"><span class="pre">|F_A</span> <span class="pre">intersection</span> <span class="pre">F_B|</span> <span class="pre">/</span> <span class="pre">min(|F_A|,</span> <span class="pre">|F_B|)</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">signed=True</span></code>, positive and negative use of the same feature are
+treated as different support elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum feature-containment score in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>signed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Compare signed <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">sign)</span></code> pairs instead of feature ids only.</p></li>
+<li><p><strong>max_rounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum iterative merge rounds.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while comparing clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.CentroidSimilarityMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">CentroidSimilarityMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_group_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#CentroidSimilarityMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.CentroidSimilarityMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge active clusters whose sparse centroids are similar.</p>
+<p>This creates non-destructive parent nodes from connected components in a
+centroid-similarity graph. It is useful after initial clustering when
+different feature handles point to nearby regions in sparse space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum centroid similarity. For cosine this must be in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'cosine'</span></code>, <code class="docutils literal notranslate"><span class="pre">'dot'</span></code>]</span>) – Similarity function: <code class="docutils literal notranslate"><span class="pre">&quot;cosine&quot;</span></code> or raw <code class="docutils literal notranslate"><span class="pre">&quot;dot&quot;</span></code> product.</p></li>
+<li><p><strong>top_k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional nearest-neighbor restriction. A pair is considered only when
+one cluster is in the other’s top-k neighbors.</p></li>
+<li><p><strong>max_rounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum iterative merge rounds.</p></li>
+<li><p><strong>min_group_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimum connected component size to materialize.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while comparing centroids.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.LabelDuplicateMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">LabelDuplicateMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark_children_hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_group_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#LabelDuplicateMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.LabelDuplicateMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge clusters that have exactly the same label string.</p>
+<p>This is useful after LLM or rule-based labeling, where duplicate labels can
+indicate duplicate semantic segments. When <code class="docutils literal notranslate"><span class="pre">mark_children_hidden=True</span></code>,
+merged children are preserved but marked as hidden for later compaction or
+UI rendering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters are considered for duplicate-label grouping.</p></li>
+<li><p><strong>case_sensitive</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code>, normalize labels by case before grouping.</p></li>
+<li><p><strong>mark_children_hidden</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Mark duplicate children with metadata key <code class="docutils literal notranslate"><span class="pre">render_hidden</span></code>.</p></li>
+<li><p><strong>min_group_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimum number of clusters with the same label required to merge.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge summary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.SemanticSimilarityMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SemanticSimilarityMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embed_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_text_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_group_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#SemanticSimilarityMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SemanticSimilarityMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge clusters whose labels/descriptions are semantically similar.</p>
+<p>The user supplies <code class="docutils literal notranslate"><span class="pre">embed_fn</span></code> so Compresso does not depend on a specific
+embedding model or API key. Candidate cluster texts are embedded, similar
+clusters are grouped with a maximal-clique strategy, and new
+non-destructive semantic parent nodes are created. Optional callbacks can
+label those new parent nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embed_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – Function mapping a list of cluster texts to a 2D NumPy embedding array.</p></li>
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum cosine similarity between cluster text embeddings.</p></li>
+<li><p><strong>text_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseCluster</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Function mapping a cluster to text. Defaults to cluster description,
+then label, then empty text.</p></li>
+<li><p><strong>label_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional user function that names a newly created semantic parent.</p></li>
+<li><p><strong>label_text_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseCluster</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseCluster</span></code></a>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional function that builds the input object passed to <code class="docutils literal notranslate"><span class="pre">label_fn</span></code>
+from the parent cluster and its children.</p></li>
+<li><p><strong>cluster_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters should be considered for semantic merging.</p></li>
+<li><p><strong>max_rounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum iterative semantic merge rounds.</p></li>
+<li><p><strong>min_group_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimum similar group size to materialize.</p></li>
+<li><p><strong>normalize_embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize text embeddings before similarity.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while processing rounds.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.TagSimilarityMerge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">TagSimilarityMerge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weighted_jaccard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#TagSimilarityMerge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.TagSimilarityMerge" title="Link to this definition"></a></dt>
+<dd><p>Merge active clusters with similar assigned tag profiles.</p>
+<p>Run <a class="reference internal" href="#compresso.clustering.AssignTags" title="compresso.clustering.AssignTags"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssignTags</span></code></a> before this step. Tags are compared either by
+weighted Jaccard over tag scores or by cosine similarity of tag-score
+vectors. Matching groups are materialized as non-destructive parents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum tag-profile similarity in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'weighted_jaccard'</span></code>, <code class="docutils literal notranslate"><span class="pre">'cosine'</span></code>]</span>) – Tag similarity metric: <code class="docutils literal notranslate"><span class="pre">&quot;weighted_jaccard&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;cosine&quot;</span></code>.</p></li>
+<li><p><strong>max_rounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum iterative merge rounds.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize newly created parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print merge progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while comparing clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="post-processing">
+<h2>Post-processing<a class="headerlink" href="#post-processing" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.CompactHiddenClusters">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">CompactHiddenClusters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'render_hidden'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#CompactHiddenClusters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.CompactHiddenClusters" title="Link to this definition"></a></dt>
+<dd><p>Remove hidden clusters and rewire visible graph edges.</p>
+<p>Hidden nodes are usually produced by <a class="reference internal" href="#compresso.clustering.LabelDuplicateMerge" title="compresso.clustering.LabelDuplicateMerge"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelDuplicateMerge</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">mark_children_hidden=True</span></code>. This transform physically removes them from
+the graph while preserving visible ancestor/descendant connectivity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_key</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Metadata key used to decide whether a cluster should be removed.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print compaction summary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.PruneRedundantRoots">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">PruneRedundantRoots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#PruneRedundantRoots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.PruneRedundantRoots" title="Link to this definition"></a></dt>
+<dd><p>Remove active clusters that are descendants of another active cluster.</p>
+<p>This is usually used after link/materialization steps to make the active
+frontier easier to render. It does not delete nodes; it only updates
+<code class="docutils literal notranslate"><span class="pre">active_cluster_ids</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print pruning summary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.AssignTags">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">AssignTags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_tag_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tfidf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#AssignTags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.AssignTags" title="Link to this definition"></a></dt>
+<dd><p>Assign top tags to clusters from an entity-tag matrix.</p>
+<p>The tag matrix is expected to be shaped <code class="docutils literal notranslate"><span class="pre">(n_entities,</span> <span class="pre">n_tags)</span></code> and can be
+a dense or sparse matrix-like object accepted by the implementation. Tags
+are aggregated over each cluster’s entity indices and stored as
+<a class="reference internal" href="#compresso.clustering.ScoredTag" title="compresso.clustering.ScoredTag"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoredTag</span></code></a> objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity_tag_matrix</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></span>) – Matrix containing entity-tag counts or weights.</p></li>
+<li><p><strong>tag_names</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Names corresponding to columns of <code class="docutils literal notranslate"><span class="pre">entity_tag_matrix</span></code>.</p></li>
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'tfidf'</span></code>, <code class="docutils literal notranslate"><span class="pre">'counts'</span></code>]</span>) – Scoring method: <code class="docutils literal notranslate"><span class="pre">&quot;tfidf&quot;</span></code> downweights globally common tags, while
+<code class="docutils literal notranslate"><span class="pre">&quot;counts&quot;</span></code> uses raw aggregate counts.</p></li>
+<li><p><strong>top_k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum number of tags stored per cluster.</p></li>
+<li><p><strong>min_score</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Drop tags whose score is not greater than this threshold.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.LabelClusters">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">LabelClusters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_extractor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#LabelClusters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.LabelClusters" title="Link to this definition"></a></dt>
+<dd><p>Populate cluster labels/descriptions with user-provided callbacks.</p>
+<p>Compresso coordinates the loop but does not own prompting, API keys, or
+model initialization. <code class="docutils literal notranslate"><span class="pre">text_extractor</span></code> converts a cluster plus metadata
+into a domain-specific input object, and <code class="docutils literal notranslate"><span class="pre">label_fn</span></code> converts that object
+into a label result. The result may be a string, <code class="docutils literal notranslate"><span class="pre">(label,</span> <span class="pre">description)</span></code>,
+or a mapping understood by the implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity_metadata</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></span>) – Metadata table or object used by <code class="docutils literal notranslate"><span class="pre">text_extractor</span></code>.</p></li>
+<li><p><strong>text_extractor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#compresso.clustering.SparseCluster" title="compresso.clustering.types.SparseCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseCluster</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>]</span>) – Callable <code class="docutils literal notranslate"><span class="pre">(cluster,</span> <span class="pre">entity_metadata)</span> <span class="pre">-&gt;</span> <span class="pre">object</span></code>.</p></li>
+<li><p><strong>label_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code>]</span>) – Callable that returns a label/description for one extracted text
+object.</p></li>
+<li><p><strong>cluster_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters should be labeled.</p></li>
+<li><p><strong>overwrite</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code>, skip clusters that already have a label.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print labeling progress.</p></li>
+<li><p><strong>show_progress</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Show tqdm progress while labeling clusters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.AssignUnclusteredToNearestCluster">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">AssignUnclusteredToNearestCluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_similarity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coverage_scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_top_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#AssignUnclusteredToNearestCluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.AssignUnclusteredToNearestCluster" title="Link to this definition"></a></dt>
+<dd><p>Expand coverage by assigning uncovered entities to nearest clusters.</p>
+<p>This step does not create singleton clusters. Instead, for each cluster
+that receives newly assigned entities, it creates an expanded parent node
+with the original cluster as a child. This preserves the discovered core
+cluster while adding coverage for entities outside the current frontier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>srp</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="compresso.html#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SRPTensor</span></code></a></span>) – Original entity representations used for nearest-cluster assignment.</p></li>
+<li><p><strong>metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'cosine'</span></code>, <code class="docutils literal notranslate"><span class="pre">'dot'</span></code>]</span>) – Similarity between entity rows and cluster centroids: <code class="docutils literal notranslate"><span class="pre">&quot;cosine&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;dot&quot;</span></code>.</p></li>
+<li><p><strong>min_similarity</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional minimum similarity required for assignment.</p></li>
+<li><p><strong>top_k_clusters</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of nearest clusters to assign each uncovered entity to.</p></li>
+<li><p><strong>cluster_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, <code class="docutils literal notranslate"><span class="pre">'leaves'</span></code>, <code class="docutils literal notranslate"><span class="pre">'roots'</span></code>]</span>) – Which clusters can receive assignments.</p></li>
+<li><p><strong>coverage_scope</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'active'</span></code>, <code class="docutils literal notranslate"><span class="pre">'all'</span></code>]</span>) – Which clusters count as already covering an entity: <code class="docutils literal notranslate"><span class="pre">&quot;active&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>.</p></li>
+<li><p><strong>assigned_weight</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight of newly assigned entity vectors when recomputing expanded
+centroids.</p></li>
+<li><p><strong>centroid_top_m</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Keep only this many largest centroid features in expanded parents.</p></li>
+<li><p><strong>centroid_top_k</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Deprecated alias for <code class="docutils literal notranslate"><span class="pre">centroid_top_m</span></code>.</p></li>
+<li><p><strong>normalize_centroids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – L2-normalize expanded parent centroids.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print assignment summary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="compresso.clustering.SizeFilter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">SizeFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#SizeFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.SizeFilter" title="Link to this definition"></a></dt>
+<dd><p>Keep only active clusters with at least <code class="docutils literal notranslate"><span class="pre">min_cluster_size</span></code> entities.</p>
+<p>This changes the active frontier only; filtered-out clusters remain in the
+graph and can still be inspected through <code class="docutils literal notranslate"><span class="pre">clusters.clusters</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>min_cluster_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimum entity count required for an active cluster to stay active.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="persistence-and-helpers">
+<h2>Persistence and Helpers<a class="headerlink" href="#persistence-and-helpers" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.clustering.save_cluster_graph">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">save_cluster_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/io.html#save_cluster_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.save_cluster_graph" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>graph</strong> (<a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><em>SparseClusterSet</em></a>)</p></li>
+<li><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.clustering.load_cluster_graph">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">load_cluster_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/io.html#load_cluster_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.load_cluster_graph" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.clustering.graph_to_dict">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">graph_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/io.html#graph_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.graph_to_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>graph</strong> (<a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><em>SparseClusterSet</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.clustering.graph_from_dict">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">graph_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/io.html#graph_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.graph_from_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>data</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.clustering.cluster_srp">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">cluster_srp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srp</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dominant_signed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combo_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_merge_min_cluster_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_iou_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_tag_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tfidf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_similarity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_similarity_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weighted_jaccard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_merge_rounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#cluster_srp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.cluster_srp" title="Link to this definition"></a></dt>
+<dd><p>Convenience pipeline for sparse clustering.</p>
+<p>Semantic labeling/merging is intentionally not part of v1; callers can add
+it later as callbacks operating on the returned SparseClusterSet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>srp</strong> (<a class="reference internal" href="compresso.html#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><em>SRPTensor</em></a>)</p></li>
+<li><p><strong>mode</strong> (<em>Literal</em><em>[</em><em>'dominant_signed'</em><em>, </em><em>'top_m_signed'</em><em>, </em><em>'combo_signed'</em><em>]</em>)</p></li>
+<li><p><strong>top_m</strong> (<em>int</em>)</p></li>
+<li><p><strong>combo_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>min_cluster_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>post_merge_min_cluster_size</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>entity_ids</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>activation_iou_threshold</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>tag_names</strong> (<em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>tag_method</strong> (<em>Literal</em><em>[</em><em>'tfidf'</em><em>, </em><em>'counts'</em><em>]</em>)</p></li>
+<li><p><strong>top_k_tags</strong> (<em>int</em>)</p></li>
+<li><p><strong>tag_similarity_threshold</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>tag_similarity_metric</strong> (<em>Literal</em><em>[</em><em>'weighted_jaccard'</em><em>, </em><em>'cosine'</em><em>]</em>)</p></li>
+<li><p><strong>max_merge_rounds</strong> (<em>int</em>)</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compresso.clustering.run_clustering_pipeline">
+<span class="sig-prename descclassname"><span class="pre">compresso.clustering.</span></span><span class="sig-name descname"><span class="pre">run_clustering_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/compresso/clustering/pipeline.html#run_clustering_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#compresso.clustering.run_clustering_pipeline" title="Link to this definition"></a></dt>
+<dd><p>Run an explicit sparse clustering pipeline.</p>
+<p>The first step consumes an <code class="docutils literal notranslate"><span class="pre">SRPTensor</span></code> and must return a
+<code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code>. Every following step consumes and returns a
+<code class="docutils literal notranslate"><span class="pre">SparseClusterSet</span></code>. This keeps base cluster construction separate from
+optional merge/tag/filter phases while staying easy to compose with
+<code class="docutils literal notranslate"><span class="pre">functools.partial</span></code> or small lambdas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseClusterSet</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>srp</strong> (<a class="reference internal" href="compresso.html#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><em>SRPTensor</em></a>)</p></li>
+<li><p><strong>steps</strong> (<em>Sequence</em><em>[</em><em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="compresso.html#compresso.SRPTensor" title="compresso.params.srp.SRPTensor"><em>SRPTensor</em></a><em>]</em><em>, </em><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><em>SparseClusterSet</em></a><em>] </em><em>| </em><em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><em>SparseClusterSet</em></a><em>]</em><em>, </em><a class="reference internal" href="#compresso.clustering.SparseClusterSet" title="compresso.clustering.types.SparseClusterSet"><em>SparseClusterSet</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="compresso.html" class="btn btn-neutral float-left" title="Core API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
