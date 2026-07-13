@@ -24,6 +24,10 @@ keywords = [
     "machine-learning",
     "interpretability",
     "clustering",
+    "recommender-systems",
+    "recommendation",
+    "embedding-compression",
+    "sparse-embeddings",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
