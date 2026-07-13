@@ -3,7 +3,9 @@
 [![PyPI](https://img.shields.io/pypi/v/compresso-pytorch.svg)](https://pypi.org/project/compresso-pytorch/)
 [![Python](https://img.shields.io/pypi/pyversions/compresso-pytorch.svg)](https://pypi.org/project/compresso-pytorch/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://zombak79.github.io/compresso-pytorch/)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://zombak79.github.io/compresso/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://compreapp-demo.streamlit.app)
+[![Documentation build](https://github.com/zombak79/compresso/actions/workflows/docs.yml/badge.svg)](https://github.com/zombak79/compresso/actions/workflows/docs.yml)
 
 Compresso is an open-source PyTorch framework for sparse representation learning. It provides reusable building blocks for learning sparse neural representations, dynamic sparsification, sparse inference, and semantic analysis, enabling researchers to rapidly prototype sparse neural architectures while focusing on models rather than infrastructure.
 
