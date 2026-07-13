@@ -81,6 +81,19 @@ cluster_graph = cc.ClusteringPipeline(
 
 See full example at https://zombak79.github.io/compresso/clustering.html.
 
+## Recommender Systems Add-on
+
+For recommender-system experiments, see [compresso-recsys](https://github.com/zombak79/compresso-recsys), the companion package built on top of Compresso.
+
+It provides recommender-specific dataset loaders, checkpoint management, and retrieval metrics such as Recall and nDCG. It can be installed with:
+
+```bash
+pip install compresso-recsys
+```
+
+Compresso contains the general sparse representation learning components, while `compresso-recsys` provides the infrastructure needed to apply and evaluate them in recommender-system experiments.
+
+
 ## Citation
 
 If you find this project helpful or use it in your academic work, please consider citing it. This helps us continue to maintain and develop this project. You can find the citation format below.
