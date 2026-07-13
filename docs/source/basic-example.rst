@@ -35,7 +35,7 @@ the trainer expects.
 Train a top-k SAE
 -----------------
 
-We use a mildly overcomplete code (``hidden_dim=196`` features) and keep only
+We use a compact undercomplete code (``hidden_dim=196`` features) and keep only
 ``k=20`` of them active per image:
 
 .. code-block:: python
