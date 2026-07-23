@@ -233,8 +233,8 @@ class TopKSAEConfig:
     sparsify_score_mode: Literal["abs", "raw", "relu"] = "abs"
     sparsify_ste_alpha: float = 0.01
     noise_type: Literal["none", "gaussian"] = "none"
-    noise_scale: Literal["absolute", "global_rms", "feature_std"] = "absolute"
-    noise_level: float = 0.03
+    noise_scale: Literal["absolute", "global_rms", "feature_std"] = "global_rms"
+    noise_level: float = 0.1
     alpha_loss: float = 0.01
     l1_penalty: float = 0.0
     batch_size: int = 128
