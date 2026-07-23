@@ -117,6 +117,48 @@ These are surfaced on the config as ``sparsify_score_mode`` /
 ``sparsify_ste_alpha`` and ``srp_score_mode`` (the latter is used by
 ``transform`` when packing into an :class:`~compresso.SRPTensor`).
 
+Denoising training
+------------------
+
+The trainer can optionally corrupt each training batch with Gaussian noise
+while keeping the original embedding as the reconstruction target:
+
+.. code-block:: python
+
+   from compresso import TopKSAEConfig, TopKSAETrainer
+
+   cfg = TopKSAEConfig(
+       hidden_dim=4096,
+       k=128,
+       noise_type="gaussian",
+       noise_scale="feature_std",
+       noise_level=0.05,
+   )
+   trainer = TopKSAETrainer(cfg).fit(embeddings)
+
+``noise_scale="absolute"`` interprets ``noise_level`` directly in embedding
+coordinate units. ``"global_rms"`` derives one scale from the RMS feature
+standard deviation of the training embeddings. ``"feature_std"`` uses each
+feature's own standard deviation, so differently scaled dimensions receive
+proportional noise. Adaptive statistics are computed once at the start of each
+``fit``.
+
+Noise is applied only by the training loop. ``encode``, ``reconstruct``, and
+``transform`` always use the embeddings exactly as provided. The trainer uses
+its own generator seeded by ``seed``, so unrelated Torch random operations do
+not change the corruption sequence.
+
+The fitted noise statistics and generator state are included in
+``trainer.state_dict()``. Restore the complete trainer with:
+
+.. code-block:: python
+
+   restored = TopKSAETrainer.from_state_dict(trainer.state_dict())
+
+This restores the model, optimizer, history, adaptive noise scale, and, when
+restored on the same device type, future noise sequence. States created before
+denoising support remain loadable and default to no corruption.
+
 Post-sparsification hooks
 -------------------------
 
@@ -148,11 +190,14 @@ Field                       Default       Meaning
 ``encoder`` / ``decoder``   ``None``      Custom modules (else linear layers).
 ``sparsify_score_mode``     ``"abs"``     Top-k scoring: ``abs`` / ``raw`` / ``relu``.
 ``sparsify_ste_alpha``      ``0.01``      Straight-through leak for non-selected entries.
+``noise_type``              ``"none"``    Training corruption: ``none`` / ``gaussian``.
+``noise_scale``             "global_rms"    Gaussian scaling: absolute / global RMS / feature std.
+``noise_level``             ``0.1``       Gaussian scale or adaptive scale multiplier.
 ``alpha_loss``              ``0.01``      Cosine/MSE mixture weight in the training loss.
 ``l1_penalty``              ``0.0``       Extra L1 penalty on code activations.
 ``batch_size``              ``128``       Rows per batch.
 ``shuffle``                 ``True``      Shuffle rows between epochs.
-``seed``                    ``42``        Seed for shuffling and init.
+``seed``                    ``42``        Seed for shuffling, init, and training noise.
 ``epochs``                  ``10``        Training epochs.
 ``lr`` / ``weight_decay``   ``1e-3`` / 0  AdamW parameters.
 ``decay``                   ``False``     Cosine LR decay to zero over training.
