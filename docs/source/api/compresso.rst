@@ -24,6 +24,9 @@ Sparse Autoencoders
 .. autoclass:: compresso.TopKSAEConfig
    :members:
 
+``TopKSAETrainer`` builds on the sparse embedding compression method described
+in :ref:`sae-trainer-citation`.
+
 .. autoclass:: compresso.TopKSAETrainer
    :members:
 

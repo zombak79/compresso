@@ -221,6 +221,31 @@ compressing model weights:
   rewinds :class:`~compresso.MaskedParam` masks during training, and
   :func:`~compresso.exponential_decay`, a helper for sparsity schedules.
 
+Both sparse parameter types support localized row access:
+
+.. code-block:: python
+
+   dense_rows = masked_param[row_indices]
+   sparse_rows = srp_param[row_indices]  # returns SRPTensor
+
+For a row-wise ``MaskedParam``, selection performs the current top-k projection
+only for the requested rows. It is therefore equivalent to
+``masked_param()[row_indices]`` without materializing the complete masked
+parameter. ``SRPParam`` selection uses gradient-preserving ``index_select``;
+backward passes through ``sparse_rows.vals`` update the original
+``srp_param.values``, including accumulation for duplicate requested rows.
+
+After a ``MaskedParam`` schedule is complete, or after its mask is frozen,
+convert the exact stored boolean mask to a trainable fixed structure:
+
+.. code-block:: python
+
+   srp_param = masked_param.to_srp_param()
+
+Conversion preserves selected zero-valued and tied entries without recomputing
+top-k. It creates a new optimizer-owned parameter, so the optimizer should be
+restarted at this lifecycle boundary.
+
 .. note::
 
    The pruning stack (and the broader ``compresso.layers`` package of sparse

@@ -35,6 +35,7 @@ to *see* what a sparse autoencoder learns.
    io
    clustering-visualization
    clustering
+   citing
 
 .. toctree::
    :maxdepth: 2

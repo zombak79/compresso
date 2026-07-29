@@ -112,6 +112,10 @@ Compresso contains the general sparse representation learning components, while 
 
 If you find this project helpful or use it in your academic work, please consider citing it. This helps us continue to maintain and develop this project. You can find the citation format below.
 
+For method-specific references, including the sparse embedding compression
+work behind `TopKSAETrainer`, see the
+[citation guide](https://zombak79.github.io/compresso/citing.html).
+
 ```bibtex
 @misc{compresso,
   title  = {Compresso: A PyTorch Framework for Sparse Representation Learning},
