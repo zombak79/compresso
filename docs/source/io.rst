@@ -60,6 +60,26 @@ columns and ``k`` active entries, storage is ``rows × k × 2`` instead of
 Like a tensor, it supports ``.to(...)``, ``.cpu()``, ``.cuda()``, ``.detach()``,
 ``.clone()``, and ``.contiguous()``, each returning a new ``SRPTensor``.
 
+Row indexing
+------------
+
+Use a slice, a one-dimensional integer tensor, or an integer sequence to
+select packed rows without converting to dense:
+
+.. code-block:: python
+
+   selected = srp[torch.tensor([7, 2, 7])]
+
+The result remains an ``SRPTensor``. Requested order and duplicate rows are
+preserved, and gradients through ``selected.vals`` accumulate into the source
+values. Scalar indexing is intentionally unsupported; use ``srp[[7]]`` to keep
+the row-packed representation two-dimensional.
+
+Row indexing currently supports ``prefix_shape=None`` or a one-dimensional
+``prefix_shape``. Multidimensional prefixes must first be flattened explicitly
+because arbitrary packed-row selection cannot preserve their logical prefix
+structure.
+
 Building one directly
 ---------------------
 
