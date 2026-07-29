@@ -25,7 +25,17 @@ def normalize_row_indices(
 ) -> torch.Tensor:
     """Normalize a non-scalar row index to a 1D long tensor."""
     if isinstance(index, slice):
-        return torch.arange(rows, device=device, dtype=torch.long)[index]
+        start, stop, step = index.indices(rows)
+        length = len(range(start, stop, step))
+        if length == 0:
+            return torch.empty(0, device=device, dtype=torch.long)
+        return torch.arange(
+            start,
+            stop,
+            step,
+            device=device,
+            dtype=torch.long,
+        )
     if isinstance(index, int):
         raise IndexError(
             "scalar row indexing is not supported; use param[[row]] "

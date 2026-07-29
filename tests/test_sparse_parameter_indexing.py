@@ -4,6 +4,7 @@ import pytest
 import torch
 
 from compresso import MaskedParam, SRPParam, SRPTensor
+from compresso.params._indexing import normalize_row_indices
 
 
 def _srp_components():
@@ -25,6 +26,75 @@ def _srp_components():
         ]
     )
     return cols, values
+
+
+@pytest.mark.parametrize(
+    ("index", "expected"),
+    [
+        (slice(None), [0, 1, 2, 3, 4, 5]),
+        (slice(1, None, 2), [1, 3, 5]),
+        (slice(-3, None), [3, 4, 5]),
+        (slice(-100, 100, 2), [0, 2, 4]),
+        (slice(None, None, -1), [5, 4, 3, 2, 1, 0]),
+        (slice(5, 0, -2), [5, 3, 1]),
+        (slice(4, 2), []),
+        (slice(2, 4, -1), []),
+        (slice(100, None), []),
+    ],
+)
+def test_normalize_row_indices_preserves_python_slice_semantics(
+    index,
+    expected,
+):
+    actual = normalize_row_indices(
+        index,
+        rows=6,
+        device=torch.device("cpu"),
+    )
+
+    assert actual.dtype == torch.long
+    assert actual.device == torch.device("cpu")
+    assert actual.tolist() == expected
+
+
+def test_normalize_row_indices_supports_slices_of_empty_rows():
+    actual = normalize_row_indices(
+        slice(None, None, -1),
+        rows=0,
+        device=torch.device("cpu"),
+    )
+
+    assert actual.shape == (0,)
+    assert actual.dtype == torch.long
+
+
+def test_normalize_row_indices_rejects_zero_slice_step():
+    with pytest.raises(ValueError, match="slice step cannot be zero"):
+        normalize_row_indices(
+            slice(None, None, 0),
+            rows=6,
+            device=torch.device("cpu"),
+        )
+
+
+def test_normalize_row_indices_does_not_allocate_all_rows(monkeypatch):
+    calls = []
+    original_arange = torch.arange
+
+    def tracked_arange(*args, **kwargs):
+        calls.append(args)
+        return original_arange(*args, **kwargs)
+
+    monkeypatch.setattr(torch, "arange", tracked_arange)
+
+    actual = normalize_row_indices(
+        slice(10, 14, 2),
+        rows=10_000_000,
+        device=torch.device("cpu"),
+    )
+
+    assert actual.tolist() == [10, 12]
+    assert calls == [(10, 14, 2)]
 
 
 def test_srptensor_row_indexing_preserves_order_duplicates_and_gradients():
