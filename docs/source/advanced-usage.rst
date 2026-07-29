@@ -191,7 +191,7 @@ Field                       Default       Meaning
 ``sparsify_score_mode``     ``"abs"``     Top-k scoring: ``abs`` / ``raw`` / ``relu``.
 ``sparsify_ste_alpha``      ``0.01``      Straight-through leak for non-selected entries.
 ``noise_type``              ``"none"``    Training corruption: ``none`` / ``gaussian``.
-``noise_scale``             "global_rms"    Gaussian scaling: absolute / global RMS / feature std.
+``noise_scale``             ``"global_rms"``  Gaussian scaling: ``absolute`` / ``global_rms`` / ``feature_std``.
 ``noise_level``             ``0.1``       Gaussian scale or adaptive scale multiplier.
 ``alpha_loss``              ``0.01``      Cosine/MSE mixture weight in the training loss.
 ``l1_penalty``              ``0.0``       Extra L1 penalty on code activations.
