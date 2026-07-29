@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from collections import deque
 from typing import Optional, Sequence, Literal, List
 
+from compresso.params._indexing import RowIndex, normalize_row_indices
 from compresso.params.coo import CooSparseParam
 from compresso.params.srp import SRPParam, SRPTensor
 from compresso.functional.sparsify import topk_ste
@@ -149,6 +150,43 @@ class MaskedParam(nn.Module):
             return out
         else:
             return self.topk_weights()
+
+    def __getitem__(self, index: RowIndex) -> torch.Tensor:
+        """Return selected rows without materializing the full masked weight.
+
+        Row indexing is only defined for row-wise sparsity because each
+        selected row can then be projected independently with exactly the same
+        semantics as :meth:`forward`.
+        """
+        if self.dim != 1:
+            raise NotImplementedError(
+                "row indexing is only supported for row-wise MaskedParam "
+                "values with sparsity='row'"
+            )
+        row_indices = normalize_row_indices(
+            index,
+            rows=self.rows,
+            device=self.weight.device,
+        )
+        selected_weight = self.weight.index_select(0, row_indices)
+        if self.mask_frozen:
+            selected_mask = self.mask.index_select(0, row_indices)
+            output = selected_weight * selected_mask.to(selected_weight.dtype)
+        else:
+            output = topk_ste(
+                selected_weight,
+                k=int(self.k_current),
+                dim=1,
+                score_mode=self.score_mode,
+                ste_alpha=self.ste_alpha,
+            )
+        if self.post_norm_l1:
+            output = F.normalize(output, p=1.0, dim=1)
+        return output
+
+    def select_rows(self, row_indices: RowIndex) -> torch.Tensor:
+        """Alias for row indexing without full masked-weight materialization."""
+        return self[row_indices]
     
     def srp(self):
         assert self.dim == 1
@@ -317,66 +355,48 @@ class MaskedParam(nn.Module):
 
 
     @torch.no_grad()
-    def maskedparam_to_srp(self) -> "SRPParam":
-        """Export fixed-k row-packed SRPParam.
-
-        Only valid for row-wise sparsity (self.dim == 1), because SRPParam stores
-        exactly k entries per ROW.
-
-        Uses:
-
-        * frozen mask if ``mask_frozen``
-        * otherwise current-stage top-k mask, ``k_current``
-
-        Returns:
-
-        ``SRPParam`` with ``cols`` shaped ``(rows, k_current)``, ``values``
-        shaped ``(rows, k_current)``, and shape ``(rows, cols)``.
-        """
+    def to_srp_param(self) -> SRPParam:
+        """Export the exact final or frozen row mask as an ``SRPParam``."""
         if self.dim != 1:
             raise ValueError(
-                "maskedparam_to_srp() only supports row-wise sparsity (dim==1). "
-                "For col-wise sparsity, export COO with packed_dim='col' (or wait for implementation of a ColPackedParam)."
+                "to_srp_param() only supports row-wise sparsity"
             )
-
-        W = self.weight
-        rows, cols = W.shape
-        k = int(self.k_current)
-
-        # choose which mask to export
-        if self.mask_frozen:
-            mask = self.mask
-        else:
-            mask = self.topk_mask(k=k)
-
-        # Build row-packed cols2d in the correct order: for each row, the k active columns.
-        # Since mask is boolean, we can get indices by topk on mask.float().
-        # But safer/cleaner: compute topk on abs(W) with regrowth constraint consistent with mask.
-        #
-        # We want the *active* positions. If mask is from topk already, this will match.
-        # If allow_regrowth=False and mask is older, still OK.
-        #
-        # Easiest: use topk on (abs(W) * mask) to get k cols per row.
-        score = W.abs()
-        score = score * mask.to(score.dtype)
-
-        # If something went wrong and a row has <k active entries (shouldn't happen), topk will break.
-        # So assert in debug style:
-        active_per_row = mask.sum(dim=1)
-        if int(active_per_row.min().item()) < k:
+        if not self.schedule_done and not self.mask_frozen:
             raise RuntimeError(
-                f"Cannot export SRP: some rows have < k_current active entries. "
-                f"min_active={int(active_per_row.min().item())}, k_current={k}"
+                "to_srp_param() requires a completed schedule or frozen mask"
             )
 
-        tk = torch.topk(score, k=k, dim=1, largest=True)
-        cols2d = tk.indices.to(torch.long)  # (rows,k)
+        k = int(self.k_current)
+        mask = self.mask
+        active_per_row = mask.sum(dim=1)
+        if active_per_row.numel() and not bool(
+            torch.all(active_per_row == k).item()
+        ):
+            raise RuntimeError(
+                "cannot export SRP: every row must contain exactly "
+                f"k_current={k} selected entries; got "
+                f"min={int(active_per_row.min().item())}, "
+                f"max={int(active_per_row.max().item())}"
+            )
 
-        # Values: gather from W (not score) to preserve sign.
-        values2d = W.gather(1, cols2d).detach().clone()  # (rows,k)
+        active = mask.nonzero(as_tuple=False)
+        cols = active[:, 1].reshape(self.rows, k).to(torch.long)
+        exported_mask = torch.zeros_like(mask).scatter(1, cols, True)
+        if not torch.equal(exported_mask, mask):
+            raise RuntimeError("exported SRP columns do not match the selected mask")
 
-        # IMPORTANT: SRPParam semantics are scatter_add per row; topk gives unique cols per row, so fine.
-        return SRPParam(cols=cols2d.detach().clone(), values=values2d, shape=(rows, cols), validate=True)
+        values = self.weight.gather(1, cols).detach()
+        return SRPParam(
+            cols=cols,
+            values=values,
+            shape=(self.rows, self.cols),
+            validate=True,
+        )
+
+    @torch.no_grad()
+    def maskedparam_to_srp(self) -> SRPParam:
+        """Compatibility alias for :meth:`to_srp_param`."""
+        return self.to_srp_param()
 
     # ---- keep init on cpu -----
     def _apply(self, fn):

@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from typing import Any, Optional, Literal, Tuple
 
+from compresso.params._indexing import RowIndex, normalize_row_indices
+
 InitMode = Literal["topk_abs", "random_k"]
 
 class SRPTensor:
@@ -171,6 +173,41 @@ class SRPTensor:
     def requires_grad_(self, requires_grad: bool = True) -> "SRPTensor":
         self.vals.requires_grad_(requires_grad)
         return self
+
+    def __getitem__(self, index: RowIndex) -> "SRPTensor":
+        """Select packed rows while preserving order and autograd.
+
+        Scalar indexing is intentionally unsupported so the result always
+        remains a two-dimensional row-packed representation. For tensors with
+        ``prefix_shape``, only a single row prefix dimension is currently
+        supported.
+        """
+        if self.prefix_shape is not None and len(self.prefix_shape) != 1:
+            raise IndexError(
+                "row indexing is only supported for SRPTensor values with "
+                "prefix_shape=None or a one-dimensional prefix_shape"
+            )
+        row_indices = normalize_row_indices(
+            index,
+            rows=self.rows,
+            device=self.cols.device,
+        )
+        prefix_shape = (
+            (row_indices.numel(),)
+            if self.prefix_shape is not None
+            else None
+        )
+        return SRPTensor(
+            cols=self.cols.index_select(0, row_indices),
+            vals=self.vals.index_select(0, row_indices),
+            shape=(row_indices.numel(), self.cols_total),
+            prefix_shape=prefix_shape,
+            validate=False,
+        )
+
+    def select_rows(self, row_indices: RowIndex) -> "SRPTensor":
+        """Alias for gradient-preserving row indexing."""
+        return self[row_indices]
 
     def to_dense(self) -> torch.Tensor:
         """Densify to ``(rows, cols_total)`` or ``(*prefix, cols_total)``."""
@@ -458,19 +495,23 @@ class SRPParam(nn.Module):
         sp = torch.sparse_coo_tensor(idx, val, size=(self.rows, self.cols_total), device=device)
         return sp.coalesce() if coalesce else sp
 
-    #@torch.no_grad()
-    def select_rows(self, row_indices: torch.Tensor) -> "SRPParam":
-        """
-        Fast row selection, returns a NEW SRPParam with rows=len(row_indices), same cols_total and k.
-        Reindexes rows to [0..R-1], structure is still row-packed.
-        """
-        if row_indices.dtype != torch.long:
-            row_indices = row_indices.long()
-        row_indices = row_indices.to(self.cols.device)
+    def __getitem__(self, index: RowIndex) -> SRPTensor:
+        """Select packed rows without detaching from ``values``."""
+        row_indices = normalize_row_indices(
+            index,
+            rows=self.rows,
+            device=self.cols.device,
+        )
+        return SRPTensor(
+            cols=self.cols.index_select(0, row_indices),
+            vals=self.values.index_select(0, row_indices),
+            shape=(row_indices.numel(), self.cols_total),
+            validate=False,
+        )
 
-        cols_sel = self.cols.index_select(0, row_indices)
-        vals_sel = self.values.detach().index_select(0, row_indices)
-        return SRPParam(cols_sel, vals_sel, shape=(cols_sel.size(0), self.cols_total), validate=False)
+    def select_rows(self, row_indices: RowIndex) -> SRPTensor:
+        """Alias for gradient-preserving row indexing."""
+        return self[row_indices]
 
     # --------------------------
     # constructors / converters
