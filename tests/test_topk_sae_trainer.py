@@ -163,6 +163,7 @@ def test_topk_sae_trainer_gaussian_noise_is_independent_of_global_rng():
         hidden_dim=6,
         k=2,
         noise_type="gaussian",
+        noise_scale="absolute",
         noise_level=0.25,
         show_progress=False,
         seed=123,
