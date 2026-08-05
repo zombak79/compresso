@@ -337,3 +337,308 @@ def test_topk_sae_trainer_rejects_empty_or_nonfinite_adaptive_inputs():
         TopKSAETrainer(config).fit(torch.empty(0, 2))
     with pytest.raises(ValueError, match="finite embeddings"):
         TopKSAETrainer(config).fit(torch.tensor([[1.0, float("nan")]]))
+
+
+@pytest.mark.parametrize(
+    ("config_kwargs", "message"),
+    [
+        ({"validation_frac": 0.0}, "validation_frac"),
+        ({"validation_frac": 1.0}, "validation_frac"),
+        ({"validation_frac": float("nan")}, "validation_frac"),
+        ({"patience": 0}, "patience"),
+        ({"min_delta": -0.1}, "min_delta"),
+    ],
+)
+def test_topk_sae_trainer_validates_early_stopping_config(config_kwargs, message):
+    config = TopKSAEConfig(hidden_dim=4, k=2, show_progress=False, **config_kwargs)
+
+    with pytest.raises(ValueError, match=message):
+        TopKSAETrainer(config).build(input_dim=2)
+
+
+def test_topk_sae_trainer_rejects_conflicting_validation_sources():
+    config = TopKSAEConfig(hidden_dim=4, k=2, epochs=1, validation_frac=0.2, show_progress=False)
+
+    with pytest.raises(ValueError, match="not both"):
+        TopKSAETrainer(config).fit(torch.randn(10, 3), validation_embeddings=torch.randn(4, 3))
+
+
+def test_topk_sae_trainer_requires_validation_for_patience():
+    config = TopKSAEConfig(hidden_dim=4, k=2, epochs=1, patience=2, show_progress=False)
+
+    with pytest.raises(ValueError, match="patience requires"):
+        TopKSAETrainer(config).fit(torch.randn(10, 3))
+
+
+def test_topk_sae_trainer_rejects_validation_embeddings_with_wrong_width():
+    config = TopKSAEConfig(hidden_dim=4, k=2, epochs=1, show_progress=False)
+
+    with pytest.raises(ValueError, match="match embeddings"):
+        TopKSAETrainer(config).fit(torch.randn(10, 3), validation_embeddings=torch.randn(4, 5))
+
+
+def test_topk_sae_trainer_validation_frac_requires_two_rows():
+    config = TopKSAEConfig(hidden_dim=4, k=2, epochs=1, validation_frac=0.5, show_progress=False)
+
+    with pytest.raises(ValueError, match="at least 2 embedding rows"):
+        TopKSAETrainer(config).fit(torch.randn(1, 3))
+
+
+def test_topk_sae_trainer_validation_split_is_deterministic_and_covers_all_rows():
+    x = torch.arange(40, dtype=torch.float32).reshape(20, 2)
+    trainer = TopKSAETrainer(TopKSAEConfig(hidden_dim=4, k=2, seed=99, show_progress=False))
+
+    train_a, val_a = trainer._split_validation(x, 0.3)
+    train_b, val_b = trainer._split_validation(x, 0.3)
+
+    assert torch.equal(train_a, train_b)
+    assert torch.equal(val_a, val_b)
+    assert train_a.shape[0] == 14
+    assert val_a.shape[0] == 6
+    combined = torch.cat([train_a, val_a])
+    assert sorted(combined[:, 0].tolist()) == sorted(x[:, 0].tolist())
+    # Rows are permuted before splitting, so validation is not simply the tail.
+    assert val_a[:, 0].tolist() != x[-6:, 0].tolist()
+
+
+def test_topk_sae_trainer_validation_frac_records_validation_metrics():
+    rng = np.random.default_rng(7)
+    x = rng.normal(size=(24, 4)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=8,
+            k=2,
+            batch_size=8,
+            epochs=2,
+            validation_frac=0.25,
+            show_progress=False,
+            seed=17,
+        )
+    ).fit(x)
+
+    assert len(trainer.history) == 2
+    for record in trainer.history:
+        assert "val_loss" in record
+        assert "val_cosine_loss" in record
+        assert "val_reconstruction_mse" in record
+    assert trainer.stopped_epoch is None
+    assert trainer.best_epoch in {1, 2}
+
+
+def test_topk_sae_trainer_accepts_explicit_validation_embeddings():
+    rng = np.random.default_rng(8)
+    x = rng.normal(size=(16, 4)).astype(np.float32)
+    x_val = rng.normal(size=(6, 4)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(hidden_dim=8, k=2, batch_size=8, epochs=2, show_progress=False, seed=21)
+    ).fit(x, validation_embeddings=x_val)
+
+    assert len(trainer.history) == 2
+    assert all("val_loss" in record for record in trainer.history)
+    assert trainer.best_val_loss is not None
+
+
+def test_topk_sae_trainer_without_validation_records_no_validation_metrics():
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(hidden_dim=6, k=2, batch_size=6, epochs=2, show_progress=False, seed=1)
+    ).fit(torch.randn(12, 3))
+
+    assert len(trainer.history) == 2
+    assert not any(key.startswith("val_") for record in trainer.history for key in record)
+    assert trainer.best_epoch is None
+    assert trainer.best_val_loss is None
+    assert trainer.stopped_epoch is None
+
+
+def test_topk_sae_trainer_early_stopping_halts_when_validation_plateaus():
+    rng = np.random.default_rng(4)
+    x = rng.normal(size=(20, 4)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=8,
+            k=2,
+            batch_size=10,
+            epochs=10,
+            lr=0.0,  # weights never move, so validation loss is exactly flat
+            validation_frac=0.2,
+            patience=2,
+            show_progress=False,
+            seed=7,
+        )
+    ).fit(x)
+
+    assert trainer.best_epoch == 1
+    assert trainer.stopped_epoch == 3
+    assert len(trainer.history) == 3
+
+
+def test_topk_sae_trainer_min_delta_ignores_improvements_below_threshold():
+    x = np.random.default_rng(10).normal(size=(12, 3)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=6,
+            k=2,
+            batch_size=6,
+            epochs=6,
+            validation_frac=0.25,
+            patience=2,
+            min_delta=0.01,
+            restore_best_weights=False,
+            show_progress=False,
+            seed=41,
+        )
+    )
+    scripted = iter([1.0, 0.999, 0.998])
+    trainer._evaluate = lambda _dataset: {"val_loss": next(scripted)}
+
+    trainer.fit(x)
+
+    assert trainer.best_epoch == 1
+    assert trainer.best_val_loss == 1.0
+    assert trainer.stopped_epoch == 3
+
+
+def test_topk_sae_trainer_restores_best_epoch_weights():
+    rng = np.random.default_rng(3)
+    x = rng.normal(size=(16, 4)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=8,
+            k=2,
+            batch_size=8,
+            epochs=3,
+            lr=0.5,
+            validation_frac=0.25,
+            restore_best_weights=True,
+            show_progress=False,
+            seed=5,
+        )
+    )
+    scripted = [1.0, 0.5, 2.0]
+    snapshots: list[dict[str, torch.Tensor]] = []
+
+    def fake_evaluate(_dataset):
+        snapshots.append(trainer._weight_snapshot())
+        return {"val_loss": scripted[len(snapshots) - 1]}
+
+    trainer._evaluate = fake_evaluate
+    trainer.fit(x)
+
+    assert trainer.best_epoch == 2
+    assert trainer.best_val_loss == 0.5
+    assert trainer.stopped_epoch is None
+    best = snapshots[1]
+    for key, value in trainer.sae.state_dict().items():
+        assert torch.equal(value.detach().cpu(), best[key])
+    # The final epoch did move the weights, so the restore above is observable.
+    assert any(not torch.equal(best[key], snapshots[2][key]) for key in best)
+
+
+def test_topk_sae_trainer_keeps_last_epoch_weights_when_restore_disabled():
+    rng = np.random.default_rng(3)
+    x = rng.normal(size=(16, 4)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=8,
+            k=2,
+            batch_size=8,
+            epochs=3,
+            lr=0.5,
+            validation_frac=0.25,
+            restore_best_weights=False,
+            show_progress=False,
+            seed=5,
+        )
+    )
+    scripted = [1.0, 0.5, 2.0]
+    snapshots: list[dict[str, torch.Tensor]] = []
+
+    def fake_evaluate(_dataset):
+        snapshots.append(trainer._weight_snapshot())
+        return {"val_loss": scripted[len(snapshots) - 1]}
+
+    trainer._evaluate = fake_evaluate
+    trainer.fit(x)
+
+    assert trainer.best_epoch == 2
+    for key, value in trainer.sae.state_dict().items():
+        assert torch.equal(value.detach().cpu(), snapshots[2][key])
+
+
+def test_topk_sae_trainer_eval_step_is_never_corrupted():
+    x = torch.randn(8, 4)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=8,
+            k=2,
+            noise_type="gaussian",
+            noise_scale="absolute",
+            noise_level=50.0,
+            show_progress=False,
+            seed=11,
+        )
+    ).build(input_dim=4)
+
+    first = trainer.eval_step(x)["loss"]
+    second = trainer.eval_step(x)["loss"]
+    with torch.no_grad():
+        _reconstruction, _sparse, stats = trainer.sae(x)
+    alpha = float(trainer.cfg.alpha_loss)
+    expected = alpha * (1.0 - stats["cosine_similarity"]) + (1.0 - alpha) * stats["reconstruction_mse"]
+
+    # Corruption would advance the noise generator and change the loss each call.
+    assert torch.equal(first, second)
+    assert torch.allclose(first, expected)
+    # Guard against the asserts above passing merely because noise is inactive.
+    assert not torch.equal(trainer._corrupt(x), x)
+
+
+def test_topk_sae_trainer_fits_noise_scale_on_train_rows_only():
+    rng = np.random.default_rng(6)
+    x = torch.as_tensor(rng.normal(size=(20, 3)).astype(np.float32))
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=6,
+            k=2,
+            batch_size=8,
+            epochs=1,
+            noise_type="gaussian",
+            noise_scale="feature_std",
+            validation_frac=0.25,
+            show_progress=False,
+            seed=13,
+        )
+    ).fit(x)
+
+    train_part, val_part = trainer._split_validation(x, 0.25)
+
+    assert train_part.shape[0] == 15
+    assert val_part.shape[0] == 5
+    assert torch.allclose(trainer.input_feature_mean, train_part.mean(dim=0))
+    assert not torch.allclose(trainer.input_feature_mean, x.mean(dim=0))
+
+
+def test_topk_sae_trainer_state_dict_round_trips_early_stopping_fields():
+    rng = np.random.default_rng(9)
+    x = rng.normal(size=(20, 3)).astype(np.float32)
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=6,
+            k=2,
+            batch_size=10,
+            epochs=6,
+            lr=0.0,
+            validation_frac=0.25,
+            patience=2,
+            show_progress=False,
+            seed=31,
+        )
+    ).fit(x)
+    state = trainer.state_dict()
+
+    assert state["format_version"] == 3
+    restored = TopKSAETrainer.from_state_dict(state)
+
+    assert restored.best_epoch == trainer.best_epoch
+    assert restored.best_val_loss == trainer.best_val_loss
+    assert restored.stopped_epoch == trainer.stopped_epoch
