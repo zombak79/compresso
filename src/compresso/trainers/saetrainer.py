@@ -13,7 +13,10 @@ simple batch dataset that returns full batches directly.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import copy
+import math
+import warnings
+from dataclasses import dataclass, replace
 from typing import Any, Literal
 
 import numpy as np
@@ -182,6 +185,16 @@ class TopKSAEConfig:
         Top-k scoring mode: ``"abs"``, ``"raw"``, or ``"relu"``.
     sparsify_ste_alpha:
         Straight-through estimator leakage for non-selected positions.
+    noise_type:
+        Optional corruption applied to training inputs. ``"none"`` leaves
+        inputs unchanged and ``"gaussian"`` adds Gaussian noise.
+    noise_scale:
+        Scaling used for Gaussian noise. ``"absolute"`` uses embedding
+        coordinate units, ``"global_rms"`` uses one training-set-derived
+        scale, and ``"feature_std"`` scales each input feature separately.
+    noise_level:
+        Gaussian standard deviation for absolute scaling, or a dimensionless
+        multiplier for adaptive scaling.
     alpha_loss:
         Mixture weight for cosine loss. Training loss is
         ``alpha_loss * (1 - cosine_similarity) + (1 - alpha_loss) * mse``.
@@ -219,6 +232,9 @@ class TopKSAEConfig:
     decoder: nn.Module | None = None
     sparsify_score_mode: Literal["abs", "raw", "relu"] = "abs"
     sparsify_ste_alpha: float = 0.01
+    noise_type: Literal["none", "gaussian"] = "none"
+    noise_scale: Literal["absolute", "global_rms", "feature_std"] = "global_rms"
+    noise_level: float = 0.1
     alpha_loss: float = 0.01
     l1_penalty: float = 0.0
     batch_size: int = 128
@@ -256,6 +272,10 @@ class TopKSAETrainer:
         self.optimizer: torch.optim.Optimizer | None = None
         self.input_dim: int | None = None
         self.history: list[dict[str, float]] = []
+        self.input_feature_mean: torch.Tensor | None = None
+        self.input_feature_variance: torch.Tensor | None = None
+        self._gaussian_noise_scale: torch.Tensor | None = None
+        self._noise_generator: torch.Generator | None = None
 
     @property
     def is_built(self) -> bool:
@@ -274,6 +294,16 @@ class TopKSAETrainer:
             raise ValueError("hidden_dim must be >= 1")
         if not 1 <= self.cfg.k <= self.cfg.hidden_dim:
             raise ValueError(f"k must be in [1, hidden_dim], got k={self.cfg.k}, hidden_dim={self.cfg.hidden_dim}")
+        if not math.isfinite(float(self.cfg.alpha_loss)) or not 0.0 <= self.cfg.alpha_loss <= 1.0:
+            raise ValueError("alpha_loss must be finite and in [0, 1]")
+        if not math.isfinite(float(self.cfg.l1_penalty)) or self.cfg.l1_penalty < 0.0:
+            raise ValueError("l1_penalty must be finite and >= 0")
+        if self.cfg.noise_type not in {"none", "gaussian"}:
+            raise ValueError(f"unknown noise_type: {self.cfg.noise_type}")
+        if self.cfg.noise_scale not in {"absolute", "global_rms", "feature_std"}:
+            raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
+        if not math.isfinite(float(self.cfg.noise_level)) or self.cfg.noise_level < 0.0:
+            raise ValueError("noise_level must be finite and >= 0")
 
         torch.manual_seed(int(self.cfg.seed))
         self.input_dim = int(input_dim)
@@ -304,6 +334,8 @@ class TopKSAETrainer:
         self.device = torch.device(device)
         if self.sae is not None:
             self.sae.to(self.device)
+        if self._gaussian_noise_scale is not None:
+            self._gaussian_noise_scale = self._gaussian_noise_scale.to(self.device)
         return self
 
     def _model_dtype(self) -> torch.dtype:
@@ -318,6 +350,8 @@ class TopKSAETrainer:
         tensor = torch.as_tensor(embeddings)
         if tensor.ndim != 2:
             raise ValueError(f"embeddings must be 2D, got shape {tuple(tensor.shape)}")
+        if tensor.shape[0] < 1:
+            raise ValueError("embeddings must contain at least one row")
         return int(tensor.shape[1])
 
     def _dataset(self, embeddings: np.ndarray | torch.Tensor, *, shuffle: bool) -> EmbeddingsDataset:
@@ -350,31 +384,111 @@ class TopKSAETrainer:
             raise RuntimeError("trainer must be built before reading learning rate")
         return float(self.optimizer.param_groups[0]["lr"])
 
+    def _new_noise_generator(self, device: torch.device) -> torch.Generator:
+        try:
+            generator = torch.Generator(device=device)
+        except (RuntimeError, TypeError):
+            # Some backends do not expose device-local generators.
+            generator = torch.Generator()
+        generator.manual_seed(int(self.cfg.seed))
+        return generator
+
+    def _randn_like(self, batch: torch.Tensor) -> torch.Tensor:
+        if self._noise_generator is None:
+            self._noise_generator = self._new_noise_generator(batch.device)
+        generator_device = torch.device(self._noise_generator.device)
+        noise = torch.randn(
+            batch.shape,
+            dtype=batch.dtype,
+            device=generator_device,
+            generator=self._noise_generator,
+        )
+        return noise if generator_device == batch.device else noise.to(batch.device)
+
+    def _fit_gaussian_noise_scale(self, embeddings: np.ndarray | torch.Tensor) -> None:
+        """Compute fixed training-set statistics used by adaptive Gaussian noise."""
+        self.input_feature_mean = None
+        self.input_feature_variance = None
+        self._gaussian_noise_scale = None
+
+        if self.cfg.noise_type != "gaussian" or self.cfg.noise_scale == "absolute":
+            return
+
+        values = torch.as_tensor(embeddings)
+        if not torch.is_floating_point(values):
+            values = values.float()
+        elif values.dtype not in {torch.float32, torch.float64}:
+            values = values.float()
+        if not bool(torch.isfinite(values).all()):
+            raise ValueError("adaptive Gaussian noise requires finite embeddings")
+
+        variance, mean = torch.var_mean(values, dim=0, correction=0)
+        self.input_feature_mean = mean.detach().cpu()
+        self.input_feature_variance = variance.detach().cpu()
+
+        if self.cfg.noise_scale == "global_rms":
+            scale = variance.mean().sqrt()
+        elif self.cfg.noise_scale == "feature_std":
+            scale = variance.sqrt()
+        else:  # pragma: no cover - guarded by config validation
+            raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
+
+        if not bool(torch.isfinite(scale).all()):
+            raise ValueError("adaptive Gaussian noise produced a non-finite scale")
+        self._gaussian_noise_scale = scale.to(device=self.device, dtype=self._model_dtype())
+
+    def _corrupt(self, batch: torch.Tensor) -> torch.Tensor:
+        """Return an optionally corrupted training input."""
+        if self.cfg.noise_type == "none" or self.cfg.noise_level == 0.0:
+            return batch
+        if self.cfg.noise_type != "gaussian":
+            raise ValueError(f"unknown noise_type: {self.cfg.noise_type}")
+
+        if self.cfg.noise_scale == "absolute":
+            scale: torch.Tensor | float = 1.0
+        else:
+            if self._gaussian_noise_scale is None:
+                raise RuntimeError("adaptive Gaussian noise requires fit() before train_step()")
+            scale = self._gaussian_noise_scale.to(device=batch.device, dtype=batch.dtype)
+        return batch + float(self.cfg.noise_level) * scale * self._randn_like(batch)
+
     def train_step(self, batch: torch.Tensor) -> dict[str, torch.Tensor]:
         """Run one optimization step and return detached training stats."""
         if self.sae is None or self.optimizer is None:
             raise RuntimeError("trainer must be built before train_step")
         self.sae.train()
         self.optimizer.zero_grad(set_to_none=True)
-        _reconstruction, sparse, stats = self.sae(batch)
-        cosine_loss = 1.0 - stats["cosine_similarity"]
-        mse = stats["reconstruction_mse"]
+
+        clean = batch
+        corrupted = self._corrupt(clean)
+        reconstruction, sparse, stats = self.sae(corrupted)
+        if corrupted is clean:
+            cosine_loss = 1.0 - stats["cosine_similarity"]
+            mse = stats["reconstruction_mse"]
+        else:
+            cosine_loss = 1.0 - F.cosine_similarity(reconstruction, clean, dim=-1).mean()
+            mse = F.mse_loss(reconstruction, clean)
         loss = float(self.cfg.alpha_loss) * cosine_loss + (1.0 - float(self.cfg.alpha_loss)) * mse
         if self.cfg.l1_penalty > 0.0:
             loss = loss + float(self.cfg.l1_penalty) * sparse.abs().mean()
         loss.backward()
         self.optimizer.step()
-        return {
+        result = {
             "loss": loss.detach(),
             "cosine_loss": cosine_loss.detach(),
             "reconstruction_mse": mse.detach(),
             "active_count": stats["active_count"].detach(),
             "dead_features": stats["dead_features"].detach(),
         }
+        if corrupted is not clean:
+            result["corrupted_cosine_loss"] = (1.0 - stats["cosine_similarity"]).detach()
+            result["corrupted_reconstruction_mse"] = stats["reconstruction_mse"].detach()
+        return result
 
     def fit(self, embeddings: np.ndarray | torch.Tensor) -> "TopKSAETrainer":
         """Train the SAE on dense embeddings and return ``self``."""
         self.build(self._input_dim(embeddings))
+        self._fit_gaussian_noise_scale(embeddings)
         dataset = self._dataset(embeddings, shuffle=bool(self.cfg.shuffle))
         epochs = int(self.cfg.epochs)
         if epochs < 1:
@@ -455,9 +569,95 @@ class TopKSAETrainer:
         if self.sae is None:
             raise RuntimeError("trainer must be built before state_dict")
         return {
+            "format_version": 2,
             "config": self.cfg,
             "input_dim": self.input_dim,
             "model": self.sae.state_dict(),
             "optimizer": self.optimizer.state_dict() if self.optimizer is not None else None,
             "history": list(self.history),
+            "input_feature_mean": self.input_feature_mean,
+            "input_feature_variance": self.input_feature_variance,
+            "gaussian_noise_scale": (
+                self._gaussian_noise_scale.detach().cpu() if self._gaussian_noise_scale is not None else None
+            ),
+            "noise_generator_state": (
+                self._noise_generator.get_state() if self._noise_generator is not None else None
+            ),
+            "noise_generator_device": (
+                str(self._noise_generator.device) if self._noise_generator is not None else None
+            ),
         }
+
+    def load_state_dict(
+        self,
+        state: dict[str, Any],
+        *,
+        load_optimizer: bool = True,
+    ) -> "TopKSAETrainer":
+        """Restore trainer state, including fitted denoising statistics."""
+        format_version = int(state.get("format_version", 1))
+        if format_version not in {1, 2}:
+            raise ValueError(f"unsupported trainer state format_version: {format_version}")
+        if state.get("input_dim") is None:
+            raise ValueError("trainer state is missing input_dim")
+
+        self.build(int(state["input_dim"]))
+        if self.sae is None:
+            raise RuntimeError("trainer could not be built")
+        self.sae.load_state_dict(state["model"])
+        optimizer_state = state.get("optimizer")
+        if load_optimizer and optimizer_state is not None:
+            if self.optimizer is None:
+                raise RuntimeError("trainer optimizer could not be built")
+            self.optimizer.load_state_dict(optimizer_state)
+        self.history = list(state.get("history", []))
+
+        feature_mean = state.get("input_feature_mean")
+        feature_variance = state.get("input_feature_variance")
+        gaussian_scale = state.get("gaussian_noise_scale")
+        self.input_feature_mean = feature_mean.detach().cpu() if feature_mean is not None else None
+        self.input_feature_variance = feature_variance.detach().cpu() if feature_variance is not None else None
+        if gaussian_scale is None and self.input_feature_variance is not None:
+            if self.cfg.noise_scale == "global_rms":
+                gaussian_scale = self.input_feature_variance.mean().sqrt()
+            elif self.cfg.noise_scale == "feature_std":
+                gaussian_scale = self.input_feature_variance.sqrt()
+        self._gaussian_noise_scale = (
+            gaussian_scale.to(device=self.device, dtype=self._model_dtype()) if gaussian_scale is not None else None
+        )
+
+        self._noise_generator = None
+        generator_state = state.get("noise_generator_state")
+        saved_generator_device = state.get("noise_generator_device")
+        if generator_state is not None:
+            generator = self._new_noise_generator(self.device)
+            current_device_type = torch.device(generator.device).type
+            saved_device_type = torch.device(saved_generator_device or "cpu").type
+            if current_device_type == saved_device_type:
+                generator.set_state(generator_state.detach().cpu())
+            else:
+                warnings.warn(
+                    "noise generator device changed while loading; future Gaussian noise "
+                    "will restart from config.seed",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            self._noise_generator = generator
+        return self
+
+    @classmethod
+    def from_state_dict(
+        cls,
+        state: dict[str, Any],
+        *,
+        device: str | torch.device | None = None,
+        load_optimizer: bool = True,
+    ) -> "TopKSAETrainer":
+        """Construct a trainer from :meth:`state_dict` output."""
+        config = state.get("config")
+        if not isinstance(config, TopKSAEConfig):
+            raise ValueError("trainer state is missing a TopKSAEConfig")
+        config = copy.deepcopy(config)
+        if device is not None:
+            config = replace(config, device=device)
+        return cls(config).load_state_dict(state, load_optimizer=load_optimizer)

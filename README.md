@@ -66,6 +66,20 @@ srp = trainer.fit_transform(embeddings)
 print(srp)
 ```
 
+To train a denoising SAE, enable Gaussian corruption. The trainer adds noise
+only to training inputs and still reconstructs the original clean embeddings:
+
+```python
+trainer = TopKSAETrainer(
+    TopKSAEConfig(
+        hidden_dim=4096,
+        k=32,
+        noise_type="gaussian",
+    )
+)
+srp = trainer.fit_transform(embeddings)
+```
+
 Clustering and cluster labeling can be run through the clustering pipeline:
 
 ```python
