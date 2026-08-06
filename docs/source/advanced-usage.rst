@@ -159,6 +159,53 @@ This restores the model, optimizer, history, adaptive noise scale, and, when
 restored on the same device type, future noise sequence. States created before
 denoising support remain loadable and default to no corruption.
 
+Early stopping
+--------------
+
+Training can stop as soon as a held-out validation loss stops improving. Supply
+the validation rows either as a fraction of the input, or as a separate matrix
+when you already hold out your own:
+
+.. code-block:: python
+
+   from compresso import TopKSAEConfig, TopKSAETrainer
+
+   cfg = TopKSAEConfig(hidden_dim=4096, k=128, epochs=200, validation_frac=0.1, patience=10)
+   trainer = TopKSAETrainer(cfg).fit(embeddings)
+
+   cfg = TopKSAEConfig(hidden_dim=4096, k=128, epochs=200, patience=10)
+   trainer = TopKSAETrainer(cfg).fit(train_embeddings, validation_embeddings=val_embeddings)
+
+``validation_frac`` and ``validation_embeddings`` are mutually exclusive. When
+neither is given no validation pass runs, and ``patience`` is then rejected
+rather than silently ignored.
+
+With ``validation_frac``, rows are permuted using ``seed`` before the split, so
+an ordered input does not put a biased slice in the validation part. The split
+happens before any training statistics are fitted, including adaptive noise
+scales, so validation rows never influence training.
+
+Validation batches are never corrupted, even under ``noise_type="gaussian"``.
+The monitored loss therefore carries no per-epoch noise draw, which would
+otherwise make patience counting erratic.
+
+``epochs`` becomes an upper bound. Every epoch appends ``val_``-prefixed
+metrics to ``trainer.history`` next to the training metrics:
+
+.. code-block:: python
+
+   trainer.history[-1]["val_loss"]
+   trainer.best_epoch      # 1-based epoch with the lowest validation loss
+   trainer.best_val_loss
+   trainer.stopped_epoch   # None when training ran all of ``epochs``
+
+An epoch counts as an improvement only when the validation loss falls by more
+than ``min_delta``. Training stops after ``patience`` consecutive non-improving
+epochs. With ``restore_best_weights=True``, the default, the best epoch's
+weights are reloaded once training ends, so the model you get back is never the
+worse final epoch. ``best_epoch``, ``best_val_loss``, and ``stopped_epoch`` are
+carried in ``trainer.state_dict()``.
+
 Post-sparsification hooks
 -------------------------
 
@@ -179,33 +226,37 @@ Full config reference
 
 Every trainer hyperparameter lives on :class:`~compresso.TopKSAEConfig`:
 
-==========================  ============  ====================================================
-Field                       Default       Meaning
-==========================  ============  ====================================================
-``hidden_dim``              ``4096``      Number of dictionary features ``H``.
-``k``                       ``128``       Active features kept per row.
-``decoder_bias``            ``False``     Add a bias to the default decoder.
-``pre_act``                 ``None``      Module applied before sparsification.
-``post_sparsify``           ``None``      Module applied to codes after top-k.
-``encoder`` / ``decoder``   ``None``      Custom modules (else linear layers).
-``sparsify_score_mode``     ``"abs"``     Top-k scoring: ``abs`` / ``raw`` / ``relu``.
-``sparsify_ste_alpha``      ``0.01``      Straight-through leak for non-selected entries.
-``noise_type``              ``"none"``    Training corruption: ``none`` / ``gaussian``.
-``noise_scale``             ``"global_rms"``  Gaussian scaling: ``absolute`` / ``global_rms`` / ``feature_std``.
-``noise_level``             ``0.1``       Gaussian scale or adaptive scale multiplier.
-``alpha_loss``              ``0.01``      Cosine/MSE mixture weight in the training loss.
-``l1_penalty``              ``0.0``       Extra L1 penalty on code activations.
-``batch_size``              ``128``       Rows per batch.
-``shuffle``                 ``True``      Shuffle rows between epochs.
-``seed``                    ``42``        Seed for shuffling, init, and training noise.
-``epochs``                  ``10``        Training epochs.
-``lr`` / ``weight_decay``   ``1e-3`` / 0  AdamW parameters.
-``decay``                   ``False``     Cosine LR decay to zero over training.
-``compile``                 ``False``     ``torch.compile`` the model when available.
-``device``                  ``"cpu"``     Training/transform device.
-``show_progress``           ``True``      tqdm progress bar when tqdm is installed.
-``srp_score_mode``          ``"abs"``     Score mode for ``SRPTensor.from_dense`` in transform.
-==========================  ============  ====================================================
+=========================  ================  ==================================================================
+Field                      Default           Meaning
+=========================  ================  ==================================================================
+``hidden_dim``             ``4096``          Number of dictionary features ``H``.
+``k``                      ``128``           Active features kept per row.
+``decoder_bias``           ``False``         Add a bias to the default decoder.
+``pre_act``                ``None``          Module applied before sparsification.
+``post_sparsify``          ``None``          Module applied to codes after top-k.
+``encoder`` / ``decoder``  ``None``          Custom modules (else linear layers).
+``sparsify_score_mode``    ``"abs"``         Top-k scoring: ``abs`` / ``raw`` / ``relu``.
+``sparsify_ste_alpha``     ``0.01``          Straight-through leak for non-selected entries.
+``noise_type``             ``"none"``        Training corruption: ``none`` / ``gaussian``.
+``noise_scale``            ``"global_rms"``  Gaussian scaling: ``absolute`` / ``global_rms`` / ``feature_std``.
+``noise_level``            ``0.1``           Gaussian scale or adaptive scale multiplier.
+``alpha_loss``             ``0.01``          Cosine/MSE mixture weight in the training loss.
+``l1_penalty``             ``0.0``           Extra L1 penalty on code activations.
+``batch_size``             ``128``           Rows per batch.
+``shuffle``                ``True``          Shuffle rows between epochs.
+``seed``                   ``42``            Seed for shuffling, init, and training noise.
+``epochs``                 ``10``            Maximum training epochs.
+``validation_frac``        ``None``          Fraction of rows held out for validation.
+``patience``               ``None``          Non-improving epochs tolerated before stopping.
+``min_delta``              ``0.0``           Smallest decrease in validation loss counted as improvement.
+``restore_best_weights``   ``True``          Reload the best epoch's weights when training ends.
+``lr`` / ``weight_decay``  ``1e-3`` / 0      AdamW parameters.
+``decay``                  ``False``         Cosine LR decay to zero over training.
+``compile``                ``False``         ``torch.compile`` the model when available.
+``device``                 ``"cpu"``         Training/transform device.
+``show_progress``          ``True``          tqdm progress bar when tqdm is installed.
+``srp_score_mode``         ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
+=========================  ================  ==================================================================
 
 Sparse parameters and pruning
 -----------------------------

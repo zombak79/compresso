@@ -102,7 +102,10 @@ class EmbeddingsDataset:
         end = min(start + self.batch_size, self.n)
         rows = self.indices[start:end]
         batch = self.embeddings[torch.as_tensor(rows, dtype=torch.long)]
-        return batch.to(self.device, non_blocking=True)
+        # A blocking copy is required: this is a device-to-host transfer whenever
+        # ``embeddings`` lives on an accelerator and ``device`` is CPU, and an
+        # unsynchronized one returns memory before the copy lands.
+        return batch.to(self.device)
 
     def to(self, device: str | torch.device) -> "EmbeddingsDataset":
         """Set output device for future batches and return ``self``."""
@@ -207,7 +210,22 @@ class TopKSAEConfig:
     seed:
         Random seed used for row shuffling and Torch initialization.
     epochs:
-        Number of training epochs.
+        Maximum number of training epochs. Early stopping can end training
+        before this many epochs have run.
+    validation_frac:
+        Optional fraction of input rows held out for validation. Mutually
+        exclusive with the ``validation_embeddings`` argument of
+        :meth:`TopKSAETrainer.fit`. When both are unset, no validation pass
+        runs and early stopping is unavailable.
+    patience:
+        Number of consecutive epochs without a validation improvement
+        tolerated before training stops. ``None`` disables early stopping.
+        Requires a validation set.
+    min_delta:
+        Smallest decrease in validation loss that counts as an improvement.
+    restore_best_weights:
+        If ``True``, reload the weights of the best-scoring epoch once
+        training ends. Only applies when validation is active.
     lr, weight_decay:
         AdamW optimizer parameters.
     decay:
@@ -241,6 +259,10 @@ class TopKSAEConfig:
     shuffle: bool = True
     seed: int = 42
     epochs: int = 10
+    validation_frac: float | None = None
+    patience: int | None = None
+    min_delta: float = 0.0
+    restore_best_weights: bool = True
     lr: float = 1e-3
     weight_decay: float = 0.0
     decay: bool = False
@@ -276,6 +298,9 @@ class TopKSAETrainer:
         self.input_feature_variance: torch.Tensor | None = None
         self._gaussian_noise_scale: torch.Tensor | None = None
         self._noise_generator: torch.Generator | None = None
+        self.best_epoch: int | None = None
+        self.best_val_loss: float | None = None
+        self.stopped_epoch: int | None = None
 
     @property
     def is_built(self) -> bool:
@@ -304,6 +329,14 @@ class TopKSAETrainer:
             raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
         if not math.isfinite(float(self.cfg.noise_level)) or self.cfg.noise_level < 0.0:
             raise ValueError("noise_level must be finite and >= 0")
+        if self.cfg.validation_frac is not None and not (
+            math.isfinite(float(self.cfg.validation_frac)) and 0.0 < float(self.cfg.validation_frac) < 1.0
+        ):
+            raise ValueError("validation_frac must be finite and in (0, 1)")
+        if self.cfg.patience is not None and int(self.cfg.patience) < 1:
+            raise ValueError("patience must be >= 1")
+        if not math.isfinite(float(self.cfg.min_delta)) or self.cfg.min_delta < 0.0:
+            raise ValueError("min_delta must be finite and >= 0")
 
         torch.manual_seed(int(self.cfg.seed))
         self.input_dim = int(input_dim)
@@ -363,6 +396,33 @@ class TopKSAETrainer:
             device=self.device,
             dtype=self._model_dtype(),
         )
+
+    def _split_validation(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        frac: float,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Split rows into train and validation parts, seeded by ``config.seed``.
+
+        Rows are permuted before splitting so that ordered inputs, such as
+        item embeddings sorted by popularity, do not put a biased slice in the
+        validation part. Both parts always receive at least one row.
+        """
+        tensor = torch.as_tensor(embeddings)
+        n_rows = int(tensor.shape[0])
+        if n_rows < 2:
+            raise ValueError(f"validation_frac requires at least 2 embedding rows, got {n_rows}")
+        n_val = max(1, min(int(round(n_rows * frac)), n_rows - 1))
+        order = np.random.default_rng(int(self.cfg.seed)).permutation(n_rows)
+        val_rows = torch.as_tensor(order[:n_val], dtype=torch.long)
+        train_rows = torch.as_tensor(order[n_val:], dtype=torch.long)
+        return tensor[train_rows], tensor[val_rows]
+
+    def _weight_snapshot(self) -> dict[str, torch.Tensor]:
+        """Return a detached CPU copy of the current model weights."""
+        if self.sae is None:
+            raise RuntimeError("trainer must be built before snapshotting weights")
+        return {key: value.detach().cpu().clone() for key, value in self.sae.state_dict().items()}
 
     def _progress(self, iterable, *, total: int | None = None):
         if not self.cfg.show_progress:
@@ -485,11 +545,89 @@ class TopKSAETrainer:
             result["corrupted_reconstruction_mse"] = stats["reconstruction_mse"].detach()
         return result
 
-    def fit(self, embeddings: np.ndarray | torch.Tensor) -> "TopKSAETrainer":
-        """Train the SAE on dense embeddings and return ``self``."""
-        self.build(self._input_dim(embeddings))
-        self._fit_gaussian_noise_scale(embeddings)
-        dataset = self._dataset(embeddings, shuffle=bool(self.cfg.shuffle))
+    @torch.no_grad()
+    def eval_step(self, batch: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Score one batch without corruption and return detached stats.
+
+        Validation inputs are never passed through :meth:`_corrupt`, so the
+        reported loss is free of the per-epoch noise draw that makes training
+        loss a poor early-stopping signal for denoising configurations.
+        """
+        if self.sae is None:
+            raise RuntimeError("trainer must be built before eval_step")
+        self.sae.eval()
+        _reconstruction, sparse, stats = self.sae(batch)
+        cosine_loss = 1.0 - stats["cosine_similarity"]
+        mse = stats["reconstruction_mse"]
+        loss = float(self.cfg.alpha_loss) * cosine_loss + (1.0 - float(self.cfg.alpha_loss)) * mse
+        if self.cfg.l1_penalty > 0.0:
+            loss = loss + float(self.cfg.l1_penalty) * sparse.abs().mean()
+        return {
+            "loss": loss.detach(),
+            "cosine_loss": cosine_loss.detach(),
+            "reconstruction_mse": mse.detach(),
+            "active_count": stats["active_count"].detach(),
+            "dead_features": stats["dead_features"].detach(),
+        }
+
+    def _evaluate(self, dataset: EmbeddingsDataset) -> dict[str, float]:
+        """Return mean ``val_``-prefixed statistics over ``dataset``."""
+        sums: dict[str, float] = {}
+        n_batches = 0
+        for batch in dataset:
+            for key, value in self.eval_step(batch).items():
+                sums[key] = sums.get(key, 0.0) + float(value.cpu().item())
+            n_batches += 1
+        return {f"val_{key}": value / max(1, n_batches) for key, value in sums.items()}
+
+    def _resolve_validation(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        validation_embeddings: np.ndarray | torch.Tensor | None,
+        input_dim: int,
+    ) -> tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor | None]:
+        """Return the ``(train, validation)`` row sets selected by the config."""
+        if validation_embeddings is not None and self.cfg.validation_frac is not None:
+            raise ValueError("pass either validation_embeddings or config.validation_frac, not both")
+
+        if validation_embeddings is not None:
+            validation_dim = self._input_dim(validation_embeddings)
+            if validation_dim != input_dim:
+                raise ValueError(
+                    f"validation_embeddings must have {input_dim} columns to match embeddings, got {validation_dim}"
+                )
+            return embeddings, validation_embeddings
+        if self.cfg.validation_frac is not None:
+            return self._split_validation(embeddings, float(self.cfg.validation_frac))
+        if self.cfg.patience is not None:
+            raise ValueError("patience requires validation_embeddings or config.validation_frac")
+        return embeddings, None
+
+    def fit(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        validation_embeddings: np.ndarray | torch.Tensor | None = None,
+    ) -> "TopKSAETrainer":
+        """Train the SAE on dense embeddings and return ``self``.
+
+        Parameters
+        ----------
+        embeddings:
+            Training rows. When ``config.validation_frac`` is set, the held-out
+            part is split off from these rows before any training statistics,
+            including adaptive noise scales, are fitted.
+        validation_embeddings:
+            Explicit validation rows, for when the split is made by the caller.
+            Mutually exclusive with ``config.validation_frac``.
+        """
+        input_dim = self._input_dim(embeddings)
+        self.build(input_dim)
+        train_embeddings, val_embeddings = self._resolve_validation(embeddings, validation_embeddings, input_dim)
+
+        self._fit_gaussian_noise_scale(train_embeddings)
+        dataset = self._dataset(train_embeddings, shuffle=bool(self.cfg.shuffle))
+        val_dataset = self._dataset(val_embeddings, shuffle=False) if val_embeddings is not None else None
         epochs = int(self.cfg.epochs)
         if epochs < 1:
             raise ValueError("epochs must be >= 1")
@@ -499,6 +637,15 @@ class TopKSAETrainer:
             if self.cfg.decay
             else None
         )
+        self.best_epoch = None
+        self.best_val_loss = None
+        self.stopped_epoch = None
+        patience = int(self.cfg.patience) if self.cfg.patience is not None else None
+        min_delta = float(self.cfg.min_delta)
+        best_score = math.inf
+        best_state: dict[str, torch.Tensor] | None = None
+        stale_epochs = 0
+
         epoch_iter = self._progress(range(1, epochs + 1), total=epochs)
         for epoch in epoch_iter:
             dataset.on_epoch_begin()
@@ -513,18 +660,36 @@ class TopKSAETrainer:
             record = {key: value / max(1, n_batches) for key, value in sums.items()}
             record["epoch"] = float(epoch)
             record["lr"] = self._current_lr()
+            if val_dataset is not None:
+                record.update(self._evaluate(val_dataset))
+                # NaN never satisfies this, so a diverged epoch counts as stale.
+                if record["val_loss"] < best_score - min_delta:
+                    best_score = record["val_loss"]
+                    stale_epochs = 0
+                    self.best_epoch = epoch
+                    self.best_val_loss = record["val_loss"]
+                    if self.cfg.restore_best_weights:
+                        best_state = self._weight_snapshot()
+                else:
+                    stale_epochs += 1
             self.history.append(record)
             if hasattr(epoch_iter, "set_postfix"):
-                epoch_iter.set_postfix(
-                    {
-                        "loss": f"{record['loss']:.4f}",
-                        "cosine": f"{record['cosine_loss']:.4f}",
-                        "mse": f"{record['reconstruction_mse']:.4E}",
-                        "lr": f"{record['lr']:.2E}",
-                    }
-                )
+                postfix = {
+                    "loss": f"{record['loss']:.4f}",
+                    "cosine": f"{record['cosine_loss']:.4f}",
+                    "mse": f"{record['reconstruction_mse']:.4E}",
+                    "lr": f"{record['lr']:.2E}",
+                }
+                if "val_loss" in record:
+                    postfix["val_loss"] = f"{record['val_loss']:.4f}"
+                epoch_iter.set_postfix(postfix)
             if scheduler is not None:
                 scheduler.step()
+            if patience is not None and stale_epochs >= patience:
+                self.stopped_epoch = epoch
+                break
+        if best_state is not None and self.sae is not None:
+            self.sae.load_state_dict(best_state)
         return self
 
     @torch.no_grad()
@@ -559,9 +724,18 @@ class TopKSAETrainer:
         codes = self.encode(embeddings)
         return SRPTensor.from_dense(codes, k=int(self.cfg.k), score_mode=self.cfg.srp_score_mode)
 
-    def fit_transform(self, embeddings: np.ndarray | torch.Tensor) -> SRPTensor:
-        """Fit the SAE and return encoded sparse codes as an ``SRPTensor``."""
-        self.fit(embeddings)
+    def fit_transform(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        validation_embeddings: np.ndarray | torch.Tensor | None = None,
+    ) -> SRPTensor:
+        """Fit the SAE and return encoded sparse codes as an ``SRPTensor``.
+
+        Codes are returned for every row of ``embeddings``, including any rows
+        held out for validation by ``config.validation_frac``.
+        """
+        self.fit(embeddings, validation_embeddings=validation_embeddings)
         return self.transform(embeddings)
 
     def state_dict(self) -> dict[str, Any]:  # type: ignore[override]
@@ -569,12 +743,15 @@ class TopKSAETrainer:
         if self.sae is None:
             raise RuntimeError("trainer must be built before state_dict")
         return {
-            "format_version": 2,
+            "format_version": 3,
             "config": self.cfg,
             "input_dim": self.input_dim,
             "model": self.sae.state_dict(),
             "optimizer": self.optimizer.state_dict() if self.optimizer is not None else None,
             "history": list(self.history),
+            "best_epoch": self.best_epoch,
+            "best_val_loss": self.best_val_loss,
+            "stopped_epoch": self.stopped_epoch,
             "input_feature_mean": self.input_feature_mean,
             "input_feature_variance": self.input_feature_variance,
             "gaussian_noise_scale": (
@@ -596,7 +773,7 @@ class TopKSAETrainer:
     ) -> "TopKSAETrainer":
         """Restore trainer state, including fitted denoising statistics."""
         format_version = int(state.get("format_version", 1))
-        if format_version not in {1, 2}:
+        if format_version not in {1, 2, 3}:
             raise ValueError(f"unsupported trainer state format_version: {format_version}")
         if state.get("input_dim") is None:
             raise ValueError("trainer state is missing input_dim")
@@ -611,6 +788,13 @@ class TopKSAETrainer:
                 raise RuntimeError("trainer optimizer could not be built")
             self.optimizer.load_state_dict(optimizer_state)
         self.history = list(state.get("history", []))
+
+        best_epoch = state.get("best_epoch")
+        best_val_loss = state.get("best_val_loss")
+        stopped_epoch = state.get("stopped_epoch")
+        self.best_epoch = int(best_epoch) if best_epoch is not None else None
+        self.best_val_loss = float(best_val_loss) if best_val_loss is not None else None
+        self.stopped_epoch = int(stopped_epoch) if stopped_epoch is not None else None
 
         feature_mean = state.get("input_feature_mean")
         feature_variance = state.get("input_feature_variance")
