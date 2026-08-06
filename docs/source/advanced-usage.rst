@@ -248,7 +248,7 @@ Field                      Default           Meaning
 ``epochs``                 ``10``            Maximum training epochs.
 ``validation_frac``        ``None``          Fraction of rows held out for validation.
 ``patience``               ``None``          Non-improving epochs tolerated before stopping.
-``min_delta``              ``0.0``           Smallest validation gain counted as improvement.
+``min_delta``              ``0.0``           Smallest decrease in validation loss counted as improvement.
 ``restore_best_weights``   ``True``          Reload the best epoch's weights when training ends.
 ``lr`` / ``weight_decay``  ``1e-3`` / 0      AdamW parameters.
 ``decay``                  ``False``         Cosine LR decay to zero over training.
