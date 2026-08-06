@@ -118,7 +118,7 @@ class CooSparseParam(nn.Module):
             dtype = self.values.dtype
 
         # Put buffers/params on same device
-        idx_full = self.indices.to(device=device, non_blocking=True) if self.indices.device != device else self.indices
+        idx_full = self.indices.to(device=device) if self.indices.device != device else self.indices
         v_full = self.values.to(device=device, dtype=dtype)
 
         if row_indices is None and col_indices is None:
@@ -144,7 +144,7 @@ class CooSparseParam(nn.Module):
     def _select_rows_rowpacked(self, row_indices, idx_full, v_full, device, is_coalesced):
         if row_indices.dtype != torch.long:
             row_indices = row_indices.long()
-        row_indices = row_indices.to(device=device, non_blocking=True)
+        row_indices = row_indices.to(device=device)
 
         if row_indices.dim() != 1:
             raise ValueError(f"row_indices must be 1D, got {tuple(row_indices.shape)}")
@@ -174,7 +174,7 @@ class CooSparseParam(nn.Module):
     def _select_cols_colpacked(self, col_indices, idx_full, v_full, device, is_coalesced):
         if col_indices.dtype != torch.long:
             col_indices = col_indices.long()
-        col_indices = col_indices.to(device=device, non_blocking=True)
+        col_indices = col_indices.to(device=device)
 
         if col_indices.dim() != 1:
             raise ValueError(f"col_indices must be 1D, got {tuple(col_indices.shape)}")

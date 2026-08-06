@@ -10,6 +10,21 @@ from compresso import L1Normalize, SRPTensor, TopKSAEConfig, TopKSAETrainer
 from compresso.trainers import EmbeddingsDataset
 
 
+def _accelerator() -> str | None:
+    """Return a non-CPU device name, used to exercise device-to-host copies."""
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return None
+
+
+requires_accelerator = pytest.mark.skipif(
+    _accelerator() is None,
+    reason="needs a non-CPU device to exercise device-to-host copies",
+)
+
+
 def test_embeddings_dataset_batches_and_shuffle():
     x = np.arange(20, dtype=np.float32).reshape(10, 2)
     data = EmbeddingsDataset(x, batch_size=4, shuffle=True, seed=0)
@@ -642,3 +657,40 @@ def test_topk_sae_trainer_state_dict_round_trips_early_stopping_fields():
     assert restored.best_epoch == trainer.best_epoch
     assert restored.best_val_loss == trainer.best_val_loss
     assert restored.stopped_epoch == trainer.stopped_epoch
+
+
+@requires_accelerator
+def test_embeddings_dataset_device_to_host_batches_are_synchronized():
+    device = _accelerator()
+    rows, dim, batch_size = 256, 4, 32
+    source = torch.arange(rows * dim, dtype=torch.float32, device=device).reshape(rows, dim)
+    expected = source.cpu()
+    data = EmbeddingsDataset(source, batch_size=batch_size, shuffle=False, device="cpu")
+
+    for batch_idx, batch in enumerate(data):
+        start = batch_idx * batch_size
+        assert batch.device.type == "cpu"
+        assert torch.equal(batch, expected[start : start + batch_size])
+
+
+@requires_accelerator
+def test_topk_sae_trainer_fits_from_accelerator_embeddings_with_validation():
+    rng = np.random.default_rng(0)
+    x = torch.as_tensor(rng.normal(size=(120, 8)).astype(np.float32), device=_accelerator())
+    trainer = TopKSAETrainer(
+        TopKSAEConfig(
+            hidden_dim=16,
+            k=3,
+            batch_size=40,
+            epochs=4,
+            validation_frac=0.25,
+            device="cpu",
+            show_progress=False,
+            seed=3,
+        )
+    ).fit(x)
+
+    assert len(trainer.history) == 4
+    for record in trainer.history:
+        assert np.isfinite(record["loss"])
+        assert np.isfinite(record["val_loss"])

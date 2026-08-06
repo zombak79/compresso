@@ -102,7 +102,10 @@ class EmbeddingsDataset:
         end = min(start + self.batch_size, self.n)
         rows = self.indices[start:end]
         batch = self.embeddings[torch.as_tensor(rows, dtype=torch.long)]
-        return batch.to(self.device, non_blocking=True)
+        # A blocking copy is required: this is a device-to-host transfer whenever
+        # ``embeddings`` lives on an accelerator and ``device`` is CPU, and an
+        # unsynchronized one returns memory before the copy lands.
+        return batch.to(self.device)
 
     def to(self, device: str | torch.device) -> "EmbeddingsDataset":
         """Set output device for future batches and return ``self``."""

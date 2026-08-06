@@ -369,7 +369,10 @@ class GatedMaskedParam(nn.Module):
             raise RuntimeError("spawn_compacted_gate() called but gate did not just advance.")
 
         keep = torch.nonzero(self.mask, as_tuple=False).squeeze(1)
-        keep_cpu = keep.detach().to("cpu", non_blocking=True).long()
+        # Blocking copy: an unsynchronized device-to-host transfer would leave
+        # keep_cpu holding memory read before the copy landed, silently
+        # desyncing the init buffers rebuilt from it below.
+        keep_cpu = keep.detach().to("cpu").long()
         k_new = int(keep.numel())
         if k_new == 0:
             raise RuntimeError("Mask has no active units; cannot compact.")
