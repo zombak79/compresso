@@ -9,7 +9,7 @@ Releases marked *not published* exist as versions in the repository but were
 never uploaded to PyPI, so `pip install compresso-pytorch` never resolved to
 them. See [Release history notes](#release-history-notes) at the end.
 
-## [0.1.5] — unreleased
+## [0.1.5] — 2026-08-06
 
 ### Added
 
