@@ -88,3 +88,7 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Re-tagging an already published version is a no-op instead of a
+          # failed upload, so a corrected tag on a released commit stays green.
+          skip-existing: true
