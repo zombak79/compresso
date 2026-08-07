@@ -169,10 +169,8 @@ def test_scaler_is_fitted_on_training_rows_only():
     )
     trainer.fit(x)
 
-    train_rows, _val_rows = trainer._resolve_validation(x, None, 5)
-    expected_variance, expected_mean = torch.var_mean(
-        torch.as_tensor(train_rows), dim=0, correction=0
-    )
+    _source, train_rows, _val_source, _val_rows = trainer._resolve_validation(x, None, 5)
+    expected_variance, expected_mean = torch.var_mean(x[train_rows], dim=0, correction=0)
 
     assert torch.allclose(trainer.input_scaler_mean, expected_mean, atol=1e-5)
     assert torch.allclose(trainer.input_scaler_scale, expected_variance.sqrt(), atol=1e-5)

@@ -403,17 +403,18 @@ def test_topk_sae_trainer_validation_split_is_deterministic_and_covers_all_rows(
     x = torch.arange(40, dtype=torch.float32).reshape(20, 2)
     trainer = TopKSAETrainer(TopKSAEConfig(hidden_dim=4, k=2, seed=99, show_progress=False))
 
+    # The split returns row indices, so neither part is copied out of the source.
     train_a, val_a = trainer._split_validation(x, 0.3)
     train_b, val_b = trainer._split_validation(x, 0.3)
 
-    assert torch.equal(train_a, train_b)
-    assert torch.equal(val_a, val_b)
-    assert train_a.shape[0] == 14
-    assert val_a.shape[0] == 6
-    combined = torch.cat([train_a, val_a])
-    assert sorted(combined[:, 0].tolist()) == sorted(x[:, 0].tolist())
+    assert np.array_equal(train_a, train_b)
+    assert np.array_equal(val_a, val_b)
+    assert train_a.size == 14
+    assert val_a.size == 6
+    combined = np.concatenate([train_a, val_a])
+    assert sorted(combined.tolist()) == list(range(20))
     # Rows are permuted before splitting, so validation is not simply the tail.
-    assert val_a[:, 0].tolist() != x[-6:, 0].tolist()
+    assert val_a.tolist() != list(range(14, 20))
 
 
 def test_topk_sae_trainer_validation_frac_records_validation_metrics():
@@ -625,11 +626,11 @@ def test_topk_sae_trainer_fits_noise_scale_on_train_rows_only():
         )
     ).fit(x)
 
-    train_part, val_part = trainer._split_validation(x, 0.25)
+    train_rows, val_rows = trainer._split_validation(x, 0.25)
 
-    assert train_part.shape[0] == 15
-    assert val_part.shape[0] == 5
-    assert torch.allclose(trainer.input_feature_mean, train_part.mean(dim=0))
+    assert train_rows.size == 15
+    assert val_rows.size == 5
+    assert torch.allclose(trainer.input_feature_mean, x[train_rows].mean(dim=0))
     assert not torch.allclose(trainer.input_feature_mean, x.mean(dim=0))
 
 

@@ -56,8 +56,14 @@ class EmbeddingsDataset:
     device:
         Device where returned batches should live.
     dtype:
-        Optional dtype conversion for returned batches. ``None`` preserves the
-        dtype from the input tensor/array as much as possible.
+        Optional dtype for returned batches. Conversion happens per batch, so a
+        memory-mapped or half-precision source is never materialized in full.
+        ``None`` preserves the source dtype, except that integer sources are
+        promoted to float.
+    rows:
+        Optional row indices to restrict the dataset to, as positions in
+        ``embeddings``. Used to view a train or validation split without
+        copying it out of the source.
     """
 
     def __init__(
@@ -69,20 +75,26 @@ class EmbeddingsDataset:
         seed: int = 42,
         device: str | torch.device = "cpu",
         dtype: torch.dtype | None = None,
+        rows: np.ndarray | None = None,
     ) -> None:
         if batch_size < 1:
             raise ValueError("batch_size must be >= 1")
         tensor = torch.as_tensor(embeddings)
         if tensor.ndim != 2:
             raise ValueError(f"embeddings must be 2D, got shape {tuple(tensor.shape)}")
-        if not torch.is_floating_point(tensor):
-            tensor = tensor.float()
-        if dtype is not None:
-            tensor = tensor.to(dtype=dtype)
 
-        self.embeddings = tensor.contiguous()
-        self.n, self.dim = int(tensor.shape[0]), int(tensor.shape[1])
-        self.indices = np.arange(self.n)
+        # Kept exactly as handed over: casting or copying here would pull a
+        # memory-mapped source into RAM before a single batch is read.
+        self.embeddings = tensor
+        self.out_dtype = dtype
+        self.dim = int(tensor.shape[1])
+        if rows is None:
+            self.indices = np.arange(int(tensor.shape[0]))
+        else:
+            self.indices = np.asarray(rows, dtype=np.int64).copy()
+            if self.indices.ndim != 1:
+                raise ValueError("rows must be one-dimensional")
+        self.n = int(self.indices.size)
         self.rng = np.random.default_rng(seed)
         self.batch_size = int(batch_size)
         self.shuffle = bool(shuffle)
@@ -105,7 +117,14 @@ class EmbeddingsDataset:
         # A blocking copy is required: this is a device-to-host transfer whenever
         # ``embeddings`` lives on an accelerator and ``device`` is CPU, and an
         # unsynchronized one returns memory before the copy lands.
-        return batch.to(self.device)
+        batch = batch.to(self.device)
+        # Convert after the transfer, so a half-precision source crosses the bus
+        # at half the bytes and is widened on the destination device.
+        if not torch.is_floating_point(batch):
+            batch = batch.float()
+        if self.out_dtype is not None and batch.dtype != self.out_dtype:
+            batch = batch.to(self.out_dtype)
+        return batch
 
     def to(self, device: str | torch.device) -> "EmbeddingsDataset":
         """Set output device for future batches and return ``self``."""
@@ -122,6 +141,66 @@ class EmbeddingsDataset:
         """Shuffle row order after each epoch when ``shuffle=True``."""
         if self.shuffle:
             self.rng.shuffle(self.indices)
+
+
+def _streaming_mean_variance(
+    embeddings: np.ndarray | torch.Tensor,
+    *,
+    name: str,
+    rows: np.ndarray | None = None,
+    chunk_bytes: int = 32 * 1024 * 1024,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-feature mean and population variance over one chunked pass.
+
+    Reads the source in slices sized by the float64 accumulation rather than by
+    the input dtype, so a memory-mapped or half-precision matrix is never
+    materialized. Chunks are merged with Chan's parallel formula instead of
+    ``E[x**2] - E[x]**2``: the latter cancels to zero in float32 for a feature
+    whose mean dwarfs its spread, which is exactly the anisotropic case that
+    standard scaling is meant to fix.
+
+    Accumulation happens on the host, so every backend gets float64 arithmetic.
+    A device-resident source therefore pays one host transfer per chunk, once
+    per fit.
+    """
+    tensor = torch.as_tensor(embeddings)
+    if tensor.ndim != 2:
+        raise ValueError(f"{name} requires 2D embeddings, got shape {tuple(tensor.shape)}")
+    dim = int(tensor.shape[1])
+    if rows is None:
+        order = None
+        total = int(tensor.shape[0])
+    else:
+        # Sorted so a memory-mapped source is still read front to back.
+        order = np.sort(np.asarray(rows, dtype=np.int64))
+        total = int(order.size)
+    if total < 1:
+        raise ValueError(f"{name} requires at least one embedding row")
+
+    rows_per_chunk = max(1, chunk_bytes // (dim * 8))
+    count = 0
+    mean = torch.zeros(dim, dtype=torch.float64)
+    m2 = torch.zeros(dim, dtype=torch.float64)
+    for start in range(0, total, rows_per_chunk):
+        if order is None:
+            block = tensor[start : start + rows_per_chunk]
+        else:
+            block = tensor[torch.from_numpy(order[start : start + rows_per_chunk])]
+        # copy=True: a float64 host source would hand back a view, and the
+        # centering below is in place.
+        block = block.to(device="cpu", dtype=torch.float64, copy=True)
+        if not bool(torch.isfinite(block).all()):
+            raise ValueError(f"{name} requires finite embeddings")
+        block_rows = int(block.shape[0])
+        block_mean = block.mean(dim=0)
+        block -= block_mean
+        block_m2 = block.square().sum(dim=0)
+        delta = block_mean - mean
+        merged = count + block_rows
+        mean = mean + delta * (block_rows / merged)
+        m2 = m2 + block_m2 + delta.square() * (count * block_rows / merged)
+        count = merged
+    return mean, m2 / count
 
 
 class L1Normalize(nn.Module):
@@ -427,7 +506,13 @@ class TopKSAETrainer:
             raise ValueError("embeddings must contain at least one row")
         return int(tensor.shape[1])
 
-    def _dataset(self, embeddings: np.ndarray | torch.Tensor, *, shuffle: bool) -> EmbeddingsDataset:
+    def _dataset(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        shuffle: bool,
+        rows: np.ndarray | None = None,
+    ) -> EmbeddingsDataset:
         return EmbeddingsDataset(
             embeddings,
             batch_size=int(self.cfg.batch_size),
@@ -435,28 +520,29 @@ class TopKSAETrainer:
             seed=int(self.cfg.seed),
             device=self.device,
             dtype=self._model_dtype(),
+            rows=rows,
         )
 
     def _split_validation(
         self,
         embeddings: np.ndarray | torch.Tensor,
         frac: float,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Split rows into train and validation parts, seeded by ``config.seed``.
 
-        Rows are permuted before splitting so that ordered inputs, such as
-        item embeddings sorted by popularity, do not put a biased slice in the
-        validation part. Both parts always receive at least one row.
+        Returns row indices rather than the rows themselves: materializing the
+        two parts would copy the whole matrix, which a memory-mapped source
+        cannot afford. Rows are permuted before splitting so that ordered
+        inputs, such as item embeddings sorted by popularity, do not put a
+        biased slice in the validation part. Both parts always receive at least
+        one row.
         """
-        tensor = torch.as_tensor(embeddings)
-        n_rows = int(tensor.shape[0])
+        n_rows = int(torch.as_tensor(embeddings).shape[0])
         if n_rows < 2:
             raise ValueError(f"validation_frac requires at least 2 embedding rows, got {n_rows}")
         n_val = max(1, min(int(round(n_rows * frac)), n_rows - 1))
         order = np.random.default_rng(int(self.cfg.seed)).permutation(n_rows)
-        val_rows = torch.as_tensor(order[:n_val], dtype=torch.long)
-        train_rows = torch.as_tensor(order[n_val:], dtype=torch.long)
-        return tensor[train_rows], tensor[val_rows]
+        return order[n_val:].astype(np.int64), order[:n_val].astype(np.int64)
 
     def _weight_snapshot(self) -> dict[str, torch.Tensor]:
         """Return a detached CPU copy of the current model weights."""
@@ -505,7 +591,11 @@ class TopKSAETrainer:
         )
         return noise if generator_device == batch.device else noise.to(batch.device)
 
-    def _fit_gaussian_noise_scale(self, embeddings: np.ndarray | torch.Tensor) -> None:
+    def _fit_gaussian_noise_scale(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        rows: np.ndarray | None = None,
+    ) -> None:
         """Compute fixed training-set statistics used by adaptive Gaussian noise."""
         self.input_feature_mean = None
         self.input_feature_variance = None
@@ -514,17 +604,14 @@ class TopKSAETrainer:
         if self.cfg.noise_type != "gaussian" or self.cfg.noise_scale == "absolute":
             return
 
-        values = torch.as_tensor(embeddings)
-        if not torch.is_floating_point(values):
-            values = values.float()
-        elif values.dtype not in {torch.float32, torch.float64}:
-            values = values.float()
-        if not bool(torch.isfinite(values).all()):
-            raise ValueError("adaptive Gaussian noise requires finite embeddings")
-
-        variance, mean = torch.var_mean(values, dim=0, correction=0)
-        self.input_feature_mean = mean.detach().cpu()
-        self.input_feature_variance = variance.detach().cpu()
+        mean, variance = _streaming_mean_variance(
+            embeddings,
+            name="adaptive Gaussian noise",
+            rows=rows,
+        )
+        dtype = self._model_dtype()
+        self.input_feature_mean = mean.to(dtype)
+        self.input_feature_variance = variance.to(dtype)
 
         if self.cfg.noise_scale == "global_rms":
             scale = variance.mean().sqrt()
@@ -537,7 +624,11 @@ class TopKSAETrainer:
             raise ValueError("adaptive Gaussian noise produced a non-finite scale")
         self._gaussian_noise_scale = scale.to(device=self.device, dtype=self._model_dtype())
 
-    def _fit_standard_scaler(self, embeddings: np.ndarray | torch.Tensor) -> None:
+    def _fit_standard_scaler(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        rows: np.ndarray | None = None,
+    ) -> None:
         """Compute per-feature centering and scaling from training rows only."""
         self.input_scaler_mean = None
         self.input_scaler_scale = None
@@ -547,19 +638,16 @@ class TopKSAETrainer:
         if not self._standard_scaling_enabled:
             return
 
-        values = torch.as_tensor(embeddings)
-        if not torch.is_floating_point(values):
-            values = values.float()
-        elif values.dtype not in {torch.float32, torch.float64}:
-            values = values.float()
-        if not bool(torch.isfinite(values).all()):
-            raise ValueError("standard scaling requires finite embeddings")
-
-        variance, mean = torch.var_mean(values, dim=0, correction=0)
+        mean, variance = _streaming_mean_variance(
+            embeddings,
+            name="standard scaling",
+            rows=rows,
+        )
+        dtype = self._model_dtype()
         if self.cfg.standard_scaler_mean:
-            self.input_scaler_mean = mean.detach().cpu()
+            self.input_scaler_mean = mean.to(dtype)
         if self.cfg.standard_scaler_std:
-            scale = variance.sqrt()
+            scale = variance.sqrt().to(dtype)
             # A constant feature would divide by zero; sklearn leaves it at 1.
             scale = torch.where(scale > 0, scale, torch.ones_like(scale))
             if not bool(torch.isfinite(scale).all()):
@@ -723,8 +811,17 @@ class TopKSAETrainer:
         embeddings: np.ndarray | torch.Tensor,
         validation_embeddings: np.ndarray | torch.Tensor | None,
         input_dim: int,
-    ) -> tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor | None]:
-        """Return the ``(train, validation)`` row sets selected by the config."""
+    ) -> tuple[
+        np.ndarray | torch.Tensor,
+        np.ndarray | None,
+        np.ndarray | torch.Tensor | None,
+        np.ndarray | None,
+    ]:
+        """Return ``(train source, train rows, validation source, validation rows)``.
+
+        A ``None`` row set means "every row of that source". Splits are returned
+        as row indices so that neither part is copied out of the source.
+        """
         if validation_embeddings is not None and self.cfg.validation_frac is not None:
             raise ValueError("pass either validation_embeddings or config.validation_frac, not both")
 
@@ -734,12 +831,13 @@ class TopKSAETrainer:
                 raise ValueError(
                     f"validation_embeddings must have {input_dim} columns to match embeddings, got {validation_dim}"
                 )
-            return embeddings, validation_embeddings
+            return embeddings, None, validation_embeddings, None
         if self.cfg.validation_frac is not None:
-            return self._split_validation(embeddings, float(self.cfg.validation_frac))
+            train_rows, val_rows = self._split_validation(embeddings, float(self.cfg.validation_frac))
+            return embeddings, train_rows, embeddings, val_rows
         if self.cfg.patience is not None:
             raise ValueError("patience requires validation_embeddings or config.validation_frac")
-        return embeddings, None
+        return embeddings, None, None, None
 
     def fit(
         self,
@@ -761,12 +859,16 @@ class TopKSAETrainer:
         """
         input_dim = self._input_dim(embeddings)
         self.build(input_dim)
-        train_embeddings, val_embeddings = self._resolve_validation(embeddings, validation_embeddings, input_dim)
+        train_source, train_rows, val_source, val_rows = self._resolve_validation(
+            embeddings, validation_embeddings, input_dim
+        )
 
-        self._fit_standard_scaler(train_embeddings)
-        self._fit_gaussian_noise_scale(train_embeddings)
-        dataset = self._dataset(train_embeddings, shuffle=bool(self.cfg.shuffle))
-        val_dataset = self._dataset(val_embeddings, shuffle=False) if val_embeddings is not None else None
+        self._fit_standard_scaler(train_source, rows=train_rows)
+        self._fit_gaussian_noise_scale(train_source, rows=train_rows)
+        dataset = self._dataset(train_source, shuffle=bool(self.cfg.shuffle), rows=train_rows)
+        val_dataset = (
+            self._dataset(val_source, shuffle=False, rows=val_rows) if val_source is not None else None
+        )
         epochs = int(self.cfg.epochs)
         if epochs < 1:
             raise ValueError("epochs must be >= 1")
