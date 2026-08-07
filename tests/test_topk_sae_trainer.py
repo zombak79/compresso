@@ -651,7 +651,7 @@ def test_topk_sae_trainer_state_dict_round_trips_early_stopping_fields():
     ).fit(x)
     state = trainer.state_dict()
 
-    assert state["format_version"] == 3
+    assert state["format_version"] == 4
     restored = TopKSAETrainer.from_state_dict(state)
 
     assert restored.best_epoch == trainer.best_epoch

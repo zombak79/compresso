@@ -198,6 +198,19 @@ class TopKSAEConfig:
     noise_level:
         Gaussian standard deviation for absolute scaling, or a dimensionless
         multiplier for adaptive scaling.
+    standard_scaler_mean, standard_scaler_std:
+        Per-feature centering and scaling fitted on the training rows, applied
+        to inputs before the SAE and undone on its reconstruction. Statistics
+        use ``correction=0``, matching ``sklearn.preprocessing.StandardScaler``,
+        and constant features keep a scale of ``1``. Both default to ``False``,
+        which leaves inputs untouched. Standardized features have unit
+        variance, so adaptive ``noise_scale`` is rejected while either is set.
+    standard_scaler_loss_space:
+        Space the reconstruction loss is measured in when standard scaling is
+        active. ``"original"`` un-scales the reconstruction and compares it to
+        the raw input, keeping the objective and reported metrics identical to
+        an unscaled run. ``"scaled"`` compares in standardized space, which
+        weights every feature equally instead of by its variance.
     alpha_loss:
         Mixture weight for cosine loss. Training loss is
         ``alpha_loss * (1 - cosine_similarity) + (1 - alpha_loss) * mse``.
@@ -253,6 +266,9 @@ class TopKSAEConfig:
     noise_type: Literal["none", "gaussian"] = "none"
     noise_scale: Literal["absolute", "global_rms", "feature_std"] = "global_rms"
     noise_level: float = 0.1
+    standard_scaler_mean: bool = False
+    standard_scaler_std: bool = False
+    standard_scaler_loss_space: Literal["original", "scaled"] = "original"
     alpha_loss: float = 0.01
     l1_penalty: float = 0.0
     batch_size: int = 128
@@ -296,7 +312,11 @@ class TopKSAETrainer:
         self.history: list[dict[str, float]] = []
         self.input_feature_mean: torch.Tensor | None = None
         self.input_feature_variance: torch.Tensor | None = None
+        self.input_scaler_mean: torch.Tensor | None = None
+        self.input_scaler_scale: torch.Tensor | None = None
         self._gaussian_noise_scale: torch.Tensor | None = None
+        self._scaler_mean: torch.Tensor | None = None
+        self._scaler_scale: torch.Tensor | None = None
         self._noise_generator: torch.Generator | None = None
         self.best_epoch: int | None = None
         self.best_val_loss: float | None = None
@@ -306,6 +326,10 @@ class TopKSAETrainer:
     def is_built(self) -> bool:
         """Whether the underlying ``TopKSAE`` model has been initialized."""
         return self.sae is not None
+
+    @property
+    def _standard_scaling_enabled(self) -> bool:
+        return bool(self.cfg.standard_scaler_mean) or bool(self.cfg.standard_scaler_std)
 
     def build(self, input_dim: int) -> "TopKSAETrainer":
         """Initialize model and optimizer for inputs of size ``input_dim``."""
@@ -329,6 +353,18 @@ class TopKSAETrainer:
             raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
         if not math.isfinite(float(self.cfg.noise_level)) or self.cfg.noise_level < 0.0:
             raise ValueError("noise_level must be finite and >= 0")
+        if self.cfg.standard_scaler_loss_space not in {"original", "scaled"}:
+            raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
+        if self._standard_scaling_enabled:
+            if self.cfg.noise_type == "gaussian" and self.cfg.noise_scale != "absolute":
+                raise ValueError(
+                    "standardized features have unit variance, so adaptive noise scales "
+                    "collapse to 1: use noise_scale='absolute' with standard scaling"
+                )
+        elif self.cfg.standard_scaler_loss_space != "original":
+            raise ValueError(
+                "standard_scaler_loss_space requires standard_scaler_mean or standard_scaler_std"
+            )
         if self.cfg.validation_frac is not None and not (
             math.isfinite(float(self.cfg.validation_frac)) and 0.0 < float(self.cfg.validation_frac) < 1.0
         ):
@@ -369,6 +405,10 @@ class TopKSAETrainer:
             self.sae.to(self.device)
         if self._gaussian_noise_scale is not None:
             self._gaussian_noise_scale = self._gaussian_noise_scale.to(self.device)
+        if self._scaler_mean is not None:
+            self._scaler_mean = self._scaler_mean.to(self.device)
+        if self._scaler_scale is not None:
+            self._scaler_scale = self._scaler_scale.to(self.device)
         return self
 
     def _model_dtype(self) -> torch.dtype:
@@ -497,6 +537,80 @@ class TopKSAETrainer:
             raise ValueError("adaptive Gaussian noise produced a non-finite scale")
         self._gaussian_noise_scale = scale.to(device=self.device, dtype=self._model_dtype())
 
+    def _fit_standard_scaler(self, embeddings: np.ndarray | torch.Tensor) -> None:
+        """Compute per-feature centering and scaling from training rows only."""
+        self.input_scaler_mean = None
+        self.input_scaler_scale = None
+        self._scaler_mean = None
+        self._scaler_scale = None
+
+        if not self._standard_scaling_enabled:
+            return
+
+        values = torch.as_tensor(embeddings)
+        if not torch.is_floating_point(values):
+            values = values.float()
+        elif values.dtype not in {torch.float32, torch.float64}:
+            values = values.float()
+        if not bool(torch.isfinite(values).all()):
+            raise ValueError("standard scaling requires finite embeddings")
+
+        variance, mean = torch.var_mean(values, dim=0, correction=0)
+        if self.cfg.standard_scaler_mean:
+            self.input_scaler_mean = mean.detach().cpu()
+        if self.cfg.standard_scaler_std:
+            scale = variance.sqrt()
+            # A constant feature would divide by zero; sklearn leaves it at 1.
+            scale = torch.where(scale > 0, scale, torch.ones_like(scale))
+            if not bool(torch.isfinite(scale).all()):
+                raise ValueError("standard scaling produced a non-finite scale")
+            self.input_scaler_scale = scale.detach().cpu()
+        self._cache_scaler_tensors()
+
+    def _cache_scaler_tensors(self) -> None:
+        """Keep device copies so per-batch scaling costs no host transfer."""
+        dtype = self._model_dtype()
+        self._scaler_mean = (
+            self.input_scaler_mean.to(device=self.device, dtype=dtype)
+            if self.input_scaler_mean is not None
+            else None
+        )
+        self._scaler_scale = (
+            self.input_scaler_scale.to(device=self.device, dtype=dtype)
+            if self.input_scaler_scale is not None
+            else None
+        )
+
+    def _require_fitted_scaler(self) -> None:
+        if self.cfg.standard_scaler_mean and self._scaler_mean is None:
+            raise RuntimeError("standard scaling requires fit() before train_step()")
+        if self.cfg.standard_scaler_std and self._scaler_scale is None:
+            raise RuntimeError("standard scaling requires fit() before train_step()")
+
+    def _standardize(self, batch: torch.Tensor) -> torch.Tensor:
+        """Map raw inputs into the standardized space the SAE sees."""
+        if not self._standard_scaling_enabled:
+            return batch
+        self._require_fitted_scaler()
+        out = batch
+        if self._scaler_mean is not None:
+            out = out - self._scaler_mean.to(device=batch.device, dtype=batch.dtype)
+        if self._scaler_scale is not None:
+            out = out / self._scaler_scale.to(device=batch.device, dtype=batch.dtype)
+        return out
+
+    def _destandardize(self, batch: torch.Tensor) -> torch.Tensor:
+        """Map SAE outputs back to the original embedding space."""
+        if not self._standard_scaling_enabled:
+            return batch
+        self._require_fitted_scaler()
+        out = batch
+        if self._scaler_scale is not None:
+            out = out * self._scaler_scale.to(device=batch.device, dtype=batch.dtype)
+        if self._scaler_mean is not None:
+            out = out + self._scaler_mean.to(device=batch.device, dtype=batch.dtype)
+        return out
+
     def _corrupt(self, batch: torch.Tensor) -> torch.Tensor:
         """Return an optionally corrupted training input."""
         if self.cfg.noise_type == "none" or self.cfg.noise_level == 0.0:
@@ -520,14 +634,23 @@ class TopKSAETrainer:
         self.optimizer.zero_grad(set_to_none=True)
 
         clean = batch
-        corrupted = self._corrupt(clean)
+        # Corruption lives in the space the SAE trains in, so noise is applied
+        # after standardization and is measured in standardized units.
+        scaled = self._standardize(clean)
+        corrupted = self._corrupt(scaled)
         reconstruction, sparse, stats = self.sae(corrupted)
-        if corrupted is clean:
+        if self.cfg.standard_scaler_loss_space == "scaled":
+            target, prediction = scaled, reconstruction
+        else:
+            target, prediction = clean, self._destandardize(reconstruction)
+        # The model's own stats compare its output to its input, which is only
+        # the loss target when nothing was corrupted or un-scaled in between.
+        if corrupted is scaled and target is scaled:
             cosine_loss = 1.0 - stats["cosine_similarity"]
             mse = stats["reconstruction_mse"]
         else:
-            cosine_loss = 1.0 - F.cosine_similarity(reconstruction, clean, dim=-1).mean()
-            mse = F.mse_loss(reconstruction, clean)
+            cosine_loss = 1.0 - F.cosine_similarity(prediction, target, dim=-1).mean()
+            mse = F.mse_loss(prediction, target)
         loss = float(self.cfg.alpha_loss) * cosine_loss + (1.0 - float(self.cfg.alpha_loss)) * mse
         if self.cfg.l1_penalty > 0.0:
             loss = loss + float(self.cfg.l1_penalty) * sparse.abs().mean()
@@ -540,9 +663,18 @@ class TopKSAETrainer:
             "active_count": stats["active_count"].detach(),
             "dead_features": stats["dead_features"].detach(),
         }
-        if corrupted is not clean:
-            result["corrupted_cosine_loss"] = (1.0 - stats["cosine_similarity"]).detach()
-            result["corrupted_reconstruction_mse"] = stats["reconstruction_mse"].detach()
+        if corrupted is not scaled:
+            if target is scaled:
+                result["corrupted_cosine_loss"] = (1.0 - stats["cosine_similarity"]).detach()
+                result["corrupted_reconstruction_mse"] = stats["reconstruction_mse"].detach()
+            else:
+                # Report against the corrupted input in the loss space, so the
+                # whole history stays in one space.
+                corrupted_target = self._destandardize(corrupted)
+                result["corrupted_cosine_loss"] = (
+                    1.0 - F.cosine_similarity(prediction, corrupted_target, dim=-1).mean()
+                ).detach()
+                result["corrupted_reconstruction_mse"] = F.mse_loss(prediction, corrupted_target).detach()
         return result
 
     @torch.no_grad()
@@ -556,9 +688,15 @@ class TopKSAETrainer:
         if self.sae is None:
             raise RuntimeError("trainer must be built before eval_step")
         self.sae.eval()
-        _reconstruction, sparse, stats = self.sae(batch)
-        cosine_loss = 1.0 - stats["cosine_similarity"]
-        mse = stats["reconstruction_mse"]
+        scaled = self._standardize(batch)
+        reconstruction, sparse, stats = self.sae(scaled)
+        if self.cfg.standard_scaler_loss_space == "scaled" or scaled is batch:
+            cosine_loss = 1.0 - stats["cosine_similarity"]
+            mse = stats["reconstruction_mse"]
+        else:
+            prediction = self._destandardize(reconstruction)
+            cosine_loss = 1.0 - F.cosine_similarity(prediction, batch, dim=-1).mean()
+            mse = F.mse_loss(prediction, batch)
         loss = float(self.cfg.alpha_loss) * cosine_loss + (1.0 - float(self.cfg.alpha_loss)) * mse
         if self.cfg.l1_penalty > 0.0:
             loss = loss + float(self.cfg.l1_penalty) * sparse.abs().mean()
@@ -625,6 +763,7 @@ class TopKSAETrainer:
         self.build(input_dim)
         train_embeddings, val_embeddings = self._resolve_validation(embeddings, validation_embeddings, input_dim)
 
+        self._fit_standard_scaler(train_embeddings)
         self._fit_gaussian_noise_scale(train_embeddings)
         dataset = self._dataset(train_embeddings, shuffle=bool(self.cfg.shuffle))
         val_dataset = self._dataset(val_embeddings, shuffle=False) if val_embeddings is not None else None
@@ -701,7 +840,7 @@ class TopKSAETrainer:
         self.sae.eval()
         codes: list[torch.Tensor] = []
         for batch in self._progress(dataset, total=len(dataset)):
-            _reconstruction, sparse, _stats = self.sae(batch)
+            _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
             codes.append(sparse.detach().cpu())
         return torch.cat(codes, dim=0)
 
@@ -714,8 +853,9 @@ class TopKSAETrainer:
         self.sae.eval()
         reconstructions: list[torch.Tensor] = []
         for batch in self._progress(dataset, total=len(dataset)):
-            reconstruction, _sparse, _stats = self.sae(batch)
-            reconstructions.append(reconstruction.detach().cpu())
+            reconstruction, _sparse, _stats = self.sae(self._standardize(batch))
+            # Reconstructions are returned in the caller's own embedding space.
+            reconstructions.append(self._destandardize(reconstruction).detach().cpu())
         return torch.cat(reconstructions, dim=0)
 
     @torch.no_grad()
@@ -743,7 +883,7 @@ class TopKSAETrainer:
         if self.sae is None:
             raise RuntimeError("trainer must be built before state_dict")
         return {
-            "format_version": 3,
+            "format_version": 4,
             "config": self.cfg,
             "input_dim": self.input_dim,
             "model": self.sae.state_dict(),
@@ -754,6 +894,8 @@ class TopKSAETrainer:
             "stopped_epoch": self.stopped_epoch,
             "input_feature_mean": self.input_feature_mean,
             "input_feature_variance": self.input_feature_variance,
+            "input_scaler_mean": self.input_scaler_mean,
+            "input_scaler_scale": self.input_scaler_scale,
             "gaussian_noise_scale": (
                 self._gaussian_noise_scale.detach().cpu() if self._gaussian_noise_scale is not None else None
             ),
@@ -773,7 +915,7 @@ class TopKSAETrainer:
     ) -> "TopKSAETrainer":
         """Restore trainer state, including fitted denoising statistics."""
         format_version = int(state.get("format_version", 1))
-        if format_version not in {1, 2, 3}:
+        if format_version not in {1, 2, 3, 4}:
             raise ValueError(f"unsupported trainer state format_version: {format_version}")
         if state.get("input_dim") is None:
             raise ValueError("trainer state is missing input_dim")
@@ -809,6 +951,13 @@ class TopKSAETrainer:
         self._gaussian_noise_scale = (
             gaussian_scale.to(device=self.device, dtype=self._model_dtype()) if gaussian_scale is not None else None
         )
+
+        # Absent before format_version 4, where standard scaling did not exist.
+        scaler_mean = state.get("input_scaler_mean")
+        scaler_scale = state.get("input_scaler_scale")
+        self.input_scaler_mean = scaler_mean.detach().cpu() if scaler_mean is not None else None
+        self.input_scaler_scale = scaler_scale.detach().cpu() if scaler_scale is not None else None
+        self._cache_scaler_tensors()
 
         self._noise_generator = None
         generator_state = state.get("noise_generator_state")
