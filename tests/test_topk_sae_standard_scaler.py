@@ -44,20 +44,78 @@ def test_standard_scaling_is_off_by_default():
     assert config.standard_scaler_loss_space == "original"
 
 
-@pytest.mark.parametrize(
-    ("mean", "std"),
-    [(True, False), (False, True), (True, True)],
-)
-def test_adaptive_noise_is_rejected_with_standard_scaling(mean, std):
+@pytest.mark.parametrize("mean", [False, True])
+def test_adaptive_noise_is_rejected_with_std_scaling(mean):
     with pytest.raises(ValueError, match="adaptive noise scales"):
         TopKSAETrainer(
             _config(
                 standard_scaler_mean=mean,
-                standard_scaler_std=std,
+                standard_scaler_std=True,
                 noise_type="gaussian",
                 noise_scale="global_rms",
             )
         ).build(input_dim=5)
+
+
+@pytest.mark.parametrize("noise_scale", ["global_rms", "feature_std"])
+def test_adaptive_noise_is_allowed_with_centering_only(noise_scale):
+    """Centering leaves variances untouched, so adaptive scales still mean something."""
+    trainer = TopKSAETrainer(
+        _config(
+            standard_scaler_mean=True,
+            standard_scaler_std=False,
+            noise_type="gaussian",
+            noise_scale=noise_scale,
+        )
+    ).build(input_dim=5)
+
+    assert trainer.is_built
+
+
+def test_centering_leaves_the_adaptive_noise_scale_on_the_raw_spread():
+    x = _embeddings(rows=24)
+    trainer = TopKSAETrainer(
+        _config(
+            standard_scaler_mean=True,
+            standard_scaler_std=False,
+            noise_type="gaussian",
+            noise_scale="feature_std",
+            noise_level=0.1,
+            epochs=1,
+        )
+    ).fit(x)
+
+    # Var(x - mean) == Var(x), so the scale is the untouched per-feature spread.
+    expected = x.double().var(dim=0, correction=0).sqrt()
+    assert torch.allclose(trainer._gaussian_noise_scale.double().cpu(), expected, rtol=1e-5)
+    # And the noise still lands in centered space, where the mean is gone.
+    assert torch.allclose(
+        trainer._standardize(x).mean(dim=0), torch.zeros(5), atol=1e-4
+    )
+
+
+def test_shared_statistics_are_read_once(monkeypatch):
+    """Centering plus adaptive noise want the same numbers: stream the source once."""
+    from compresso.trainers import saetrainer
+
+    calls: list[str] = []
+    original = saetrainer._streaming_mean_variance
+
+    def counting(*args, **kwargs):
+        calls.append(kwargs.get("name", ""))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(saetrainer, "_streaming_mean_variance", counting)
+    TopKSAETrainer(
+        _config(
+            standard_scaler_mean=True,
+            noise_type="gaussian",
+            noise_scale="feature_std",
+            epochs=1,
+        )
+    ).fit(_embeddings(rows=24))
+
+    assert len(calls) == 1
 
 
 def test_absolute_noise_is_allowed_with_standard_scaling():

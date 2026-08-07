@@ -282,8 +282,9 @@ class TopKSAEConfig:
         to inputs before the SAE and undone on its reconstruction. Statistics
         use ``correction=0``, matching ``sklearn.preprocessing.StandardScaler``,
         and constant features keep a scale of ``1``. Both default to ``False``,
-        which leaves inputs untouched. Standardized features have unit
-        variance, so adaptive ``noise_scale`` is rejected while either is set.
+        which leaves inputs untouched. ``standard_scaler_std`` gives every
+        feature unit variance, so adaptive ``noise_scale`` is rejected while it
+        is set; centering alone leaves variances intact and stays compatible.
     standard_scaler_loss_space:
         Space the reconstruction loss is measured in when standard scaling is
         active. ``"original"`` un-scales the reconstruction and compares it to
@@ -434,13 +435,16 @@ class TopKSAETrainer:
             raise ValueError("noise_level must be finite and >= 0")
         if self.cfg.standard_scaler_loss_space not in {"original", "scaled"}:
             raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
-        if self._standard_scaling_enabled:
+        # Only dividing by the standard deviation flattens the variances that
+        # adaptive noise scales itself against. Centering leaves them untouched,
+        # so mean-only scaling keeps every noise_scale meaningful.
+        if self.cfg.standard_scaler_std:
             if self.cfg.noise_type == "gaussian" and self.cfg.noise_scale != "absolute":
                 raise ValueError(
-                    "standardized features have unit variance, so adaptive noise scales "
-                    "collapse to 1: use noise_scale='absolute' with standard scaling"
+                    "standard_scaler_std gives every feature unit variance, so adaptive "
+                    "noise scales collapse to 1: use noise_scale='absolute' with it"
                 )
-        elif self.cfg.standard_scaler_loss_space != "original":
+        if not self._standard_scaling_enabled and self.cfg.standard_scaler_loss_space != "original":
             raise ValueError(
                 "standard_scaler_loss_space requires standard_scaler_mean or standard_scaler_std"
             )
@@ -595,6 +599,7 @@ class TopKSAETrainer:
         self,
         embeddings: np.ndarray | torch.Tensor,
         rows: np.ndarray | None = None,
+        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
     ) -> None:
         """Compute fixed training-set statistics used by adaptive Gaussian noise."""
         self.input_feature_mean = None
@@ -604,7 +609,7 @@ class TopKSAETrainer:
         if self.cfg.noise_type != "gaussian" or self.cfg.noise_scale == "absolute":
             return
 
-        mean, variance = _streaming_mean_variance(
+        mean, variance = stats or _streaming_mean_variance(
             embeddings,
             name="adaptive Gaussian noise",
             rows=rows,
@@ -628,6 +633,7 @@ class TopKSAETrainer:
         self,
         embeddings: np.ndarray | torch.Tensor,
         rows: np.ndarray | None = None,
+        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
     ) -> None:
         """Compute per-feature centering and scaling from training rows only."""
         self.input_scaler_mean = None
@@ -638,7 +644,7 @@ class TopKSAETrainer:
         if not self._standard_scaling_enabled:
             return
 
-        mean, variance = _streaming_mean_variance(
+        mean, variance = stats or _streaming_mean_variance(
             embeddings,
             name="standard scaling",
             rows=rows,
@@ -863,8 +869,16 @@ class TopKSAETrainer:
             embeddings, validation_embeddings, input_dim
         )
 
-        self._fit_standard_scaler(train_source, rows=train_rows)
-        self._fit_gaussian_noise_scale(train_source, rows=train_rows)
+        # Mean-only scaling and adaptive noise both want the same per-feature
+        # statistics, so read the source once rather than once each.
+        adaptive_noise = self.cfg.noise_type == "gaussian" and self.cfg.noise_scale != "absolute"
+        shared_stats = (
+            _streaming_mean_variance(train_source, name="standard scaling", rows=train_rows)
+            if self._standard_scaling_enabled and adaptive_noise
+            else None
+        )
+        self._fit_standard_scaler(train_source, rows=train_rows, stats=shared_stats)
+        self._fit_gaussian_noise_scale(train_source, rows=train_rows, stats=shared_stats)
         dataset = self._dataset(train_source, shuffle=bool(self.cfg.shuffle), rows=train_rows)
         val_dataset = (
             self._dataset(val_source, shuffle=False, rows=val_rows) if val_source is not None else None
