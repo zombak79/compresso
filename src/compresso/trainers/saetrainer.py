@@ -277,14 +277,23 @@ class TopKSAEConfig:
     noise_level:
         Gaussian standard deviation for absolute scaling, or a dimensionless
         multiplier for adaptive scaling.
-    standard_scaler_mean, standard_scaler_std:
-        Per-feature centering and scaling fitted on the training rows, applied
-        to inputs before the SAE and undone on its reconstruction. Statistics
-        use ``correction=0``, matching ``sklearn.preprocessing.StandardScaler``,
-        and constant features keep a scale of ``1``. Both default to ``False``,
-        which leaves inputs untouched. ``standard_scaler_std`` gives every
-        feature unit variance, so adaptive ``noise_scale`` is rejected while it
-        is set; centering alone leaves variances intact and stays compatible.
+    standard_scaler_mean:
+        Subtract the per-feature training mean from inputs before the SAE, and
+        add it back on its reconstruction. Off by default.
+    standard_scaler_scale:
+        Division applied after centering, and undone on the reconstruction.
+        ``"none"`` leaves magnitudes alone. ``"feature_std"`` divides each
+        feature by its own standard deviation, matching
+        ``sklearn.preprocessing.StandardScaler``; it gives every feature unit
+        variance, which flattens the relative importance of coordinates and
+        bends the embedding geometry, so adaptive ``noise_scale`` is rejected
+        alongside it. ``"global_rms"`` divides everything by one scalar, the
+        root mean per-feature variance: coordinates land at unit scale for the
+        encoder while every angle and every distance ratio is preserved
+        exactly, since a uniform scale is not a distortion.
+
+        Statistics are fitted on the training rows with ``correction=0``, and
+        constant features keep a scale of ``1``.
     standard_scaler_loss_space:
         Space the reconstruction loss is measured in when standard scaling is
         active. ``"original"`` un-scales the reconstruction and compares it to
@@ -347,7 +356,7 @@ class TopKSAEConfig:
     noise_scale: Literal["absolute", "global_rms", "feature_std"] = "global_rms"
     noise_level: float = 0.1
     standard_scaler_mean: bool = False
-    standard_scaler_std: bool = False
+    standard_scaler_scale: Literal["none", "feature_std", "global_rms"] = "none"
     standard_scaler_loss_space: Literal["original", "scaled"] = "original"
     alpha_loss: float = 0.01
     l1_penalty: float = 0.0
@@ -409,7 +418,7 @@ class TopKSAETrainer:
 
     @property
     def _standard_scaling_enabled(self) -> bool:
-        return bool(self.cfg.standard_scaler_mean) or bool(self.cfg.standard_scaler_std)
+        return bool(self.cfg.standard_scaler_mean) or self.cfg.standard_scaler_scale != "none"
 
     def build(self, input_dim: int) -> "TopKSAETrainer":
         """Initialize model and optimizer for inputs of size ``input_dim``."""
@@ -435,18 +444,21 @@ class TopKSAETrainer:
             raise ValueError("noise_level must be finite and >= 0")
         if self.cfg.standard_scaler_loss_space not in {"original", "scaled"}:
             raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
-        # Only dividing by the standard deviation flattens the variances that
-        # adaptive noise scales itself against. Centering leaves them untouched,
-        # so mean-only scaling keeps every noise_scale meaningful.
-        if self.cfg.standard_scaler_std:
+        if self.cfg.standard_scaler_scale not in {"none", "feature_std", "global_rms"}:
+            raise ValueError(f"unknown standard_scaler_scale: {self.cfg.standard_scaler_scale}")
+        # Adaptive noise scales are derived from the scaled variances, so every
+        # mode stays correct. feature_std is the one that makes them degenerate:
+        # unit variance everywhere turns both adaptive modes into absolute.
+        if self.cfg.standard_scaler_scale == "feature_std":
             if self.cfg.noise_type == "gaussian" and self.cfg.noise_scale != "absolute":
                 raise ValueError(
-                    "standard_scaler_std gives every feature unit variance, so adaptive "
-                    "noise scales collapse to 1: use noise_scale='absolute' with it"
+                    "standard_scaler_scale='feature_std' gives every feature unit "
+                    "variance, so adaptive noise scales collapse to 1: use "
+                    "noise_scale='absolute' with it"
                 )
         if not self._standard_scaling_enabled and self.cfg.standard_scaler_loss_space != "original":
             raise ValueError(
-                "standard_scaler_loss_space requires standard_scaler_mean or standard_scaler_std"
+                "standard_scaler_loss_space requires standard_scaler_mean or standard_scaler_scale"
             )
         if self.cfg.validation_frac is not None and not (
             math.isfinite(float(self.cfg.validation_frac)) and 0.0 < float(self.cfg.validation_frac) < 1.0
@@ -615,19 +627,29 @@ class TopKSAETrainer:
             rows=rows,
         )
         dtype = self._model_dtype()
+        # Kept as the statistics of the embeddings handed in, not of what the
+        # SAE sees after scaling, which is what their names say.
         self.input_feature_mean = mean.to(dtype)
         self.input_feature_variance = variance.to(dtype)
+        self._gaussian_noise_scale = self._noise_scale_from(variance)
 
+    def _noise_scale_from(self, variance: torch.Tensor) -> torch.Tensor:
+        """Adaptive noise scale for the space the corruption is applied in.
+
+        Noise is injected after standard scaling, so the scale has to describe
+        the scaled spread rather than the raw one.
+        """
+        scaled = self._scaled_variance(variance)
         if self.cfg.noise_scale == "global_rms":
-            scale = variance.mean().sqrt()
+            scale = scaled.mean().sqrt()
         elif self.cfg.noise_scale == "feature_std":
-            scale = variance.sqrt()
+            scale = scaled.sqrt()
         else:  # pragma: no cover - guarded by config validation
             raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
 
         if not bool(torch.isfinite(scale).all()):
             raise ValueError("adaptive Gaussian noise produced a non-finite scale")
-        self._gaussian_noise_scale = scale.to(device=self.device, dtype=self._model_dtype())
+        return scale.to(device=self.device, dtype=self._model_dtype())
 
     def _fit_standard_scaler(
         self,
@@ -652,14 +674,32 @@ class TopKSAETrainer:
         dtype = self._model_dtype()
         if self.cfg.standard_scaler_mean:
             self.input_scaler_mean = mean.to(dtype)
-        if self.cfg.standard_scaler_std:
-            scale = variance.sqrt().to(dtype)
+        if self.cfg.standard_scaler_scale == "feature_std":
+            scale = variance.sqrt()
+        elif self.cfg.standard_scaler_scale == "global_rms":
+            # One scalar for the whole matrix, so angles and distance ratios
+            # come through untouched; only the magnitude moves.
+            scale = variance.mean().sqrt()
+        else:
+            scale = None
+        if scale is not None:
             # A constant feature would divide by zero; sklearn leaves it at 1.
-            scale = torch.where(scale > 0, scale, torch.ones_like(scale))
+            scale = torch.where(scale > 0, scale, torch.ones_like(scale)).to(dtype)
             if not bool(torch.isfinite(scale).all()):
                 raise ValueError("standard scaling produced a non-finite scale")
             self.input_scaler_scale = scale.detach().cpu()
         self._cache_scaler_tensors()
+
+    def _scaled_variance(self, variance: torch.Tensor) -> torch.Tensor:
+        """Per-feature variance after standard scaling, without a second pass.
+
+        Scaling divides by a fixed factor, so the variance the SAE actually sees
+        is the raw one over that factor squared. Centering does not enter, since
+        translation leaves variance alone.
+        """
+        if self.input_scaler_scale is None:
+            return variance
+        return variance / self.input_scaler_scale.to(variance.dtype).square()
 
     def _cache_scaler_tensors(self) -> None:
         """Keep device copies so per-batch scaling costs no host transfer."""
@@ -678,7 +718,7 @@ class TopKSAETrainer:
     def _require_fitted_scaler(self) -> None:
         if self.cfg.standard_scaler_mean and self._scaler_mean is None:
             raise RuntimeError("standard scaling requires fit() before train_step()")
-        if self.cfg.standard_scaler_std and self._scaler_scale is None:
+        if self.cfg.standard_scaler_scale != "none" and self._scaler_scale is None:
             raise RuntimeError("standard scaling requires fit() before train_step()")
 
     def _standardize(self, batch: torch.Tensor) -> torch.Tensor:
@@ -1088,26 +1128,27 @@ class TopKSAETrainer:
         self.best_val_loss = float(best_val_loss) if best_val_loss is not None else None
         self.stopped_epoch = int(stopped_epoch) if stopped_epoch is not None else None
 
+        # Absent before format_version 4, where standard scaling did not exist.
+        # Restored first: a noise scale rebuilt below is derived from it.
+        scaler_mean = state.get("input_scaler_mean")
+        scaler_scale = state.get("input_scaler_scale")
+        self.input_scaler_mean = scaler_mean.detach().cpu() if scaler_mean is not None else None
+        self.input_scaler_scale = scaler_scale.detach().cpu() if scaler_scale is not None else None
+        self._cache_scaler_tensors()
+
         feature_mean = state.get("input_feature_mean")
         feature_variance = state.get("input_feature_variance")
         gaussian_scale = state.get("gaussian_noise_scale")
         self.input_feature_mean = feature_mean.detach().cpu() if feature_mean is not None else None
         self.input_feature_variance = feature_variance.detach().cpu() if feature_variance is not None else None
         if gaussian_scale is None and self.input_feature_variance is not None:
-            if self.cfg.noise_scale == "global_rms":
-                gaussian_scale = self.input_feature_variance.mean().sqrt()
-            elif self.cfg.noise_scale == "feature_std":
-                gaussian_scale = self.input_feature_variance.sqrt()
-        self._gaussian_noise_scale = (
-            gaussian_scale.to(device=self.device, dtype=self._model_dtype()) if gaussian_scale is not None else None
-        )
-
-        # Absent before format_version 4, where standard scaling did not exist.
-        scaler_mean = state.get("input_scaler_mean")
-        scaler_scale = state.get("input_scaler_scale")
-        self.input_scaler_mean = scaler_mean.detach().cpu() if scaler_mean is not None else None
-        self.input_scaler_scale = scaler_scale.detach().cpu() if scaler_scale is not None else None
-        self._cache_scaler_tensors()
+            self._gaussian_noise_scale = self._noise_scale_from(self.input_feature_variance)
+        else:
+            self._gaussian_noise_scale = (
+                gaussian_scale.to(device=self.device, dtype=self._model_dtype())
+                if gaussian_scale is not None
+                else None
+            )
 
         self._noise_generator = None
         generator_state = state.get("noise_generator_state")

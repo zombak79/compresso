@@ -40,7 +40,7 @@ def test_standard_scaling_is_off_by_default():
     config = TopKSAEConfig()
 
     assert config.standard_scaler_mean is False
-    assert config.standard_scaler_std is False
+    assert config.standard_scaler_scale == "none"
     assert config.standard_scaler_loss_space == "original"
 
 
@@ -50,7 +50,7 @@ def test_adaptive_noise_is_rejected_with_std_scaling(mean):
         TopKSAETrainer(
             _config(
                 standard_scaler_mean=mean,
-                standard_scaler_std=True,
+                standard_scaler_scale="feature_std",
                 noise_type="gaussian",
                 noise_scale="global_rms",
             )
@@ -63,7 +63,7 @@ def test_adaptive_noise_is_allowed_with_centering_only(noise_scale):
     trainer = TopKSAETrainer(
         _config(
             standard_scaler_mean=True,
-            standard_scaler_std=False,
+            standard_scaler_scale="none",
             noise_type="gaussian",
             noise_scale=noise_scale,
         )
@@ -77,7 +77,7 @@ def test_centering_leaves_the_adaptive_noise_scale_on_the_raw_spread():
     trainer = TopKSAETrainer(
         _config(
             standard_scaler_mean=True,
-            standard_scaler_std=False,
+            standard_scaler_scale="none",
             noise_type="gaussian",
             noise_scale="feature_std",
             noise_level=0.1,
@@ -121,7 +121,7 @@ def test_shared_statistics_are_read_once(monkeypatch):
 def test_absolute_noise_is_allowed_with_standard_scaling():
     trainer = TopKSAETrainer(
         _config(
-            standard_scaler_std=True,
+            standard_scaler_scale="feature_std",
             noise_type="gaussian",
             noise_scale="absolute",
             noise_level=0.1,
@@ -158,7 +158,7 @@ def test_unknown_loss_space_is_rejected():
 def test_scaler_matches_sklearn_conventions():
     x = torch.tensor([[1.0, 2.0], [3.0, 2.0]])
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std")
     ).build(input_dim=2)
 
     trainer._fit_standard_scaler(x)
@@ -170,7 +170,7 @@ def test_scaler_matches_sklearn_conventions():
 
 def test_scaler_std_is_population_not_sample():
     x = torch.tensor([[0.0], [2.0], [4.0]])
-    trainer = TopKSAETrainer(_config(standard_scaler_std=True)).build(input_dim=1)
+    trainer = TopKSAETrainer(_config(standard_scaler_scale="feature_std")).build(input_dim=1)
 
     trainer._fit_standard_scaler(x)
 
@@ -179,24 +179,30 @@ def test_scaler_std_is_population_not_sample():
 
 
 @pytest.mark.parametrize(
-    ("mean", "std"),
-    [(True, False), (False, True), (True, True)],
+    ("mean", "scale"),
+    [
+        (True, "none"),
+        (False, "feature_std"),
+        (True, "feature_std"),
+        (False, "global_rms"),
+        (True, "global_rms"),
+    ],
 )
-def test_only_requested_statistics_are_fitted(mean, std):
+def test_only_requested_statistics_are_fitted(mean, scale):
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=mean, standard_scaler_std=std)
+        _config(standard_scaler_mean=mean, standard_scaler_scale=scale)
     ).build(input_dim=5)
 
     trainer._fit_standard_scaler(_embeddings())
 
     assert (trainer.input_scaler_mean is not None) is mean
-    assert (trainer.input_scaler_scale is not None) is std
+    assert (trainer.input_scaler_scale is not None) is (scale != "none")
 
 
 def test_standardized_training_rows_have_zero_mean_and_unit_variance():
     x = _embeddings()
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std")
     ).build(input_dim=5)
     trainer._fit_standard_scaler(x)
 
@@ -209,10 +215,80 @@ def test_standardized_training_rows_have_zero_mean_and_unit_variance():
     assert torch.allclose(variance, torch.ones(5), atol=1e-5)
 
 
+def test_global_rms_is_a_single_scalar():
+    x = _embeddings()
+    trainer = TopKSAETrainer(
+        _config(standard_scaler_mean=True, standard_scaler_scale="global_rms")
+    ).build(input_dim=5)
+
+    trainer._fit_standard_scaler(x)
+
+    assert trainer.input_scaler_scale.numel() == 1
+    expected = x.double().var(dim=0, correction=0).mean().sqrt()
+    assert torch.allclose(trainer.input_scaler_scale.double(), expected, rtol=1e-5)
+
+
+def test_global_rms_leaves_the_geometry_untouched():
+    """A uniform scale changes no angle and no distance ratio."""
+    x = _embeddings(rows=32)
+    trainer = TopKSAETrainer(
+        _config(standard_scaler_mean=True, standard_scaler_scale="global_rms")
+    ).build(input_dim=5)
+    trainer._fit_standard_scaler(x)
+
+    centered = x - trainer.input_scaler_mean
+    scaled = trainer._standardize(x)
+
+    cosine_before = F.cosine_similarity(centered[:16], centered[16:], dim=-1)
+    cosine_after = F.cosine_similarity(scaled[:16], scaled[16:], dim=-1)
+    assert torch.allclose(cosine_before, cosine_after, atol=1e-5)
+
+    ratio = (scaled[:16] - scaled[16:]).norm(dim=-1) / (centered[:16] - centered[16:]).norm(dim=-1)
+    assert torch.allclose(ratio, ratio[0].expand_as(ratio), rtol=1e-4)
+
+
+def test_global_rms_brings_coordinates_to_unit_scale():
+    x = _embeddings(rows=64)
+    trainer = TopKSAETrainer(
+        _config(standard_scaler_mean=True, standard_scaler_scale="global_rms")
+    ).build(input_dim=5)
+    trainer._fit_standard_scaler(x)
+
+    scaled = trainer._standardize(x)
+
+    # Mean per-feature variance is 1 by construction, unlike feature_std which
+    # forces every feature to 1 individually.
+    assert torch.allclose(
+        scaled.double().var(dim=0, correction=0).mean(), torch.tensor(1.0, dtype=torch.float64), rtol=1e-4
+    )
+    assert scaled.double().var(dim=0, correction=0).std() > 0.1
+
+
+def test_global_rms_keeps_adaptive_noise_correct():
+    """The noise scale must describe the scaled spread, not the raw one."""
+    x = _embeddings(rows=32)
+    trainer = TopKSAETrainer(
+        _config(
+            standard_scaler_mean=True,
+            standard_scaler_scale="global_rms",
+            noise_type="gaussian",
+            noise_scale="feature_std",
+            epochs=1,
+        )
+    ).fit(x)
+
+    scaled = trainer._standardize(x)
+    expected = scaled.double().var(dim=0, correction=0).sqrt()
+    assert torch.allclose(trainer._gaussian_noise_scale.double().cpu(), expected, rtol=1e-3)
+    # Raw spread would be larger by exactly the scale factor.
+    raw = x.double().var(dim=0, correction=0).sqrt()
+    assert not torch.allclose(trainer._gaussian_noise_scale.double().cpu(), raw, rtol=1e-2)
+
+
 def test_standardize_round_trips_through_destandardize():
     x = _embeddings()
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std")
     ).build(input_dim=5)
     trainer._fit_standard_scaler(x)
 
@@ -223,7 +299,7 @@ def test_scaler_is_fitted_on_training_rows_only():
     """Validation rows must not leak into the statistics."""
     x = _embeddings(rows=20)
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True, validation_frac=0.25)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std", validation_frac=0.25)
     )
     trainer.fit(x)
 
@@ -238,7 +314,7 @@ def test_scaler_is_fitted_on_training_rows_only():
 
 
 def test_scaling_without_fit_is_rejected():
-    trainer = TopKSAETrainer(_config(standard_scaler_std=True)).build(input_dim=5)
+    trainer = TopKSAETrainer(_config(standard_scaler_scale="feature_std")).build(input_dim=5)
 
     with pytest.raises(RuntimeError, match="requires fit\\(\\) before train_step\\(\\)"):
         trainer.train_step(_embeddings(rows=4))
@@ -252,7 +328,7 @@ def test_scaling_without_fit_is_rejected():
 def test_original_loss_space_measures_against_raw_inputs():
     x = _embeddings(rows=8)
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True, epochs=1)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std", epochs=1)
     )
     trainer.fit(x)
 
@@ -272,7 +348,7 @@ def test_scaled_loss_space_measures_against_standardized_inputs():
     trainer = TopKSAETrainer(
         _config(
             standard_scaler_mean=True,
-            standard_scaler_std=True,
+            standard_scaler_scale="feature_std",
             standard_scaler_loss_space="scaled",
             epochs=1,
         )
@@ -293,7 +369,7 @@ def test_scaled_loss_space_measures_against_standardized_inputs():
 def test_loss_spaces_disagree_on_anisotropic_data():
     """The two spaces differ by a per-feature variance weighting."""
     x = _embeddings(rows=12)
-    common = dict(standard_scaler_mean=True, standard_scaler_std=True, epochs=1)
+    common = dict(standard_scaler_mean=True, standard_scaler_scale="feature_std", epochs=1)
 
     original = TopKSAETrainer(_config(**common)).fit(x)
     scaled = TopKSAETrainer(_config(**common, standard_scaler_loss_space="scaled")).fit(x)
@@ -308,7 +384,7 @@ def test_centering_only_leaves_mse_unchanged_between_loss_spaces():
     """MSE is translation invariant, so only the cosine term can move."""
     x = _embeddings(rows=12)
     batch = x[:4]
-    common = dict(standard_scaler_mean=True, standard_scaler_std=False, epochs=1)
+    common = dict(standard_scaler_mean=True, standard_scaler_scale="none", epochs=1)
 
     original = TopKSAETrainer(_config(**common)).fit(x)
     scaled = TopKSAETrainer(_config(**common, standard_scaler_loss_space="scaled")).fit(x)
@@ -333,7 +409,7 @@ def test_scaling_off_is_bit_identical_to_before():
     x = _embeddings(rows=12)
 
     first = TopKSAETrainer(_config()).fit(x)
-    second = TopKSAETrainer(_config(standard_scaler_mean=False, standard_scaler_std=False)).fit(x)
+    second = TopKSAETrainer(_config(standard_scaler_mean=False, standard_scaler_scale="none")).fit(x)
 
     assert first.history == second.history
 
@@ -341,7 +417,7 @@ def test_scaling_off_is_bit_identical_to_before():
 def test_reconstruct_returns_the_original_embedding_space():
     x = _embeddings(rows=12)
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std")
     ).fit(x)
 
     reconstruction = trainer.reconstruct(x)
@@ -358,7 +434,7 @@ def test_noise_is_injected_after_standardization():
     trainer = TopKSAETrainer(
         _config(
             standard_scaler_mean=True,
-            standard_scaler_std=True,
+            standard_scaler_scale="feature_std",
             noise_type="gaussian",
             noise_scale="absolute",
             noise_level=0.25,
@@ -386,7 +462,7 @@ def test_noise_is_injected_after_standardization():
 def test_state_dict_round_trips_the_scaler():
     x = _embeddings(rows=12)
     trainer = TopKSAETrainer(
-        _config(standard_scaler_mean=True, standard_scaler_std=True)
+        _config(standard_scaler_mean=True, standard_scaler_scale="feature_std")
     ).fit(x)
     state = trainer.state_dict()
 

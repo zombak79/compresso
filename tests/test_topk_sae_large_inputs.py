@@ -173,7 +173,7 @@ def test_fit_runs_on_a_float16_memmap(memmap):
             show_progress=False,
             seed=0,
             standard_scaler_mean=True,
-            standard_scaler_std=True,
+            standard_scaler_scale="feature_std",
             validation_frac=0.25,
             patience=2,
         )
