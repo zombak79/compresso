@@ -976,9 +976,43 @@ class TopKSAETrainer:
 
     @torch.no_grad()
     def transform(self, embeddings: np.ndarray | torch.Tensor) -> SRPTensor:
-        """Encode ``embeddings`` and return sparse codes as an ``SRPTensor``."""
-        codes = self.encode(embeddings)
-        return SRPTensor.from_dense(codes, k=int(self.cfg.k), score_mode=self.cfg.srp_score_mode)
+        """Encode ``embeddings`` and return sparse codes as an ``SRPTensor``.
+
+        Each batch is packed as it is produced, so the dense ``(n, hidden_dim)``
+        code matrix is never held whole: peak memory is the packed ``(n, k)``
+        result plus one batch. Top-k runs per row, so the result is identical to
+        packing the full dense matrix in one go.
+        """
+        if self.sae is None:
+            raise RuntimeError("trainer must be fitted or built before transform")
+        dataset = self._dataset(embeddings, shuffle=False)
+        if len(dataset) == 0:
+            raise ValueError("embeddings must contain at least one row")
+        self.sae.eval()
+        cols: list[torch.Tensor] = []
+        vals: list[torch.Tensor] = []
+        code_dim = 0
+        for batch in self._progress(dataset, total=len(dataset)):
+            _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
+            # Packed on the host, matching what encode() used to hand over, so
+            # tie-breaking cannot depend on the training device.
+            codes = sparse.detach().cpu()
+            code_dim = int(codes.shape[1])
+            packed = SRPTensor.from_dense(
+                codes,
+                k=int(self.cfg.k),
+                score_mode=self.cfg.srp_score_mode,
+            )
+            cols.append(packed.cols)
+            vals.append(packed.vals)
+        rows = int(dataset.n)
+        return SRPTensor(
+            cols=torch.cat(cols, dim=0),
+            vals=torch.cat(vals, dim=0),
+            shape=(rows, code_dim),
+            prefix_shape=(rows,),
+            validate=False,
+        )
 
     def fit_transform(
         self,

@@ -188,6 +188,70 @@ def test_fit_runs_on_a_float16_memmap(memmap):
     assert trainer.reconstruct(memmap).shape == (memmap.shape[0], DIM)
 
 
+def _fitted(memmap, **overrides):
+    config = dict(
+        hidden_dim=16,
+        k=3,
+        batch_size=8,
+        epochs=1,
+        show_progress=False,
+        seed=0,
+    )
+    config.update(overrides)
+    return TopKSAETrainer(TopKSAEConfig(**config)).fit(memmap)
+
+
+def test_transform_matches_packing_the_whole_dense_matrix(memmap):
+    """Per-batch packing must not change the result: top-k is per row."""
+    from compresso import SRPTensor
+
+    trainer = _fitted(memmap)
+
+    packed = trainer.transform(memmap)
+    expected = SRPTensor.from_dense(
+        trainer.encode(memmap), k=3, score_mode=trainer.cfg.srp_score_mode
+    )
+
+    assert torch.equal(packed.cols, expected.cols)
+    assert torch.equal(packed.vals, expected.vals)
+    assert packed.shape == expected.shape
+    assert packed.prefix_shape == expected.prefix_shape
+
+
+@pytest.mark.parametrize("batch_size", [1, 7, 4096])
+def test_transform_is_independent_of_batch_size(memmap, batch_size):
+    """One fitted model, only the transform batching varies."""
+    from dataclasses import replace
+
+    trainer = _fitted(memmap, batch_size=8)
+    reference = trainer.transform(memmap)
+
+    trainer.cfg = replace(trainer.cfg, batch_size=batch_size)
+    batched = trainer.transform(memmap)
+
+    # Selection is exact. The values carry float32 noise of a few ulp, because
+    # the encoder matmul picks different BLAS kernels per batch shape, which is
+    # a property of the forward pass rather than of the packing.
+    assert torch.equal(batched.cols, reference.cols)
+    assert torch.allclose(batched.vals, reference.vals, atol=1e-5, rtol=0.0)
+
+
+def test_transform_never_holds_the_dense_codes(memmap, monkeypatch):
+    """The dense (n, hidden_dim) matrix must not be accumulated batch by batch."""
+    trainer = _fitted(memmap)
+    retained: list[torch.Tensor] = []
+    original = torch.cat
+
+    def spy(tensors, *args, **kwargs):
+        retained.extend(t for t in tensors if t.ndim == 2 and t.shape[-1] == 16)
+        return original(tensors, *args, **kwargs)
+
+    monkeypatch.setattr(torch, "cat", spy)
+    trainer.transform(memmap)
+
+    assert retained == [], "dense hidden_dim-wide codes were concatenated"
+
+
 def test_split_statistics_ignore_validation_rows_on_a_memmap(memmap):
     config = TopKSAEConfig(
         hidden_dim=8,
