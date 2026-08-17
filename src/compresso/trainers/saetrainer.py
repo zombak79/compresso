@@ -56,8 +56,14 @@ class EmbeddingsDataset:
     device:
         Device where returned batches should live.
     dtype:
-        Optional dtype conversion for returned batches. ``None`` preserves the
-        dtype from the input tensor/array as much as possible.
+        Optional dtype for returned batches. Conversion happens per batch, so a
+        memory-mapped or half-precision source is never materialized in full.
+        ``None`` preserves the source dtype, except that integer sources are
+        promoted to float.
+    rows:
+        Optional row indices to restrict the dataset to, as positions in
+        ``embeddings``. Used to view a train or validation split without
+        copying it out of the source.
     """
 
     def __init__(
@@ -69,20 +75,26 @@ class EmbeddingsDataset:
         seed: int = 42,
         device: str | torch.device = "cpu",
         dtype: torch.dtype | None = None,
+        rows: np.ndarray | None = None,
     ) -> None:
         if batch_size < 1:
             raise ValueError("batch_size must be >= 1")
         tensor = torch.as_tensor(embeddings)
         if tensor.ndim != 2:
             raise ValueError(f"embeddings must be 2D, got shape {tuple(tensor.shape)}")
-        if not torch.is_floating_point(tensor):
-            tensor = tensor.float()
-        if dtype is not None:
-            tensor = tensor.to(dtype=dtype)
 
-        self.embeddings = tensor.contiguous()
-        self.n, self.dim = int(tensor.shape[0]), int(tensor.shape[1])
-        self.indices = np.arange(self.n)
+        # Kept exactly as handed over: casting or copying here would pull a
+        # memory-mapped source into RAM before a single batch is read.
+        self.embeddings = tensor
+        self.out_dtype = dtype
+        self.dim = int(tensor.shape[1])
+        if rows is None:
+            self.indices = np.arange(int(tensor.shape[0]))
+        else:
+            self.indices = np.asarray(rows, dtype=np.int64).copy()
+            if self.indices.ndim != 1:
+                raise ValueError("rows must be one-dimensional")
+        self.n = int(self.indices.size)
         self.rng = np.random.default_rng(seed)
         self.batch_size = int(batch_size)
         self.shuffle = bool(shuffle)
@@ -105,7 +117,14 @@ class EmbeddingsDataset:
         # A blocking copy is required: this is a device-to-host transfer whenever
         # ``embeddings`` lives on an accelerator and ``device`` is CPU, and an
         # unsynchronized one returns memory before the copy lands.
-        return batch.to(self.device)
+        batch = batch.to(self.device)
+        # Convert after the transfer, so a half-precision source crosses the bus
+        # at half the bytes and is widened on the destination device.
+        if not torch.is_floating_point(batch):
+            batch = batch.float()
+        if self.out_dtype is not None and batch.dtype != self.out_dtype:
+            batch = batch.to(self.out_dtype)
+        return batch
 
     def to(self, device: str | torch.device) -> "EmbeddingsDataset":
         """Set output device for future batches and return ``self``."""
@@ -122,6 +141,66 @@ class EmbeddingsDataset:
         """Shuffle row order after each epoch when ``shuffle=True``."""
         if self.shuffle:
             self.rng.shuffle(self.indices)
+
+
+def _streaming_mean_variance(
+    embeddings: np.ndarray | torch.Tensor,
+    *,
+    name: str,
+    rows: np.ndarray | None = None,
+    chunk_bytes: int = 32 * 1024 * 1024,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-feature mean and population variance over one chunked pass.
+
+    Reads the source in slices sized by the float64 accumulation rather than by
+    the input dtype, so a memory-mapped or half-precision matrix is never
+    materialized. Chunks are merged with Chan's parallel formula instead of
+    ``E[x**2] - E[x]**2``: the latter cancels to zero in float32 for a feature
+    whose mean dwarfs its spread, which is exactly the anisotropic case that
+    standard scaling is meant to fix.
+
+    Accumulation happens on the host, so every backend gets float64 arithmetic.
+    A device-resident source therefore pays one host transfer per chunk, once
+    per fit.
+    """
+    tensor = torch.as_tensor(embeddings)
+    if tensor.ndim != 2:
+        raise ValueError(f"{name} requires 2D embeddings, got shape {tuple(tensor.shape)}")
+    dim = int(tensor.shape[1])
+    if rows is None:
+        order = None
+        total = int(tensor.shape[0])
+    else:
+        # Sorted so a memory-mapped source is still read front to back.
+        order = np.sort(np.asarray(rows, dtype=np.int64))
+        total = int(order.size)
+    if total < 1:
+        raise ValueError(f"{name} requires at least one embedding row")
+
+    rows_per_chunk = max(1, chunk_bytes // (dim * 8))
+    count = 0
+    mean = torch.zeros(dim, dtype=torch.float64)
+    m2 = torch.zeros(dim, dtype=torch.float64)
+    for start in range(0, total, rows_per_chunk):
+        if order is None:
+            block = tensor[start : start + rows_per_chunk]
+        else:
+            block = tensor[torch.from_numpy(order[start : start + rows_per_chunk])]
+        # copy=True: a float64 host source would hand back a view, and the
+        # centering below is in place.
+        block = block.to(device="cpu", dtype=torch.float64, copy=True)
+        if not bool(torch.isfinite(block).all()):
+            raise ValueError(f"{name} requires finite embeddings")
+        block_rows = int(block.shape[0])
+        block_mean = block.mean(dim=0)
+        block -= block_mean
+        block_m2 = block.square().sum(dim=0)
+        delta = block_mean - mean
+        merged = count + block_rows
+        mean = mean + delta * (block_rows / merged)
+        m2 = m2 + block_m2 + delta.square() * (count * block_rows / merged)
+        count = merged
+    return mean, m2 / count
 
 
 class L1Normalize(nn.Module):
@@ -198,6 +277,29 @@ class TopKSAEConfig:
     noise_level:
         Gaussian standard deviation for absolute scaling, or a dimensionless
         multiplier for adaptive scaling.
+    standard_scaler_mean:
+        Subtract the per-feature training mean from inputs before the SAE, and
+        add it back on its reconstruction. Off by default.
+    standard_scaler_scale:
+        Division applied after centering, and undone on the reconstruction.
+        ``"none"`` leaves magnitudes alone. ``"feature_std"`` divides each
+        feature by its own standard deviation, matching
+        ``sklearn.preprocessing.StandardScaler``; it gives every feature unit
+        variance, which flattens the relative importance of coordinates and
+        bends the embedding geometry, so adaptive ``noise_scale`` is rejected
+        alongside it. ``"global_rms"`` divides everything by one scalar, the
+        root mean per-feature variance: coordinates land at unit scale for the
+        encoder while every angle and every distance ratio is preserved
+        exactly, since a uniform scale is not a distortion.
+
+        Statistics are fitted on the training rows with ``correction=0``, and
+        constant features keep a scale of ``1``.
+    standard_scaler_loss_space:
+        Space the reconstruction loss is measured in when standard scaling is
+        active. ``"original"`` un-scales the reconstruction and compares it to
+        the raw input, keeping the objective and reported metrics identical to
+        an unscaled run. ``"scaled"`` compares in standardized space, which
+        weights every feature equally instead of by its variance.
     alpha_loss:
         Mixture weight for cosine loss. Training loss is
         ``alpha_loss * (1 - cosine_similarity) + (1 - alpha_loss) * mse``.
@@ -253,6 +355,9 @@ class TopKSAEConfig:
     noise_type: Literal["none", "gaussian"] = "none"
     noise_scale: Literal["absolute", "global_rms", "feature_std"] = "global_rms"
     noise_level: float = 0.1
+    standard_scaler_mean: bool = False
+    standard_scaler_scale: Literal["none", "feature_std", "global_rms"] = "none"
+    standard_scaler_loss_space: Literal["original", "scaled"] = "original"
     alpha_loss: float = 0.01
     l1_penalty: float = 0.0
     batch_size: int = 128
@@ -296,7 +401,11 @@ class TopKSAETrainer:
         self.history: list[dict[str, float]] = []
         self.input_feature_mean: torch.Tensor | None = None
         self.input_feature_variance: torch.Tensor | None = None
+        self.input_scaler_mean: torch.Tensor | None = None
+        self.input_scaler_scale: torch.Tensor | None = None
         self._gaussian_noise_scale: torch.Tensor | None = None
+        self._scaler_mean: torch.Tensor | None = None
+        self._scaler_scale: torch.Tensor | None = None
         self._noise_generator: torch.Generator | None = None
         self.best_epoch: int | None = None
         self.best_val_loss: float | None = None
@@ -306,6 +415,10 @@ class TopKSAETrainer:
     def is_built(self) -> bool:
         """Whether the underlying ``TopKSAE`` model has been initialized."""
         return self.sae is not None
+
+    @property
+    def _standard_scaling_enabled(self) -> bool:
+        return bool(self.cfg.standard_scaler_mean) or self.cfg.standard_scaler_scale != "none"
 
     def build(self, input_dim: int) -> "TopKSAETrainer":
         """Initialize model and optimizer for inputs of size ``input_dim``."""
@@ -329,6 +442,24 @@ class TopKSAETrainer:
             raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
         if not math.isfinite(float(self.cfg.noise_level)) or self.cfg.noise_level < 0.0:
             raise ValueError("noise_level must be finite and >= 0")
+        if self.cfg.standard_scaler_loss_space not in {"original", "scaled"}:
+            raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
+        if self.cfg.standard_scaler_scale not in {"none", "feature_std", "global_rms"}:
+            raise ValueError(f"unknown standard_scaler_scale: {self.cfg.standard_scaler_scale}")
+        # Adaptive noise scales are derived from the scaled variances, so every
+        # mode stays correct. feature_std is the one that makes them degenerate:
+        # unit variance everywhere turns both adaptive modes into absolute.
+        if self.cfg.standard_scaler_scale == "feature_std":
+            if self.cfg.noise_type == "gaussian" and self.cfg.noise_scale != "absolute":
+                raise ValueError(
+                    "standard_scaler_scale='feature_std' gives every feature unit "
+                    "variance, so adaptive noise scales collapse to 1: use "
+                    "noise_scale='absolute' with it"
+                )
+        if not self._standard_scaling_enabled and self.cfg.standard_scaler_loss_space != "original":
+            raise ValueError(
+                "standard_scaler_loss_space requires standard_scaler_mean or standard_scaler_scale"
+            )
         if self.cfg.validation_frac is not None and not (
             math.isfinite(float(self.cfg.validation_frac)) and 0.0 < float(self.cfg.validation_frac) < 1.0
         ):
@@ -369,6 +500,10 @@ class TopKSAETrainer:
             self.sae.to(self.device)
         if self._gaussian_noise_scale is not None:
             self._gaussian_noise_scale = self._gaussian_noise_scale.to(self.device)
+        if self._scaler_mean is not None:
+            self._scaler_mean = self._scaler_mean.to(self.device)
+        if self._scaler_scale is not None:
+            self._scaler_scale = self._scaler_scale.to(self.device)
         return self
 
     def _model_dtype(self) -> torch.dtype:
@@ -387,7 +522,13 @@ class TopKSAETrainer:
             raise ValueError("embeddings must contain at least one row")
         return int(tensor.shape[1])
 
-    def _dataset(self, embeddings: np.ndarray | torch.Tensor, *, shuffle: bool) -> EmbeddingsDataset:
+    def _dataset(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        shuffle: bool,
+        rows: np.ndarray | None = None,
+    ) -> EmbeddingsDataset:
         return EmbeddingsDataset(
             embeddings,
             batch_size=int(self.cfg.batch_size),
@@ -395,28 +536,29 @@ class TopKSAETrainer:
             seed=int(self.cfg.seed),
             device=self.device,
             dtype=self._model_dtype(),
+            rows=rows,
         )
 
     def _split_validation(
         self,
         embeddings: np.ndarray | torch.Tensor,
         frac: float,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Split rows into train and validation parts, seeded by ``config.seed``.
 
-        Rows are permuted before splitting so that ordered inputs, such as
-        item embeddings sorted by popularity, do not put a biased slice in the
-        validation part. Both parts always receive at least one row.
+        Returns row indices rather than the rows themselves: materializing the
+        two parts would copy the whole matrix, which a memory-mapped source
+        cannot afford. Rows are permuted before splitting so that ordered
+        inputs, such as item embeddings sorted by popularity, do not put a
+        biased slice in the validation part. Both parts always receive at least
+        one row.
         """
-        tensor = torch.as_tensor(embeddings)
-        n_rows = int(tensor.shape[0])
+        n_rows = int(torch.as_tensor(embeddings).shape[0])
         if n_rows < 2:
             raise ValueError(f"validation_frac requires at least 2 embedding rows, got {n_rows}")
         n_val = max(1, min(int(round(n_rows * frac)), n_rows - 1))
         order = np.random.default_rng(int(self.cfg.seed)).permutation(n_rows)
-        val_rows = torch.as_tensor(order[:n_val], dtype=torch.long)
-        train_rows = torch.as_tensor(order[n_val:], dtype=torch.long)
-        return tensor[train_rows], tensor[val_rows]
+        return order[n_val:].astype(np.int64), order[:n_val].astype(np.int64)
 
     def _weight_snapshot(self) -> dict[str, torch.Tensor]:
         """Return a detached CPU copy of the current model weights."""
@@ -465,7 +607,12 @@ class TopKSAETrainer:
         )
         return noise if generator_device == batch.device else noise.to(batch.device)
 
-    def _fit_gaussian_noise_scale(self, embeddings: np.ndarray | torch.Tensor) -> None:
+    def _fit_gaussian_noise_scale(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        rows: np.ndarray | None = None,
+        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
+    ) -> None:
         """Compute fixed training-set statistics used by adaptive Gaussian noise."""
         self.input_feature_mean = None
         self.input_feature_variance = None
@@ -474,28 +621,129 @@ class TopKSAETrainer:
         if self.cfg.noise_type != "gaussian" or self.cfg.noise_scale == "absolute":
             return
 
-        values = torch.as_tensor(embeddings)
-        if not torch.is_floating_point(values):
-            values = values.float()
-        elif values.dtype not in {torch.float32, torch.float64}:
-            values = values.float()
-        if not bool(torch.isfinite(values).all()):
-            raise ValueError("adaptive Gaussian noise requires finite embeddings")
+        mean, variance = stats or _streaming_mean_variance(
+            embeddings,
+            name="adaptive Gaussian noise",
+            rows=rows,
+        )
+        dtype = self._model_dtype()
+        # Kept as the statistics of the embeddings handed in, not of what the
+        # SAE sees after scaling, which is what their names say.
+        self.input_feature_mean = mean.to(dtype)
+        self.input_feature_variance = variance.to(dtype)
+        self._gaussian_noise_scale = self._noise_scale_from(variance)
 
-        variance, mean = torch.var_mean(values, dim=0, correction=0)
-        self.input_feature_mean = mean.detach().cpu()
-        self.input_feature_variance = variance.detach().cpu()
+    def _noise_scale_from(self, variance: torch.Tensor) -> torch.Tensor:
+        """Adaptive noise scale for the space the corruption is applied in.
 
+        Noise is injected after standard scaling, so the scale has to describe
+        the scaled spread rather than the raw one.
+        """
+        scaled = self._scaled_variance(variance)
         if self.cfg.noise_scale == "global_rms":
-            scale = variance.mean().sqrt()
+            scale = scaled.mean().sqrt()
         elif self.cfg.noise_scale == "feature_std":
-            scale = variance.sqrt()
+            scale = scaled.sqrt()
         else:  # pragma: no cover - guarded by config validation
             raise ValueError(f"unknown noise_scale: {self.cfg.noise_scale}")
 
         if not bool(torch.isfinite(scale).all()):
             raise ValueError("adaptive Gaussian noise produced a non-finite scale")
-        self._gaussian_noise_scale = scale.to(device=self.device, dtype=self._model_dtype())
+        return scale.to(device=self.device, dtype=self._model_dtype())
+
+    def _fit_standard_scaler(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        rows: np.ndarray | None = None,
+        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
+    ) -> None:
+        """Compute per-feature centering and scaling from training rows only."""
+        self.input_scaler_mean = None
+        self.input_scaler_scale = None
+        self._scaler_mean = None
+        self._scaler_scale = None
+
+        if not self._standard_scaling_enabled:
+            return
+
+        mean, variance = stats or _streaming_mean_variance(
+            embeddings,
+            name="standard scaling",
+            rows=rows,
+        )
+        dtype = self._model_dtype()
+        if self.cfg.standard_scaler_mean:
+            self.input_scaler_mean = mean.to(dtype)
+        if self.cfg.standard_scaler_scale == "feature_std":
+            scale = variance.sqrt()
+        elif self.cfg.standard_scaler_scale == "global_rms":
+            # One scalar for the whole matrix, so angles and distance ratios
+            # come through untouched; only the magnitude moves.
+            scale = variance.mean().sqrt()
+        else:
+            scale = None
+        if scale is not None:
+            # A constant feature would divide by zero; sklearn leaves it at 1.
+            scale = torch.where(scale > 0, scale, torch.ones_like(scale)).to(dtype)
+            if not bool(torch.isfinite(scale).all()):
+                raise ValueError("standard scaling produced a non-finite scale")
+            self.input_scaler_scale = scale.detach().cpu()
+        self._cache_scaler_tensors()
+
+    def _scaled_variance(self, variance: torch.Tensor) -> torch.Tensor:
+        """Per-feature variance after standard scaling, without a second pass.
+
+        Scaling divides by a fixed factor, so the variance the SAE actually sees
+        is the raw one over that factor squared. Centering does not enter, since
+        translation leaves variance alone.
+        """
+        if self.input_scaler_scale is None:
+            return variance
+        return variance / self.input_scaler_scale.to(variance.dtype).square()
+
+    def _cache_scaler_tensors(self) -> None:
+        """Keep device copies so per-batch scaling costs no host transfer."""
+        dtype = self._model_dtype()
+        self._scaler_mean = (
+            self.input_scaler_mean.to(device=self.device, dtype=dtype)
+            if self.input_scaler_mean is not None
+            else None
+        )
+        self._scaler_scale = (
+            self.input_scaler_scale.to(device=self.device, dtype=dtype)
+            if self.input_scaler_scale is not None
+            else None
+        )
+
+    def _require_fitted_scaler(self) -> None:
+        if self.cfg.standard_scaler_mean and self._scaler_mean is None:
+            raise RuntimeError("standard scaling requires fit() before train_step()")
+        if self.cfg.standard_scaler_scale != "none" and self._scaler_scale is None:
+            raise RuntimeError("standard scaling requires fit() before train_step()")
+
+    def _standardize(self, batch: torch.Tensor) -> torch.Tensor:
+        """Map raw inputs into the standardized space the SAE sees."""
+        if not self._standard_scaling_enabled:
+            return batch
+        self._require_fitted_scaler()
+        out = batch
+        if self._scaler_mean is not None:
+            out = out - self._scaler_mean.to(device=batch.device, dtype=batch.dtype)
+        if self._scaler_scale is not None:
+            out = out / self._scaler_scale.to(device=batch.device, dtype=batch.dtype)
+        return out
+
+    def _destandardize(self, batch: torch.Tensor) -> torch.Tensor:
+        """Map SAE outputs back to the original embedding space."""
+        if not self._standard_scaling_enabled:
+            return batch
+        self._require_fitted_scaler()
+        out = batch
+        if self._scaler_scale is not None:
+            out = out * self._scaler_scale.to(device=batch.device, dtype=batch.dtype)
+        if self._scaler_mean is not None:
+            out = out + self._scaler_mean.to(device=batch.device, dtype=batch.dtype)
+        return out
 
     def _corrupt(self, batch: torch.Tensor) -> torch.Tensor:
         """Return an optionally corrupted training input."""
@@ -520,14 +768,23 @@ class TopKSAETrainer:
         self.optimizer.zero_grad(set_to_none=True)
 
         clean = batch
-        corrupted = self._corrupt(clean)
+        # Corruption lives in the space the SAE trains in, so noise is applied
+        # after standardization and is measured in standardized units.
+        scaled = self._standardize(clean)
+        corrupted = self._corrupt(scaled)
         reconstruction, sparse, stats = self.sae(corrupted)
-        if corrupted is clean:
+        if self.cfg.standard_scaler_loss_space == "scaled":
+            target, prediction = scaled, reconstruction
+        else:
+            target, prediction = clean, self._destandardize(reconstruction)
+        # The model's own stats compare its output to its input, which is only
+        # the loss target when nothing was corrupted or un-scaled in between.
+        if corrupted is scaled and target is scaled:
             cosine_loss = 1.0 - stats["cosine_similarity"]
             mse = stats["reconstruction_mse"]
         else:
-            cosine_loss = 1.0 - F.cosine_similarity(reconstruction, clean, dim=-1).mean()
-            mse = F.mse_loss(reconstruction, clean)
+            cosine_loss = 1.0 - F.cosine_similarity(prediction, target, dim=-1).mean()
+            mse = F.mse_loss(prediction, target)
         loss = float(self.cfg.alpha_loss) * cosine_loss + (1.0 - float(self.cfg.alpha_loss)) * mse
         if self.cfg.l1_penalty > 0.0:
             loss = loss + float(self.cfg.l1_penalty) * sparse.abs().mean()
@@ -540,9 +797,18 @@ class TopKSAETrainer:
             "active_count": stats["active_count"].detach(),
             "dead_features": stats["dead_features"].detach(),
         }
-        if corrupted is not clean:
-            result["corrupted_cosine_loss"] = (1.0 - stats["cosine_similarity"]).detach()
-            result["corrupted_reconstruction_mse"] = stats["reconstruction_mse"].detach()
+        if corrupted is not scaled:
+            if target is scaled:
+                result["corrupted_cosine_loss"] = (1.0 - stats["cosine_similarity"]).detach()
+                result["corrupted_reconstruction_mse"] = stats["reconstruction_mse"].detach()
+            else:
+                # Report against the corrupted input in the loss space, so the
+                # whole history stays in one space.
+                corrupted_target = self._destandardize(corrupted)
+                result["corrupted_cosine_loss"] = (
+                    1.0 - F.cosine_similarity(prediction, corrupted_target, dim=-1).mean()
+                ).detach()
+                result["corrupted_reconstruction_mse"] = F.mse_loss(prediction, corrupted_target).detach()
         return result
 
     @torch.no_grad()
@@ -556,9 +822,15 @@ class TopKSAETrainer:
         if self.sae is None:
             raise RuntimeError("trainer must be built before eval_step")
         self.sae.eval()
-        _reconstruction, sparse, stats = self.sae(batch)
-        cosine_loss = 1.0 - stats["cosine_similarity"]
-        mse = stats["reconstruction_mse"]
+        scaled = self._standardize(batch)
+        reconstruction, sparse, stats = self.sae(scaled)
+        if self.cfg.standard_scaler_loss_space == "scaled" or scaled is batch:
+            cosine_loss = 1.0 - stats["cosine_similarity"]
+            mse = stats["reconstruction_mse"]
+        else:
+            prediction = self._destandardize(reconstruction)
+            cosine_loss = 1.0 - F.cosine_similarity(prediction, batch, dim=-1).mean()
+            mse = F.mse_loss(prediction, batch)
         loss = float(self.cfg.alpha_loss) * cosine_loss + (1.0 - float(self.cfg.alpha_loss)) * mse
         if self.cfg.l1_penalty > 0.0:
             loss = loss + float(self.cfg.l1_penalty) * sparse.abs().mean()
@@ -585,8 +857,17 @@ class TopKSAETrainer:
         embeddings: np.ndarray | torch.Tensor,
         validation_embeddings: np.ndarray | torch.Tensor | None,
         input_dim: int,
-    ) -> tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor | None]:
-        """Return the ``(train, validation)`` row sets selected by the config."""
+    ) -> tuple[
+        np.ndarray | torch.Tensor,
+        np.ndarray | None,
+        np.ndarray | torch.Tensor | None,
+        np.ndarray | None,
+    ]:
+        """Return ``(train source, train rows, validation source, validation rows)``.
+
+        A ``None`` row set means "every row of that source". Splits are returned
+        as row indices so that neither part is copied out of the source.
+        """
         if validation_embeddings is not None and self.cfg.validation_frac is not None:
             raise ValueError("pass either validation_embeddings or config.validation_frac, not both")
 
@@ -596,12 +877,13 @@ class TopKSAETrainer:
                 raise ValueError(
                     f"validation_embeddings must have {input_dim} columns to match embeddings, got {validation_dim}"
                 )
-            return embeddings, validation_embeddings
+            return embeddings, None, validation_embeddings, None
         if self.cfg.validation_frac is not None:
-            return self._split_validation(embeddings, float(self.cfg.validation_frac))
+            train_rows, val_rows = self._split_validation(embeddings, float(self.cfg.validation_frac))
+            return embeddings, train_rows, embeddings, val_rows
         if self.cfg.patience is not None:
             raise ValueError("patience requires validation_embeddings or config.validation_frac")
-        return embeddings, None
+        return embeddings, None, None, None
 
     def fit(
         self,
@@ -623,11 +905,24 @@ class TopKSAETrainer:
         """
         input_dim = self._input_dim(embeddings)
         self.build(input_dim)
-        train_embeddings, val_embeddings = self._resolve_validation(embeddings, validation_embeddings, input_dim)
+        train_source, train_rows, val_source, val_rows = self._resolve_validation(
+            embeddings, validation_embeddings, input_dim
+        )
 
-        self._fit_gaussian_noise_scale(train_embeddings)
-        dataset = self._dataset(train_embeddings, shuffle=bool(self.cfg.shuffle))
-        val_dataset = self._dataset(val_embeddings, shuffle=False) if val_embeddings is not None else None
+        # Mean-only scaling and adaptive noise both want the same per-feature
+        # statistics, so read the source once rather than once each.
+        adaptive_noise = self.cfg.noise_type == "gaussian" and self.cfg.noise_scale != "absolute"
+        shared_stats = (
+            _streaming_mean_variance(train_source, name="standard scaling", rows=train_rows)
+            if self._standard_scaling_enabled and adaptive_noise
+            else None
+        )
+        self._fit_standard_scaler(train_source, rows=train_rows, stats=shared_stats)
+        self._fit_gaussian_noise_scale(train_source, rows=train_rows, stats=shared_stats)
+        dataset = self._dataset(train_source, shuffle=bool(self.cfg.shuffle), rows=train_rows)
+        val_dataset = (
+            self._dataset(val_source, shuffle=False, rows=val_rows) if val_source is not None else None
+        )
         epochs = int(self.cfg.epochs)
         if epochs < 1:
             raise ValueError("epochs must be >= 1")
@@ -701,7 +996,7 @@ class TopKSAETrainer:
         self.sae.eval()
         codes: list[torch.Tensor] = []
         for batch in self._progress(dataset, total=len(dataset)):
-            _reconstruction, sparse, _stats = self.sae(batch)
+            _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
             codes.append(sparse.detach().cpu())
         return torch.cat(codes, dim=0)
 
@@ -714,15 +1009,50 @@ class TopKSAETrainer:
         self.sae.eval()
         reconstructions: list[torch.Tensor] = []
         for batch in self._progress(dataset, total=len(dataset)):
-            reconstruction, _sparse, _stats = self.sae(batch)
-            reconstructions.append(reconstruction.detach().cpu())
+            reconstruction, _sparse, _stats = self.sae(self._standardize(batch))
+            # Reconstructions are returned in the caller's own embedding space.
+            reconstructions.append(self._destandardize(reconstruction).detach().cpu())
         return torch.cat(reconstructions, dim=0)
 
     @torch.no_grad()
     def transform(self, embeddings: np.ndarray | torch.Tensor) -> SRPTensor:
-        """Encode ``embeddings`` and return sparse codes as an ``SRPTensor``."""
-        codes = self.encode(embeddings)
-        return SRPTensor.from_dense(codes, k=int(self.cfg.k), score_mode=self.cfg.srp_score_mode)
+        """Encode ``embeddings`` and return sparse codes as an ``SRPTensor``.
+
+        Each batch is packed as it is produced, so the dense ``(n, hidden_dim)``
+        code matrix is never held whole: peak memory is the packed ``(n, k)``
+        result plus one batch. Top-k runs per row, so the result is identical to
+        packing the full dense matrix in one go.
+        """
+        if self.sae is None:
+            raise RuntimeError("trainer must be fitted or built before transform")
+        dataset = self._dataset(embeddings, shuffle=False)
+        if len(dataset) == 0:
+            raise ValueError("embeddings must contain at least one row")
+        self.sae.eval()
+        cols: list[torch.Tensor] = []
+        vals: list[torch.Tensor] = []
+        code_dim = 0
+        for batch in self._progress(dataset, total=len(dataset)):
+            _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
+            # Packed on the host, matching what encode() used to hand over, so
+            # tie-breaking cannot depend on the training device.
+            codes = sparse.detach().cpu()
+            code_dim = int(codes.shape[1])
+            packed = SRPTensor.from_dense(
+                codes,
+                k=int(self.cfg.k),
+                score_mode=self.cfg.srp_score_mode,
+            )
+            cols.append(packed.cols)
+            vals.append(packed.vals)
+        rows = int(dataset.n)
+        return SRPTensor(
+            cols=torch.cat(cols, dim=0),
+            vals=torch.cat(vals, dim=0),
+            shape=(rows, code_dim),
+            prefix_shape=(rows,),
+            validate=False,
+        )
 
     def fit_transform(
         self,
@@ -743,7 +1073,7 @@ class TopKSAETrainer:
         if self.sae is None:
             raise RuntimeError("trainer must be built before state_dict")
         return {
-            "format_version": 3,
+            "format_version": 4,
             "config": self.cfg,
             "input_dim": self.input_dim,
             "model": self.sae.state_dict(),
@@ -754,6 +1084,8 @@ class TopKSAETrainer:
             "stopped_epoch": self.stopped_epoch,
             "input_feature_mean": self.input_feature_mean,
             "input_feature_variance": self.input_feature_variance,
+            "input_scaler_mean": self.input_scaler_mean,
+            "input_scaler_scale": self.input_scaler_scale,
             "gaussian_noise_scale": (
                 self._gaussian_noise_scale.detach().cpu() if self._gaussian_noise_scale is not None else None
             ),
@@ -773,7 +1105,7 @@ class TopKSAETrainer:
     ) -> "TopKSAETrainer":
         """Restore trainer state, including fitted denoising statistics."""
         format_version = int(state.get("format_version", 1))
-        if format_version not in {1, 2, 3}:
+        if format_version not in {1, 2, 3, 4}:
             raise ValueError(f"unsupported trainer state format_version: {format_version}")
         if state.get("input_dim") is None:
             raise ValueError("trainer state is missing input_dim")
@@ -796,19 +1128,27 @@ class TopKSAETrainer:
         self.best_val_loss = float(best_val_loss) if best_val_loss is not None else None
         self.stopped_epoch = int(stopped_epoch) if stopped_epoch is not None else None
 
+        # Absent before format_version 4, where standard scaling did not exist.
+        # Restored first: a noise scale rebuilt below is derived from it.
+        scaler_mean = state.get("input_scaler_mean")
+        scaler_scale = state.get("input_scaler_scale")
+        self.input_scaler_mean = scaler_mean.detach().cpu() if scaler_mean is not None else None
+        self.input_scaler_scale = scaler_scale.detach().cpu() if scaler_scale is not None else None
+        self._cache_scaler_tensors()
+
         feature_mean = state.get("input_feature_mean")
         feature_variance = state.get("input_feature_variance")
         gaussian_scale = state.get("gaussian_noise_scale")
         self.input_feature_mean = feature_mean.detach().cpu() if feature_mean is not None else None
         self.input_feature_variance = feature_variance.detach().cpu() if feature_variance is not None else None
         if gaussian_scale is None and self.input_feature_variance is not None:
-            if self.cfg.noise_scale == "global_rms":
-                gaussian_scale = self.input_feature_variance.mean().sqrt()
-            elif self.cfg.noise_scale == "feature_std":
-                gaussian_scale = self.input_feature_variance.sqrt()
-        self._gaussian_noise_scale = (
-            gaussian_scale.to(device=self.device, dtype=self._model_dtype()) if gaussian_scale is not None else None
-        )
+            self._gaussian_noise_scale = self._noise_scale_from(self.input_feature_variance)
+        else:
+            self._gaussian_noise_scale = (
+                gaussian_scale.to(device=self.device, dtype=self._model_dtype())
+                if gaussian_scale is not None
+                else None
+            )
 
         self._noise_generator = None
         generator_state = state.get("noise_generator_state")
