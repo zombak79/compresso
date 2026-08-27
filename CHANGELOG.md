@@ -9,7 +9,7 @@ Releases marked *not published* exist as versions in the repository but were
 never uploaded to PyPI, so `pip install compresso-pytorch` never resolved to
 them. See [Release history notes](#release-history-notes) at the end.
 
-## [0.1.7] — unreleased
+## [0.1.7] — 2026-08-27
 
 ### Added
 
@@ -243,7 +243,7 @@ Initial release.
 - **History before 0.1.0** was squashed into a single commit. The original
   development commits are preserved on the `main-before-squash` branch.
 
-[0.1.7]: https://github.com/zombak79/compresso/compare/v0.1.6...HEAD
+[0.1.7]: https://github.com/zombak79/compresso/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/zombak79/compresso/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/zombak79/compresso/compare/v0.1.3...v0.1.5
 [0.1.4]: https://github.com/zombak79/compresso/compare/v0.1.3...main
