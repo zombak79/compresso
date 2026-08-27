@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import copy
 import math
+import time
 import warnings
 from dataclasses import dataclass, replace
 from typing import Any, Literal
@@ -345,7 +346,16 @@ class TopKSAEConfig:
     device:
         Device used for training and transforms.
     show_progress:
-        Whether to show a tqdm progress bar when tqdm is installed.
+        Whether to show a tqdm progress bar when tqdm is installed. Ignored
+        when :class:`TopKSAETrainer` is given a ``logger``, since a bar and a
+        log stream would report the same numbers twice.
+    log_prefix:
+        Bracketed tag put in front of every logged line, so one job's output
+        stays greppable when several share a log stream.
+    log_every_n_steps:
+        With a ``logger``, also log every ``N``-th batch within an epoch.
+        ``0`` logs epoch boundaries only, which is enough unless a single
+        epoch runs for minutes.
     srp_score_mode:
         Score mode used by ``SRPTensor.from_dense`` during ``transform``.
     """
@@ -381,6 +391,8 @@ class TopKSAEConfig:
     compile: bool = False
     device: str | torch.device = "cpu"
     show_progress: bool = True
+    log_prefix: str = "TopKSAE"
+    log_every_n_steps: int = 0
     srp_score_mode: Literal["abs", "raw", "relu"] = "abs"
 
 
@@ -397,10 +409,24 @@ class TopKSAETrainer:
 
     ``transform`` returns an ``SRPTensor`` containing sparse codes. Use
     ``reconstruct`` if dense reconstructions are needed.
+
+    Parameters
+    ----------
+    config:
+        Trainer configuration. Defaults to :class:`TopKSAEConfig`.
+    logger:
+        Optional sink for progress lines, any object with an ``info(str)``
+        method: a ``logging.Logger``, a service's own logger, or a shim around
+        ``print``. Duck-typed on purpose, so compresso needs no logging
+        dependency and callers keep their own. When given, ``fit`` reports the
+        run line by line instead of through tqdm, which suits a container with
+        no tty; when omitted, nothing about the trainer changes.
     """
 
-    def __init__(self, config: TopKSAEConfig | None = None) -> None:
+    def __init__(self, config: TopKSAEConfig | None = None, logger: Any | None = None) -> None:
         self.cfg = config if config is not None else TopKSAEConfig()
+        self.logger = logger
+        self._logging_disabled = False
         self.device = torch.device(self.cfg.device)
         self.sae: TopKSAE | nn.Module | None = None
         self.optimizer: torch.optim.Optimizer | None = None
@@ -453,6 +479,8 @@ class TopKSAETrainer:
             raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
         if self.cfg.standard_scaler_scale not in {"none", "feature_std", "global_rms"}:
             raise ValueError(f"unknown standard_scaler_scale: {self.cfg.standard_scaler_scale}")
+        if int(self.cfg.log_every_n_steps) < 0:
+            raise ValueError(f"log_every_n_steps must be >= 0, got {self.cfg.log_every_n_steps}")
         # Coherent but slow, unlike the rejections around it, so this one only
         # warns: normalized codes are scale-invariant, which leaves the decoder
         # alone to absorb a rescaled input from an initialization that is too
@@ -590,13 +618,164 @@ class TopKSAETrainer:
         return {key: value.detach().cpu().clone() for key, value in self.sae.state_dict().items()}
 
     def _progress(self, iterable, *, total: int | None = None):
-        if not self.cfg.show_progress:
+        # A logger wins over the bar: both would carry the same per-epoch
+        # numbers, and tqdm has nowhere good to draw them without a tty.
+        if self.logger is not None or not self.cfg.show_progress:
             return iterable
         try:
             from tqdm.auto import tqdm
         except Exception:  # pragma: no cover - optional dependency fallback
             return iterable
         return tqdm(iterable, total=total)
+
+    @property
+    def _logging_active(self) -> bool:
+        """Whether any line would reach a sink, checked before formatting one."""
+        return self.logger is not None and not self._logging_disabled
+
+    def _log(self, message: str) -> None:
+        """Emit one prefixed line through the injected logger.
+
+        A logger that raises disables itself rather than ending the fit: hours
+        of training must not be lost to a broken log handler. The first failure
+        is surfaced as a warning so it is not silent either.
+        """
+        if not self._logging_active:
+            return
+        try:
+            self.logger.info(f"[{self.cfg.log_prefix}] {message}")
+        except Exception as exc:
+            self._logging_disabled = True
+            warnings.warn(
+                f"logger.info raised {exc!r}; training continues with logging disabled",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+    @staticmethod
+    def _format_duration(seconds: float, unit_name: str | None = None) -> str:
+        """Render a duration in whichever of s / ms / us keeps it readable."""
+        suffix = f"/{unit_name}" if unit_name is not None else ""
+        if seconds >= 1 or seconds == 0:
+            return f"{seconds:.0f}s{suffix}"
+        if seconds >= 1e-3:
+            return f"{seconds * 1e3:.0f}ms{suffix}"
+        return f"{seconds * 1e6:.0f}us{suffix}"
+
+    @staticmethod
+    def _format_metric(value: Any) -> str:
+        """Render one metric, keeping small values from printing as ``0.0000``."""
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            # History carries floats today; anything else is a future key that
+            # should still show up rather than break the line.
+            return str(value)
+        return f"{number:.4f}" if abs(number) > 1e-3 else f"{number:.4e}"
+
+    def _log_fit_start(
+        self,
+        dataset: EmbeddingsDataset,
+        val_dataset: EmbeddingsDataset | None,
+        epochs: int,
+        patience: int | None,
+    ) -> None:
+        """Log the run's shape, so the log explains itself months later."""
+        if not self._logging_active:
+            return
+        if self.cfg.noise_type == "none":
+            corruption = "corruption off"
+        else:
+            corruption = (
+                f"corruption {self.cfg.noise_type}({self.cfg.noise_scale}, level={self.cfg.noise_level})"
+            )
+        if not self._standard_scaling_enabled:
+            scaling = "standard scaling off"
+        else:
+            scaling = (
+                f"standard scaling mean={self.cfg.standard_scaler_mean} "
+                f"scale={self.cfg.standard_scaler_scale} "
+                f"loss_space={self.cfg.standard_scaler_loss_space}"
+            )
+        rows = f"{dataset.n} train rows"
+        rows += f" / {val_dataset.n} validation rows" if val_dataset is not None else " / no validation"
+        self._log(
+            "fit started: "
+            + " | ".join(
+                [
+                    f"input_dim {self.input_dim}",
+                    f"hidden_dim {self.cfg.hidden_dim}",
+                    f"k {self.cfg.k}",
+                    rows,
+                    f"{len(dataset)} batches of {self.cfg.batch_size}",
+                    f"epochs {epochs}",
+                    f"patience {patience if patience is not None else 'off'}",
+                    f"device {self.device}",
+                    corruption,
+                    scaling,
+                ]
+            )
+        )
+
+    def _log_step(self, step: int, steps: int, epoch: int, epochs: int, epoch_start: float) -> None:
+        """Log progress inside a long epoch."""
+        elapsed = time.monotonic() - epoch_start
+        per_step = elapsed / max(1, step)
+        self._log(
+            f"epoch {epoch}/{epochs} step {step}/{steps}: "
+            + " | ".join(
+                [
+                    self._format_duration(per_step, "step"),
+                    f"{self._format_duration(elapsed)} elapsed",
+                    f"{self._format_duration(per_step * (steps - step))} remaining",
+                ]
+            )
+        )
+
+    def _log_epoch(
+        self,
+        epoch: int,
+        epochs: int,
+        record: dict[str, float],
+        epoch_start: float,
+        fit_start: float,
+    ) -> None:
+        """Log one epoch, carrying the whole history record.
+
+        Every key is dumped rather than a chosen few, so ``dead_features`` and
+        ``active_count`` are always there and a metric added to ``history``
+        later needs no change here.
+        """
+        if not self._logging_active:
+            return
+        now = time.monotonic()
+        run_elapsed = now - fit_start
+        # ``epoch`` counts this fit's epochs, so it is also the number finished.
+        remaining = (run_elapsed / max(1, epoch)) * (epochs - epoch)
+        segments = [
+            self._format_duration(now - epoch_start, "epoch"),
+            f"{self._format_duration(run_elapsed)} elapsed",
+            f"{self._format_duration(remaining)} remaining",
+        ]
+        segments += [
+            f"{key}: {self._format_metric(value)}" for key, value in record.items() if key != "epoch"
+        ]
+        self._log(f"epoch {epoch}/{epochs}: " + " | ".join(segments))
+
+    def _log_fit_end(self, duration: float, epochs_run: int) -> None:
+        """Log the outcome, including whether early stopping ended the run."""
+        if not self._logging_active:
+            return
+        segments = [f"{self._format_duration(duration)} total", f"epochs_run {epochs_run}"]
+        if self.best_epoch is not None:
+            segments.append(f"best_epoch {self.best_epoch}")
+            segments.append(f"best_val_loss {self._format_metric(self.best_val_loss)}")
+        segments.append(
+            f"early stopping fired at epoch {self.stopped_epoch}"
+            if self.stopped_epoch is not None
+            else "early stopping did not fire"
+        )
+        self._log("fit finished: " + " | ".join(segments))
 
     def _set_lr(self, lr: float) -> None:
         if self.optimizer is None:
@@ -963,9 +1142,17 @@ class TopKSAETrainer:
         best_score = math.inf
         best_state: dict[str, torch.Tensor] | None = None
         stale_epochs = 0
+        epochs_run = 0
+        # Zero unless a logger is attached, so the per-batch check below stays a
+        # single integer comparison on an unlogged run.
+        log_steps = int(self.cfg.log_every_n_steps) if self.logger is not None else 0
+        steps_per_epoch = len(dataset)
 
+        fit_start = time.monotonic()
+        self._log_fit_start(dataset, val_dataset, epochs, patience)
         epoch_iter = self._progress(range(1, epochs + 1), total=epochs)
         for epoch in epoch_iter:
+            epoch_start = time.monotonic()
             dataset.on_epoch_begin()
             sums: dict[str, float] = {}
             n_batches = 0
@@ -974,6 +1161,8 @@ class TopKSAETrainer:
                 for key, value in stats.items():
                     sums[key] = sums.get(key, 0.0) + float(value.detach().cpu().item())
                 n_batches += 1
+                if log_steps and n_batches % log_steps == 0:
+                    self._log_step(n_batches, steps_per_epoch, epoch, epochs, epoch_start)
             dataset.on_epoch_end()
             record = {key: value / max(1, n_batches) for key, value in sums.items()}
             record["epoch"] = float(epoch)
@@ -991,6 +1180,8 @@ class TopKSAETrainer:
                 else:
                     stale_epochs += 1
             self.history.append(record)
+            epochs_run = epoch
+            self._log_epoch(epoch, epochs, record, epoch_start, fit_start)
             if hasattr(epoch_iter, "set_postfix"):
                 postfix = {
                     "loss": f"{record['loss']:.4f}",
@@ -1008,6 +1199,7 @@ class TopKSAETrainer:
                 break
         if best_state is not None and self.sae is not None:
             self.sae.load_state_dict(best_state)
+        self._log_fit_end(time.monotonic() - fit_start, epochs_run)
         return self
 
     @torch.no_grad()

@@ -9,6 +9,27 @@ Releases marked *not published* exist as versions in the repository but were
 never uploaded to PyPI, so `pip install compresso-pytorch` never resolved to
 them. See [Release history notes](#release-history-notes) at the end.
 
+## [Unreleased]
+
+### Added
+
+- An injectable logger for `TopKSAETrainer`: `TopKSAETrainer(config, logger=...)`
+  accepts anything with an `info(str)` method, so a containerised run can report
+  itself as structured log lines instead of a tqdm bar that needs a tty.
+  `fit()` emits one line describing the run, one per epoch, and one for the
+  outcome. Two new `TopKSAEConfig` fields, `log_prefix` and
+  `log_every_n_steps`, tag the lines and optionally add per-batch progress
+  inside a long epoch.
+- Epoch lines carry every key of the epoch's `history` record rather than a
+  curated subset, so `dead_features` and `active_count` are always in the
+  stream and a metric added to `history` later needs no change here.
+
+### Changed
+
+- Passing a `logger` suppresses the tqdm bar, since the two would report the
+  same numbers. Callers who pass no logger are unaffected: `show_progress` and
+  the bar behave exactly as before.
+
 ## [0.1.5] — 2026-08-06
 
 ### Added

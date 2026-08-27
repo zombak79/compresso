@@ -206,6 +206,45 @@ weights are reloaded once training ends, so the model you get back is never the
 worse final epoch. ``best_epoch``, ``best_val_loss``, and ``stopped_epoch`` are
 carried in ``trainer.state_dict()``.
 
+Logging a long run
+------------------
+
+``fit`` reports itself two ways. By default it draws a tqdm progress bar, which
+needs a tty; inside a container every refresh becomes its own log line instead.
+Pass a ``logger`` to get structured lines and no bar:
+
+.. code-block:: python
+
+   import logging
+
+   from compresso import TopKSAEConfig, TopKSAETrainer
+
+   cfg = TopKSAEConfig(hidden_dim=4096, k=128, epochs=30, validation_frac=0.1, log_prefix="SAE")
+   trainer = TopKSAETrainer(cfg, logger=logging.getLogger(__name__)).fit(embeddings)
+
+The logger is duck-typed: anything with an ``info(str)`` method works, so a
+``logging.Logger``, a service's own logger, or a shim around ``print`` all fit
+and compresso needs no logging dependency of its own. Passing one suppresses
+tqdm, since a bar and a log stream would carry the same numbers.
+
+One line opens the run with its shape, one closes it with the outcome, and one
+lands per epoch carrying *every* key of that epoch's ``history`` record::
+
+   [SAE] fit started: input_dim 32 | hidden_dim 64 | k 8 | 320 train rows / 80 validation rows | ...
+   [SAE] epoch 1/3: 11ms/epoch | 11ms elapsed | 22ms remaining | loss: 1.0292 | ... | dead_features: 0.2000 | val_loss: 0.9780 | ...
+   [SAE] fit finished: 14ms total | epochs_run 3 | best_epoch 3 | best_val_loss 0.9236 | early stopping did not fire
+
+Dumping the whole record rather than a chosen few means ``dead_features`` is
+always in the stream — the number that says whether ``hidden_dim`` is too wide
+for the catalog — and a metric added to ``history`` later shows up on its own.
+
+When a single epoch runs for minutes, ``log_every_n_steps=N`` adds a line every
+``N``-th batch with time per step and time remaining in the epoch. It stays off
+at the default ``0``.
+
+A logger that raises never ends a fit: the failure becomes one
+``RuntimeWarning``, logging switches off, and training continues.
+
 Post-sparsification hooks
 -------------------------
 
@@ -254,7 +293,9 @@ Field                      Default           Meaning
 ``decay``                  ``False``         Cosine LR decay to zero over training.
 ``compile``                ``False``         ``torch.compile`` the model when available.
 ``device``                 ``"cpu"``         Training/transform device.
-``show_progress``          ``True``          tqdm progress bar when tqdm is installed.
+``show_progress``          ``True``          tqdm progress bar when tqdm is installed. Ignored when a ``logger`` is passed.
+``log_prefix``             ``"TopKSAE"``     Bracketed tag on every logged line.
+``log_every_n_steps``      ``0``             With a ``logger``, also log every ``N``-th batch. ``0`` logs epochs only.
 ``srp_score_mode``         ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
 =========================  ================  ==================================================================
 
