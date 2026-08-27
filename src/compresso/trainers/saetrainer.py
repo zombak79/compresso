@@ -470,8 +470,8 @@ class TopKSAEConfig:
         stays greppable when several share a log stream.
     log_every_n_steps:
         With a ``logger``, also log every ``N``-th batch of an epoch or of an
-        inference pass. ``0`` logs pass boundaries only, which is enough unless
-        a single epoch or pass runs for minutes.
+        inference pass. ``0`` logs epoch and pass boundaries only, which is
+        enough unless a single epoch or pass runs for minutes.
     srp_score_mode:
         Score mode used by ``SRPTensor.from_dense`` during ``transform``.
     """
@@ -1215,8 +1215,8 @@ class TopKSAETrainer:
             Mutually exclusive with ``config.validation_frac``.
         logger:
             Reporting sink for this call only, overriding the one given to the
-            constructor. ``None`` silences this call even when the trainer has
-            a logger.
+            constructor. ``None`` disables log lines and drops an inherited
+            progress bar unless ``show_progress`` is passed explicitly.
         show_progress:
             tqdm bar for this call only, overriding ``config.show_progress``. A
             logger suppresses the bar either way.
@@ -1341,7 +1341,8 @@ class TopKSAETrainer:
             Rows to run through the fitted SAE.
         logger:
             Reporting sink for this call only, overriding the one given to the
-            constructor. ``None`` silences this call.
+            constructor. ``None`` disables log lines and drops an inherited
+            progress bar unless ``show_progress`` is passed explicitly.
         show_progress:
             tqdm bar for this call only, overriding ``config.show_progress``. A
             logger suppresses the bar either way.
@@ -1372,7 +1373,8 @@ class TopKSAETrainer:
             Rows to run through the fitted SAE.
         logger:
             Reporting sink for this call only, overriding the one given to the
-            constructor. ``None`` silences this call.
+            constructor. ``None`` disables log lines and drops an inherited
+            progress bar unless ``show_progress`` is passed explicitly.
         show_progress:
             tqdm bar for this call only, overriding ``config.show_progress``. A
             logger suppresses the bar either way.
@@ -1404,7 +1406,9 @@ class TopKSAETrainer:
         packing the full dense matrix in one go.
 
         ``logger`` and ``show_progress`` override the trainer's own reporting
-        for this call, as on :meth:`encode`.
+        for this call, as on :meth:`encode`. In particular, ``logger=None``
+        disables log lines and drops an inherited progress bar unless
+        ``show_progress`` is passed explicitly.
         """
         if self.sae is None:
             raise RuntimeError("trainer must be fitted or built before transform")
@@ -1451,7 +1455,9 @@ class TopKSAETrainer:
         held out for validation by ``config.validation_frac``.
 
         ``logger`` and ``show_progress`` cover both phases, so a long transform
-        is reported by whatever reported the fit.
+        is reported by whatever reported the fit. In particular,
+        ``logger=None`` disables log lines and drops an inherited progress bar
+        unless ``show_progress`` is passed explicitly.
         """
         self.fit(
             embeddings,

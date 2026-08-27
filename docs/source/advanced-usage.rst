@@ -385,9 +385,9 @@ Full config reference
 
 Every trainer hyperparameter lives on :class:`~compresso.TopKSAEConfig`:
 
-==============================  ================  ==============================================================================
+==============================  ================  ========================================================================================
 Field                           Default           Meaning
-==============================  ================  ==============================================================================
+==============================  ================  ========================================================================================
 ``hidden_dim``                  ``4096``          Number of dictionary features ``H``.
 ``k``                           ``128``           Active features kept per row.
 ``decoder_bias``                ``False``         Add a bias to the default decoder.
@@ -418,9 +418,9 @@ Field                           Default           Meaning
 ``device``                      ``"cpu"``         Training/transform device.
 ``show_progress``               ``True``          tqdm progress bar when tqdm is installed. Ignored when a ``logger`` is passed.
 ``log_prefix``                  ``"TopKSAE"``     Bracketed tag on every logged line.
-``log_every_n_steps``           ``0``             With a ``logger``, also log every ``N``-th batch. ``0`` logs epochs only.
+``log_every_n_steps``           ``0``             With a ``logger``, also log every ``N``-th batch. ``0`` logs epoch/pass boundaries only.
 ``srp_score_mode``              ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
-==============================  ================  ==============================================================================
+==============================  ================  ========================================================================================
 
 Sparse parameters and pruning
 -----------------------------
