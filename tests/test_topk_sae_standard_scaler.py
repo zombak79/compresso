@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 import torch
 import torch.nn.functional as F
 
-from compresso import TopKSAEConfig, TopKSAETrainer
+from compresso import L1Normalize, L2Normalize, TopKSAEConfig, TopKSAETrainer
 
 
 def _config(**overrides) -> TopKSAEConfig:
@@ -134,6 +136,41 @@ def test_absolute_noise_is_allowed_with_standard_scaling():
 def test_adaptive_noise_scale_is_allowed_while_scaling_is_off():
     """noise_scale defaults to global_rms, so the check must gate on noise_type."""
     trainer = TopKSAETrainer(_config(noise_scale="global_rms")).build(input_dim=5)
+
+    assert trainer.is_built
+
+
+@pytest.mark.parametrize("scale", ["feature_std", "global_rms"])
+@pytest.mark.parametrize("post", [L1Normalize(), L2Normalize()])
+def test_scaling_warns_with_normalized_codes(scale, post):
+    """Unit-norm codes carry no magnitude, so only the decoder could absorb it."""
+    with pytest.warns(RuntimeWarning, match="normalizing post_sparsify"):
+        trainer = TopKSAETrainer(
+            _config(standard_scaler_scale=scale, post_sparsify=post)
+        ).build(input_dim=5)
+
+    # Warned about, not blocked: the combination still trains.
+    assert trainer.is_built
+
+
+@pytest.mark.parametrize("post", [L1Normalize(), L2Normalize()])
+def test_centering_stays_quiet_with_normalized_codes(post):
+    """Centering barely moves the magnitude, so it is not part of the rule."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        trainer = TopKSAETrainer(
+            _config(standard_scaler_mean=True, standard_scaler_scale="none", post_sparsify=post)
+        ).build(input_dim=5)
+
+    assert trainer.is_built
+
+
+def test_scaling_stays_quiet_with_a_non_normalizing_post_sparsify():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        trainer = TopKSAETrainer(
+            _config(standard_scaler_scale="global_rms", post_sparsify=torch.nn.ReLU())
+        ).build(input_dim=5)
 
     assert trainer.is_built
 

@@ -294,6 +294,13 @@ class TopKSAEConfig:
 
         Statistics are fitted on the training rows with ``correction=0``, and
         constant features keep a scale of ``1``.
+
+        Neither scaling mode sits well with a normalizing ``post_sparsify``:
+        unit-norm codes carry no magnitude, so the rescale has to be undone by
+        the decoder alone and converges several times worse. That combination
+        warns rather than raising, since it is merely a bad trade rather than a
+        contradiction. ``standard_scaler_mean`` is unaffected, because centering
+        barely moves the magnitude.
     standard_scaler_loss_space:
         Space the reconstruction loss is measured in when standard scaling is
         active. ``"original"`` un-scales the reconstruction and compares it to
@@ -446,6 +453,22 @@ class TopKSAETrainer:
             raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
         if self.cfg.standard_scaler_scale not in {"none", "feature_std", "global_rms"}:
             raise ValueError(f"unknown standard_scaler_scale: {self.cfg.standard_scaler_scale}")
+        # Coherent but slow, unlike the rejections around it, so this one only
+        # warns: normalized codes are scale-invariant, which leaves the decoder
+        # alone to absorb a rescaled input from an initialization that is too
+        # small by exactly that factor.
+        if self.cfg.standard_scaler_scale != "none" and isinstance(
+            self.cfg.post_sparsify, (L1Normalize, L2Normalize)
+        ):
+            warnings.warn(
+                "standard_scaler_scale rescales inputs, but a normalizing post_sparsify "
+                "makes the codes scale-invariant, so only the decoder can absorb it. "
+                "Expect several times the reconstruction error, which more epochs do not "
+                "recover. standard_scaler_scale='none' avoids it, and "
+                "standard_scaler_mean is unaffected.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         # Adaptive noise scales are derived from the scaled variances, so every
         # mode stays correct. feature_std is the one that makes them degenerate:
         # unit variance everywhere turns both adaptive modes into absolute.
