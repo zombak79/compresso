@@ -9,7 +9,7 @@ Releases marked *not published* exist as versions in the repository but were
 never uploaded to PyPI, so `pip install compresso-pytorch` never resolved to
 them. See [Release history notes](#release-history-notes) at the end.
 
-## [Unreleased]
+## [0.1.7] — unreleased
 
 ### Added
 
@@ -29,6 +29,59 @@ them. See [Release history notes](#release-history-notes) at the end.
 - Passing a `logger` suppresses the tqdm bar, since the two would report the
   same numbers. Callers who pass no logger are unaffected: `show_progress` and
   the bar behave exactly as before.
+
+## [0.1.6] — 2026-08-17
+
+### Added
+
+- Optional standard scaling for `TopKSAETrainer`, applied to inputs before the
+  SAE and undone on its reconstruction. Three new `TopKSAEConfig` fields:
+  `standard_scaler_mean`, `standard_scaler_scale`, and
+  `standard_scaler_loss_space`.
+- `standard_scaler_scale` chooses how magnitudes are handled. `"feature_std"`
+  divides each feature by its own standard deviation, matching
+  `sklearn.preprocessing.StandardScaler`. `"global_rms"` divides everything by
+  one scalar, the root mean per-feature variance: coordinates land at unit
+  scale for the encoder while every angle and every distance ratio is preserved
+  exactly, which suits L2-normalized embeddings whose geometry is the signal.
+- `standard_scaler_loss_space` selects whether the reconstruction loss is
+  measured in original or standardized space. `"original"`, the default, keeps
+  the objective and the reported metrics identical to an unscaled run.
+- `input_scaler_mean` and `input_scaler_scale` attributes carrying the fitted
+  statistics. `state_dict()` moved to `format_version` 4 and includes them;
+  versions 1 through 3 still load.
+- Statistics are fitted on the training rows only, with `correction=0`, and a
+  constant feature keeps a scale of `1` rather than dividing by zero.
+
+### Changed
+
+- `standard_scaler_mean` now accepts every `noise_scale`. Centering leaves
+  per-feature variance untouched, so adaptive noise statistics stay exactly as
+  meaningful as they were on raw inputs. Only `"feature_std"` flattens
+  variances to `1`, which is what collapses both adaptive modes into absolute,
+  and it alone is still rejected alongside them.
+- Adaptive noise scales under `"global_rms"` are derived analytically as
+  `var_raw / scale ** 2` instead of being refitted. Translation leaves variance
+  alone and scaling divides it by a known constant, so this is exact and costs
+  no extra pass.
+
+### Fixed
+
+- Fitting no longer materializes the input. `EmbeddingsDataset` keeps the
+  source exactly as handed over and converts per batch, validation splits are
+  returned as row indices rather than two copied halves, and statistics stream
+  in one chunked pass. A memory-mapped export is a usable source at last: on a
+  439 MiB float16 memmap with standard scaling and a validation split, peak RSS
+  drops from 3138 MiB to 843 MiB.
+- Streaming statistics merge chunks with Chan's parallel formula instead of
+  `E[x**2] - E[x]**2`. In float32 the latter returns exactly zero for a feature
+  whose mean dwarfs its spread, and the zero-variance guard then read that as a
+  constant feature and left it unscaled — so the features most in need of
+  standardizing passed through untouched.
+- `transform()` packs each batch as it is produced instead of densifying the
+  whole `(n, hidden_dim)` code matrix first, where `torch.cat` held it twice at
+  the peak. On 60k rows with `hidden_dim=4096` and `k=128`, peak memory drops
+  from 2413 MiB to 185 MiB. Results are unchanged, since top-k runs per row.
 
 ## [0.1.5] — 2026-08-06
 
@@ -155,7 +208,9 @@ Initial release.
 - **History before 0.1.0** was squashed into a single commit. The original
   development commits are preserved on the `main-before-squash` branch.
 
-[0.1.5]: https://github.com/zombak79/compresso/compare/v0.1.3...HEAD
+[0.1.7]: https://github.com/zombak79/compresso/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/zombak79/compresso/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/zombak79/compresso/compare/v0.1.3...v0.1.5
 [0.1.4]: https://github.com/zombak79/compresso/compare/v0.1.3...main
 [0.1.3]: https://github.com/zombak79/compresso/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/zombak79/compresso/compare/v0.1.0...v0.1.2

@@ -159,6 +159,76 @@ This restores the model, optimizer, history, adaptive noise scale, and, when
 restored on the same device type, future noise sequence. States created before
 denoising support remain loadable and default to no corruption.
 
+Standard scaling
+----------------
+
+Inputs can be standardized before the SAE sees them and un-standardized on the
+reconstruction, so the scaling stays an internal detail rather than something
+callers apply themselves:
+
+.. code-block:: python
+
+   from compresso import TopKSAEConfig, TopKSAETrainer
+
+   cfg = TopKSAEConfig(
+       hidden_dim=4096,
+       k=128,
+       standard_scaler_mean=True,
+       standard_scaler_scale="global_rms",
+   )
+   trainer = TopKSAETrainer(cfg).fit(embeddings)
+
+   trainer.input_scaler_mean    # fitted per-feature mean, or None
+   trainer.input_scaler_scale   # fitted divisor, or None
+
+Both parts are off by default and independent. ``standard_scaler_mean``
+subtracts the per-feature training mean. ``standard_scaler_scale`` divides, and
+its two modes are not variations of one setting:
+
+``"feature_std"``
+   Divides each feature by its own standard deviation, matching
+   ``sklearn.preprocessing.StandardScaler``. Every feature ends at unit
+   variance, which flattens the relative importance of coordinates and bends
+   the space the embeddings live in — a poor fit when that geometry *is* the
+   signal.
+
+``"global_rms"``
+   Divides everything by one scalar, the root mean per-feature variance. Every
+   angle stays identical and every distance ratio constant, because a uniform
+   scale is not a distortion; only magnitude changes.
+
+``"global_rms"`` is the one to reach for with L2-normalized embeddings, and the
+reason is the learning curve rather than the optimum. An L2-normalized vector
+spreads its norm across every dimension, so at 1152 dimensions coordinates sit
+near ``0.023``: a freshly initialized ``nn.Linear`` starts with pre-activations
+around ``0.02`` and spends early epochs merely growing weights. Scaling lifts
+those to roughly ``0.58``. A uniform input scale can be absorbed into the
+weights, so the optimum itself does not move — but ``l1_penalty`` and
+``weight_decay`` are relative to the data scale, so they may want retuning.
+
+Statistics are fitted on the training rows only, with ``correction=0``, in one
+streaming pass that never materializes the source. A constant feature keeps a
+scale of ``1`` rather than dividing by zero. Both are carried in
+``trainer.state_dict()``.
+
+``standard_scaler_loss_space`` decides where the reconstruction loss is
+measured. The default ``"original"`` un-scales the reconstruction and compares
+it against the raw input, so the objective and every reported metric stay
+identical to an unscaled run. ``"scaled"`` compares in standardized space
+instead, weighting every feature equally rather than by its variance. It is
+rejected unless some scaling is active.
+
+Two combinations get in each other's way:
+
+* ``standard_scaler_scale="feature_std"`` is **rejected** alongside an adaptive
+  ``noise_scale``. Unit variance everywhere makes ``"global_rms"`` and
+  ``"feature_std"`` noise indistinguishable from ``"absolute"``. Mean-only
+  scaling accepts every noise mode, since centering leaves variance alone.
+* Either scaling mode with a normalizing ``post_sparsify`` **warns**. Unit-norm
+  codes carry no magnitude, so the rescale has to be undone by the decoder
+  alone, and it converges several times worse. That is a bad trade rather than
+  a contradiction, so it trains anyway.
+
 Early stopping
 --------------
 
@@ -265,39 +335,42 @@ Full config reference
 
 Every trainer hyperparameter lives on :class:`~compresso.TopKSAEConfig`:
 
-=========================  ================  ==================================================================
-Field                      Default           Meaning
-=========================  ================  ==================================================================
-``hidden_dim``             ``4096``          Number of dictionary features ``H``.
-``k``                      ``128``           Active features kept per row.
-``decoder_bias``           ``False``         Add a bias to the default decoder.
-``pre_act``                ``None``          Module applied before sparsification.
-``post_sparsify``          ``None``          Module applied to codes after top-k.
-``encoder`` / ``decoder``  ``None``          Custom modules (else linear layers).
-``sparsify_score_mode``    ``"abs"``         Top-k scoring: ``abs`` / ``raw`` / ``relu``.
-``sparsify_ste_alpha``     ``0.01``          Straight-through leak for non-selected entries.
-``noise_type``             ``"none"``        Training corruption: ``none`` / ``gaussian``.
-``noise_scale``            ``"global_rms"``  Gaussian scaling: ``absolute`` / ``global_rms`` / ``feature_std``.
-``noise_level``            ``0.1``           Gaussian scale or adaptive scale multiplier.
-``alpha_loss``             ``0.01``          Cosine/MSE mixture weight in the training loss.
-``l1_penalty``             ``0.0``           Extra L1 penalty on code activations.
-``batch_size``             ``128``           Rows per batch.
-``shuffle``                ``True``          Shuffle rows between epochs.
-``seed``                   ``42``            Seed for shuffling, init, and training noise.
-``epochs``                 ``10``            Maximum training epochs.
-``validation_frac``        ``None``          Fraction of rows held out for validation.
-``patience``               ``None``          Non-improving epochs tolerated before stopping.
-``min_delta``              ``0.0``           Smallest decrease in validation loss counted as improvement.
-``restore_best_weights``   ``True``          Reload the best epoch's weights when training ends.
-``lr`` / ``weight_decay``  ``1e-3`` / 0      AdamW parameters.
-``decay``                  ``False``         Cosine LR decay to zero over training.
-``compile``                ``False``         ``torch.compile`` the model when available.
-``device``                 ``"cpu"``         Training/transform device.
-``show_progress``          ``True``          tqdm progress bar when tqdm is installed. Ignored when a ``logger`` is passed.
-``log_prefix``             ``"TopKSAE"``     Bracketed tag on every logged line.
-``log_every_n_steps``      ``0``             With a ``logger``, also log every ``N``-th batch. ``0`` logs epochs only.
-``srp_score_mode``         ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
-=========================  ================  ==================================================================
+==============================  ================  ==============================================================================
+Field                           Default           Meaning
+==============================  ================  ==============================================================================
+``hidden_dim``                  ``4096``          Number of dictionary features ``H``.
+``k``                           ``128``           Active features kept per row.
+``decoder_bias``                ``False``         Add a bias to the default decoder.
+``pre_act``                     ``None``          Module applied before sparsification.
+``post_sparsify``               ``None``          Module applied to codes after top-k.
+``encoder`` / ``decoder``       ``None``          Custom modules (else linear layers).
+``sparsify_score_mode``         ``"abs"``         Top-k scoring: ``abs`` / ``raw`` / ``relu``.
+``sparsify_ste_alpha``          ``0.01``          Straight-through leak for non-selected entries.
+``noise_type``                  ``"none"``        Training corruption: ``none`` / ``gaussian``.
+``noise_scale``                 ``"global_rms"``  Gaussian scaling: ``absolute`` / ``global_rms`` / ``feature_std``.
+``noise_level``                 ``0.1``           Gaussian scale or adaptive scale multiplier.
+``standard_scaler_mean``        ``False``         Subtract the per-feature training mean before the SAE.
+``standard_scaler_scale``       ``"none"``        Divisor after centering: ``none`` / ``feature_std`` / ``global_rms``.
+``standard_scaler_loss_space``  ``"original"``    Space the reconstruction loss is measured in: ``original`` / ``scaled``.
+``alpha_loss``                  ``0.01``          Cosine/MSE mixture weight in the training loss.
+``l1_penalty``                  ``0.0``           Extra L1 penalty on code activations.
+``batch_size``                  ``128``           Rows per batch.
+``shuffle``                     ``True``          Shuffle rows between epochs.
+``seed``                        ``42``            Seed for shuffling, init, and training noise.
+``epochs``                      ``10``            Maximum training epochs.
+``validation_frac``             ``None``          Fraction of rows held out for validation.
+``patience``                    ``None``          Non-improving epochs tolerated before stopping.
+``min_delta``                   ``0.0``           Smallest decrease in validation loss counted as improvement.
+``restore_best_weights``        ``True``          Reload the best epoch's weights when training ends.
+``lr`` / ``weight_decay``       ``1e-3`` / 0      AdamW parameters.
+``decay``                       ``False``         Cosine LR decay to zero over training.
+``compile``                     ``False``         ``torch.compile`` the model when available.
+``device``                      ``"cpu"``         Training/transform device.
+``show_progress``               ``True``          tqdm progress bar when tqdm is installed. Ignored when a ``logger`` is passed.
+``log_prefix``                  ``"TopKSAE"``     Bracketed tag on every logged line.
+``log_every_n_steps``           ``0``             With a ``logger``, also log every ``N``-th batch. ``0`` logs epochs only.
+``srp_score_mode``              ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
+==============================  ================  ==============================================================================
 
 Sparse parameters and pruning
 -----------------------------
