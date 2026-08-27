@@ -23,7 +23,6 @@ them. See [Release history notes](#release-history-notes) at the end.
 - Epoch lines carry every key of the epoch's `history` record rather than a
   curated subset, so `dead_features` and `active_count` are always in the
   stream and a metric added to `history` later needs no change here.
-
 - `fit()`, `fit_transform()`, `encode()`, `reconstruct()`, and `transform()`
   each accept `logger` and `show_progress`, overriding the constructor and
   `config.show_progress` for one call. Omitting either inherits the trainer's
@@ -46,6 +45,18 @@ them. See [Release history notes](#release-history-notes) at the end.
 - Passing a `logger` suppresses the tqdm bar, since the two would report the
   same numbers. Callers who pass no logger are unaffected: `show_progress` and
   the bar behave exactly as before.
+- Combining `standard_scaler_scale` with a normalizing `post_sparsify`
+  (`L1Normalize` or `L2Normalize`) now raises a `RuntimeWarning`. Unit-norm
+  codes carry no magnitude, so the rescale has to be undone by the decoder
+  alone and converges several times worse, which more epochs do not recover.
+  It warns rather than raising, since it is a bad trade rather than a
+  contradiction, and it still trains. `standard_scaler_mean` is unaffected,
+  because centering barely moves the magnitude.
+- `log_prefix` and `log_every_n_steps` are declared after `srp_score_mode`
+  rather than beside `show_progress`, so every field published in 0.1.6 keeps
+  its position. Inserting them earlier had silently redirected the arguments of
+  a positional `TopKSAEConfig(...)` caller — a wrong `srp_score_mode` with no
+  error, not a `TypeError`.
 
 ### Fixed
 

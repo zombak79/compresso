@@ -465,6 +465,8 @@ class TopKSAEConfig:
         report the same numbers twice; that rule is absolute, so a per-call
         ``show_progress=True`` does not reinstate the bar alongside a logger.
         Individual calls can override this default.
+    srp_score_mode:
+        Score mode used by ``SRPTensor.from_dense`` during ``transform``.
     log_prefix:
         Bracketed tag put in front of every logged line, so one job's output
         stays greppable when several share a log stream.
@@ -472,8 +474,6 @@ class TopKSAEConfig:
         With a ``logger``, also log every ``N``-th batch of an epoch or of an
         inference pass. ``0`` logs epoch and pass boundaries only, which is
         enough unless a single epoch or pass runs for minutes.
-    srp_score_mode:
-        Score mode used by ``SRPTensor.from_dense`` during ``transform``.
     """
 
     hidden_dim: int = 4096
@@ -507,9 +507,12 @@ class TopKSAEConfig:
     compile: bool = False
     device: str | torch.device = "cpu"
     show_progress: bool = True
+    srp_score_mode: Literal["abs", "raw", "relu"] = "abs"
+    # Appended rather than grouped with ``show_progress``: the field order of a
+    # released dataclass is a positional contract, and inserting ahead of
+    # ``srp_score_mode`` silently redirected a positional caller's score mode.
     log_prefix: str = "TopKSAE"
     log_every_n_steps: int = 0
-    srp_score_mode: Literal["abs", "raw", "relu"] = "abs"
 
 
 class TopKSAETrainer:

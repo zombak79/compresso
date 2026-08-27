@@ -417,9 +417,9 @@ Field                           Default           Meaning
 ``compile``                     ``False``         ``torch.compile`` the model when available.
 ``device``                      ``"cpu"``         Training/transform device.
 ``show_progress``               ``True``          tqdm progress bar when tqdm is installed. Ignored when a ``logger`` is passed.
+``srp_score_mode``              ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
 ``log_prefix``                  ``"TopKSAE"``     Bracketed tag on every logged line.
 ``log_every_n_steps``           ``0``             With a ``logger``, also log every ``N``-th batch. ``0`` logs epoch/pass boundaries only.
-``srp_score_mode``              ``"abs"``         Score mode for ``SRPTensor.from_dense`` in transform.
 ==============================  ================  ========================================================================================
 
 Sparse parameters and pruning

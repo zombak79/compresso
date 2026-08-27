@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import warnings
 
 import numpy as np
@@ -486,3 +487,61 @@ def test_the_logger_is_not_persisted_in_state():
 
     assert not any(isinstance(value, RecordingLogger) for value in state.values())
     assert TopKSAETrainer.from_state_dict(state).logger is None
+
+
+# --- Positional compatibility -----------------------------------------------
+
+# The field order of a released dataclass is a positional contract. This is
+# 0.1.6's order verbatim; new fields belong after it, never inside it, or a
+# positional caller's arguments land in the wrong slots without an error.
+CONFIG_FIELDS_0_1_6 = (
+    "hidden_dim",
+    "k",
+    "decoder_bias",
+    "pre_act",
+    "post_sparsify",
+    "encoder",
+    "decoder",
+    "sparsify_score_mode",
+    "sparsify_ste_alpha",
+    "noise_type",
+    "noise_scale",
+    "noise_level",
+    "standard_scaler_mean",
+    "standard_scaler_scale",
+    "standard_scaler_loss_space",
+    "alpha_loss",
+    "l1_penalty",
+    "batch_size",
+    "shuffle",
+    "seed",
+    "epochs",
+    "validation_frac",
+    "patience",
+    "min_delta",
+    "restore_best_weights",
+    "lr",
+    "weight_decay",
+    "decay",
+    "compile",
+    "device",
+    "show_progress",
+    "srp_score_mode",
+)
+
+
+def test_new_config_fields_are_appended_not_inserted():
+    names = tuple(f.name for f in dataclasses.fields(TopKSAEConfig))
+    assert names[: len(CONFIG_FIELDS_0_1_6)] == CONFIG_FIELDS_0_1_6
+
+
+def test_a_positional_caller_still_reaches_srp_score_mode():
+    """The failure this guards was silent: a wrong mode, not an exception."""
+    defaults = [f.default for f in dataclasses.fields(TopKSAEConfig)]
+    slot = CONFIG_FIELDS_0_1_6.index("srp_score_mode")
+    args = defaults[: len(CONFIG_FIELDS_0_1_6)]
+    args[slot] = "raw"
+
+    cfg = TopKSAEConfig(*args)
+    assert cfg.srp_score_mode == "raw"
+    assert cfg.log_prefix == "TopKSAE"
