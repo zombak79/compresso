@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import copy
 import math
+import time
 import warnings
 from dataclasses import dataclass, replace
 from typing import Any, Literal
@@ -243,6 +244,120 @@ class L2Normalize(nn.Module):
         return F.normalize(x, p=2.0, dim=-1)
 
 
+class _Inherit:
+    """Sentinel for "use the trainer's own value"."""
+
+    def __repr__(self) -> str:  # pragma: no cover - cosmetic, for signatures
+        return "<inherit>"
+
+
+_INHERIT = _Inherit()
+
+
+class _Reporter:
+    """One call's resolved progress sink.
+
+    Reporting is resolved per call rather than held on the trainer, because a
+    logger describes the job that is running, not the model: a trainer fitted
+    under a job logger may later be transformed under another, or under none.
+    Keeping the resolution here also keeps the "logger failed, stop trying"
+    latch scoped to a single call, so one broken handler cannot silence every
+    later call on the same trainer, and two threads sharing a trainer cannot
+    reach into each other's reporting.
+    """
+
+    def __init__(
+        self,
+        logger: Any | None,
+        show_progress: bool,
+        prefix: str,
+        log_every_n_steps: int,
+    ) -> None:
+        self.logger = logger
+        # A logger wins over the bar unconditionally: both would carry the same
+        # numbers, and tqdm has nowhere good to draw them without a tty.
+        self.show_progress = bool(show_progress) and logger is None
+        self.prefix = str(prefix)
+        self.log_every_n_steps = int(log_every_n_steps) if logger is not None else 0
+        self.disabled = False
+
+    @property
+    def active(self) -> bool:
+        """Whether a line would reach a sink, checked before formatting one."""
+        return self.logger is not None and not self.disabled
+
+    def log(self, message: str) -> None:
+        """Emit one prefixed line.
+
+        A logger that raises latches off rather than ending the call: hours of
+        training must not be lost to a broken log handler. The first failure is
+        surfaced as a warning so it is not silent either.
+        """
+        if not self.active:
+            return
+        try:
+            self.logger.info(f"[{self.prefix}] {message}")
+        except Exception as exc:
+            self.disabled = True
+            try:
+                warnings.warn(
+                    f"logger.info raised {exc!r}; the run continues with logging disabled",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            except Exception:
+                # ``-W error`` turns that notice into a raise, which would end
+                # the run by the very path this method exists to prevent. The
+                # guarantee outranks the notice, so the notice is what gives.
+                pass
+
+    def wrap(self, iterable, *, total: int | None = None):
+        """Return ``iterable`` behind a tqdm bar when one was asked for."""
+        if not self.show_progress:
+            return iterable
+        try:
+            from tqdm.auto import tqdm
+        except Exception:  # pragma: no cover - optional dependency fallback
+            return iterable
+        return tqdm(iterable, total=total)
+
+    def step(self, label: str, step: int, steps: int, start: float) -> None:
+        """Log progress inside a long pass over batches."""
+        elapsed = time.monotonic() - start
+        per_step = elapsed / max(1, step)
+        self.log(
+            f"{label}: "
+            + " | ".join(
+                [
+                    _format_duration(per_step, "step"),
+                    f"{_format_duration(elapsed)} elapsed",
+                    f"{_format_duration(per_step * (steps - step))} remaining",
+                ]
+            )
+        )
+
+
+def _format_duration(seconds: float, unit_name: str | None = None) -> str:
+    """Render a duration in whichever of s / ms / us keeps it readable."""
+    suffix = f"/{unit_name}" if unit_name is not None else ""
+    if seconds >= 1 or seconds == 0:
+        return f"{seconds:.0f}s{suffix}"
+    if seconds >= 1e-3:
+        return f"{seconds * 1e3:.0f}ms{suffix}"
+    return f"{seconds * 1e6:.0f}us{suffix}"
+
+
+def _format_metric(value: Any) -> str:
+    """Render one metric, keeping small values from printing as ``0.0000``."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        # History carries floats today; anything else is a future key that
+        # should still show up rather than break the line.
+        return str(value)
+    return f"{number:.4f}" if abs(number) > 1e-3 else f"{number:.4e}"
+
+
 @dataclass(frozen=True)
 class TopKSAEConfig:
     """Configuration for :class:`TopKSAETrainer`.
@@ -294,6 +409,13 @@ class TopKSAEConfig:
 
         Statistics are fitted on the training rows with ``correction=0``, and
         constant features keep a scale of ``1``.
+
+        Neither scaling mode sits well with a normalizing ``post_sparsify``:
+        unit-norm codes carry no magnitude, so the rescale has to be undone by
+        the decoder alone and converges several times worse. That combination
+        warns rather than raising, since it is merely a bad trade rather than a
+        contradiction. ``standard_scaler_mean`` is unaffected, because centering
+        barely moves the magnitude.
     standard_scaler_loss_space:
         Space the reconstruction loss is measured in when standard scaling is
         active. ``"original"`` un-scales the reconstruction and compares it to
@@ -338,9 +460,20 @@ class TopKSAEConfig:
     device:
         Device used for training and transforms.
     show_progress:
-        Whether to show a tqdm progress bar when tqdm is installed.
+        Whether to show a tqdm progress bar when tqdm is installed. Ignored
+        whenever a ``logger`` is in play, since a bar and a log stream would
+        report the same numbers twice; that rule is absolute, so a per-call
+        ``show_progress=True`` does not reinstate the bar alongside a logger.
+        Individual calls can override this default.
     srp_score_mode:
         Score mode used by ``SRPTensor.from_dense`` during ``transform``.
+    log_prefix:
+        Bracketed tag put in front of every logged line, so one job's output
+        stays greppable when several share a log stream.
+    log_every_n_steps:
+        With a ``logger``, also log every ``N``-th batch of an epoch or of an
+        inference pass. ``0`` logs epoch and pass boundaries only, which is
+        enough unless a single epoch or pass runs for minutes.
     """
 
     hidden_dim: int = 4096
@@ -375,6 +508,11 @@ class TopKSAEConfig:
     device: str | torch.device = "cpu"
     show_progress: bool = True
     srp_score_mode: Literal["abs", "raw", "relu"] = "abs"
+    # Appended rather than grouped with ``show_progress``: the field order of a
+    # released dataclass is a positional contract, and inserting ahead of
+    # ``srp_score_mode`` silently redirected a positional caller's score mode.
+    log_prefix: str = "TopKSAE"
+    log_every_n_steps: int = 0
 
 
 class TopKSAETrainer:
@@ -390,10 +528,31 @@ class TopKSAETrainer:
 
     ``transform`` returns an ``SRPTensor`` containing sparse codes. Use
     ``reconstruct`` if dense reconstructions are needed.
+
+    Parameters
+    ----------
+    config:
+        Trainer configuration. Defaults to :class:`TopKSAEConfig`.
+    logger:
+        Default sink for progress lines, any object with an ``info(str)``
+        method: a ``logging.Logger``, a service's own logger, or a shim around
+        ``print``. Duck-typed on purpose, so compresso needs no logging
+        dependency and callers keep their own. When given, runs report
+        themselves line by line instead of through tqdm, which suits a
+        container with no tty; when omitted, nothing about the trainer changes.
+
+        ``fit``, ``fit_transform``, ``encode``, ``reconstruct``, and
+        ``transform`` each take ``logger`` and ``show_progress`` of their own,
+        overriding this one for a single call. A sink describes the job that is
+        running rather than the model, so it is never saved in
+        :meth:`state_dict` and never carried by
+        :meth:`from_state_dict` — which is also what keeps a checkpoint
+        picklable when the sink holds a socket or an HTTP session.
     """
 
-    def __init__(self, config: TopKSAEConfig | None = None) -> None:
+    def __init__(self, config: TopKSAEConfig | None = None, logger: Any | None = None) -> None:
         self.cfg = config if config is not None else TopKSAEConfig()
+        self.logger = logger
         self.device = torch.device(self.cfg.device)
         self.sae: TopKSAE | nn.Module | None = None
         self.optimizer: torch.optim.Optimizer | None = None
@@ -446,6 +605,24 @@ class TopKSAETrainer:
             raise ValueError(f"unknown standard_scaler_loss_space: {self.cfg.standard_scaler_loss_space}")
         if self.cfg.standard_scaler_scale not in {"none", "feature_std", "global_rms"}:
             raise ValueError(f"unknown standard_scaler_scale: {self.cfg.standard_scaler_scale}")
+        if int(self.cfg.log_every_n_steps) < 0:
+            raise ValueError(f"log_every_n_steps must be >= 0, got {self.cfg.log_every_n_steps}")
+        # Coherent but slow, unlike the rejections around it, so this one only
+        # warns: normalized codes are scale-invariant, which leaves the decoder
+        # alone to absorb a rescaled input from an initialization that is too
+        # small by exactly that factor.
+        if self.cfg.standard_scaler_scale != "none" and isinstance(
+            self.cfg.post_sparsify, (L1Normalize, L2Normalize)
+        ):
+            warnings.warn(
+                "standard_scaler_scale rescales inputs, but a normalizing post_sparsify "
+                "makes the codes scale-invariant, so only the decoder can absorb it. "
+                "Expect several times the reconstruction error, which more epochs do not "
+                "recover. standard_scaler_scale='none' avoids it, and "
+                "standard_scaler_mean is unaffected.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         # Adaptive noise scales are derived from the scaled variances, so every
         # mode stays correct. feature_std is the one that makes them degenerate:
         # unit variance everywhere turns both adaptive modes into absolute.
@@ -566,14 +743,149 @@ class TopKSAETrainer:
             raise RuntimeError("trainer must be built before snapshotting weights")
         return {key: value.detach().cpu().clone() for key, value in self.sae.state_dict().items()}
 
-    def _progress(self, iterable, *, total: int | None = None):
-        if not self.cfg.show_progress:
-            return iterable
-        try:
-            from tqdm.auto import tqdm
-        except Exception:  # pragma: no cover - optional dependency fallback
-            return iterable
-        return tqdm(iterable, total=total)
+    def _reporter(self, logger: Any, show_progress: Any) -> _Reporter:
+        """Resolve one call's reporting from its arguments and the trainer.
+
+        An explicit ``logger=None`` asks for a quiet call, so it also drops the
+        bar rather than inheriting one. Reading the two arguments independently
+        would hand such a call the tqdm bar that the trainer's logger had been
+        suppressing all along, which is the opposite of what was asked for and
+        lands in a log stream with no tty to draw it on. A ``show_progress``
+        passed alongside still wins, since there is then nothing implicit left
+        to override.
+        """
+        inherited_logger = logger is _INHERIT
+        resolved_logger = self.logger if inherited_logger else logger
+        if show_progress is not _INHERIT:
+            bar = bool(show_progress)
+        elif not inherited_logger and resolved_logger is None:
+            bar = False
+        else:
+            bar = bool(self.cfg.show_progress)
+        return _Reporter(resolved_logger, bar, self.cfg.log_prefix, self.cfg.log_every_n_steps)
+
+    def _log_fit_start(
+        self,
+        rep: _Reporter,
+        dataset: EmbeddingsDataset,
+        val_dataset: EmbeddingsDataset | None,
+        epochs: int,
+        patience: int | None,
+    ) -> None:
+        """Log the run's shape, so the log explains itself months later."""
+        if not rep.active:
+            return
+        if self.cfg.noise_type == "none":
+            corruption = "corruption off"
+        else:
+            corruption = (
+                f"corruption {self.cfg.noise_type}({self.cfg.noise_scale}, level={self.cfg.noise_level})"
+            )
+        if not self._standard_scaling_enabled:
+            scaling = "standard scaling off"
+        else:
+            scaling = (
+                f"standard scaling mean={self.cfg.standard_scaler_mean} "
+                f"scale={self.cfg.standard_scaler_scale} "
+                f"loss_space={self.cfg.standard_scaler_loss_space}"
+            )
+        rows = f"{dataset.n} train rows"
+        rows += f" / {val_dataset.n} validation rows" if val_dataset is not None else " / no validation"
+        rep.log(
+            "fit started: "
+            + " | ".join(
+                [
+                    f"input_dim {self.input_dim}",
+                    f"hidden_dim {self.cfg.hidden_dim}",
+                    f"k {self.cfg.k}",
+                    rows,
+                    f"{len(dataset)} batches of {self.cfg.batch_size}",
+                    f"epochs {epochs}",
+                    f"patience {patience if patience is not None else 'off'}",
+                    f"device {self.device}",
+                    corruption,
+                    scaling,
+                ]
+            )
+        )
+
+    @staticmethod
+    def _log_epoch(
+        rep: _Reporter,
+        epoch: int,
+        epochs: int,
+        record: dict[str, float],
+        epoch_start: float,
+        fit_start: float,
+    ) -> None:
+        """Log one epoch, carrying the whole history record.
+
+        Every key is dumped rather than a chosen few, so ``dead_features`` and
+        ``active_count`` are always there and a metric added to ``history``
+        later needs no change here.
+        """
+        if not rep.active:
+            return
+        now = time.monotonic()
+        run_elapsed = now - fit_start
+        # ``epoch`` counts this fit's epochs, so it is also the number finished.
+        remaining = (run_elapsed / max(1, epoch)) * (epochs - epoch)
+        segments = [
+            _format_duration(now - epoch_start, "epoch"),
+            f"{_format_duration(run_elapsed)} elapsed",
+            f"{_format_duration(remaining)} remaining",
+        ]
+        segments += [
+            f"{key}: {_format_metric(value)}" for key, value in record.items() if key != "epoch"
+        ]
+        rep.log(f"epoch {epoch}/{epochs}: " + " | ".join(segments))
+
+    def _log_fit_end(self, rep: _Reporter, duration: float, epochs_run: int) -> None:
+        """Log the outcome, including whether early stopping ended the run."""
+        if not rep.active:
+            return
+        segments = [f"{_format_duration(duration)} total", f"epochs_run {epochs_run}"]
+        if self.best_epoch is not None:
+            segments.append(f"best_epoch {self.best_epoch}")
+            segments.append(f"best_val_loss {_format_metric(self.best_val_loss)}")
+        segments.append(
+            f"early stopping fired at epoch {self.stopped_epoch}"
+            if self.stopped_epoch is not None
+            else "early stopping did not fire"
+        )
+        rep.log("fit finished: " + " | ".join(segments))
+
+    def _logged_pass(self, rep: _Reporter, dataset: EmbeddingsDataset, name: str):
+        """Iterate ``dataset`` for an inference pass, reported like ``fit`` is.
+
+        ``encode``, ``reconstruct``, and ``transform`` would otherwise report
+        nothing at all under a logger, since it suppresses the bar they used to
+        rely on. That is worst in ``fit_transform``, which would log its fit as
+        finished and then pack a whole catalog in silence.
+        """
+        if not rep.active:
+            yield from rep.wrap(dataset, total=len(dataset))
+            return
+        steps = len(dataset)
+        rep.log(
+            f"{name} started: "
+            + " | ".join(
+                [
+                    f"{dataset.n} rows",
+                    f"{steps} batches of {self.cfg.batch_size}",
+                    f"device {self.device}",
+                ]
+            )
+        )
+        start = time.monotonic()
+        for step, batch in enumerate(dataset, start=1):
+            yield batch
+            if rep.log_every_n_steps and step % rep.log_every_n_steps == 0:
+                rep.step(f"{name} step {step}/{steps}", step, steps, start)
+        rep.log(
+            f"{name} finished: "
+            + " | ".join([f"{_format_duration(time.monotonic() - start)} total", f"{dataset.n} rows"])
+        )
 
     def _set_lr(self, lr: float) -> None:
         if self.optimizer is None:
@@ -890,6 +1202,8 @@ class TopKSAETrainer:
         embeddings: np.ndarray | torch.Tensor,
         *,
         validation_embeddings: np.ndarray | torch.Tensor | None = None,
+        logger: Any | None = _INHERIT,
+        show_progress: bool | _Inherit = _INHERIT,
     ) -> "TopKSAETrainer":
         """Train the SAE on dense embeddings and return ``self``.
 
@@ -902,7 +1216,15 @@ class TopKSAETrainer:
         validation_embeddings:
             Explicit validation rows, for when the split is made by the caller.
             Mutually exclusive with ``config.validation_frac``.
+        logger:
+            Reporting sink for this call only, overriding the one given to the
+            constructor. ``None`` disables log lines and drops an inherited
+            progress bar unless ``show_progress`` is passed explicitly.
+        show_progress:
+            tqdm bar for this call only, overriding ``config.show_progress``. A
+            logger suppresses the bar either way.
         """
+        rep = self._reporter(logger, show_progress)
         input_dim = self._input_dim(embeddings)
         self.build(input_dim)
         train_source, train_rows, val_source, val_rows = self._resolve_validation(
@@ -940,9 +1262,18 @@ class TopKSAETrainer:
         best_score = math.inf
         best_state: dict[str, torch.Tensor] | None = None
         stale_epochs = 0
+        epochs_run = 0
+        # Zero unless a logger is attached, so the per-batch check below stays a
+        # single integer comparison on an unlogged run. The reporter has already
+        # applied that rule.
+        log_steps = rep.log_every_n_steps
+        steps_per_epoch = len(dataset)
 
-        epoch_iter = self._progress(range(1, epochs + 1), total=epochs)
+        fit_start = time.monotonic()
+        self._log_fit_start(rep, dataset, val_dataset, epochs, patience)
+        epoch_iter = rep.wrap(range(1, epochs + 1), total=epochs)
         for epoch in epoch_iter:
+            epoch_start = time.monotonic()
             dataset.on_epoch_begin()
             sums: dict[str, float] = {}
             n_batches = 0
@@ -951,6 +1282,13 @@ class TopKSAETrainer:
                 for key, value in stats.items():
                     sums[key] = sums.get(key, 0.0) + float(value.detach().cpu().item())
                 n_batches += 1
+                if log_steps and n_batches % log_steps == 0:
+                    rep.step(
+                        f"epoch {epoch}/{epochs} step {n_batches}/{steps_per_epoch}",
+                        n_batches,
+                        steps_per_epoch,
+                        epoch_start,
+                    )
             dataset.on_epoch_end()
             record = {key: value / max(1, n_batches) for key, value in sums.items()}
             record["epoch"] = float(epoch)
@@ -968,6 +1306,8 @@ class TopKSAETrainer:
                 else:
                     stale_epochs += 1
             self.history.append(record)
+            epochs_run = epoch
+            self._log_epoch(rep, epoch, epochs, record, epoch_start, fit_start)
             if hasattr(epoch_iter, "set_postfix"):
                 postfix = {
                     "loss": f"{record['loss']:.4f}",
@@ -985,43 +1325,93 @@ class TopKSAETrainer:
                 break
         if best_state is not None and self.sae is not None:
             self.sae.load_state_dict(best_state)
+        self._log_fit_end(rep, time.monotonic() - fit_start, epochs_run)
         return self
 
     @torch.no_grad()
-    def encode(self, embeddings: np.ndarray | torch.Tensor) -> torch.Tensor:
-        """Return dense sparse-code tensor produced by the trained SAE."""
+    def encode(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        logger: Any | None = _INHERIT,
+        show_progress: bool | _Inherit = _INHERIT,
+    ) -> torch.Tensor:
+        """Return dense sparse-code tensor produced by the trained SAE.
+
+        Parameters
+        ----------
+        embeddings:
+            Rows to run through the fitted SAE.
+        logger:
+            Reporting sink for this call only, overriding the one given to the
+            constructor. ``None`` disables log lines and drops an inherited
+            progress bar unless ``show_progress`` is passed explicitly.
+        show_progress:
+            tqdm bar for this call only, overriding ``config.show_progress``. A
+            logger suppresses the bar either way.
+        """
         if self.sae is None:
             raise RuntimeError("trainer must be fitted or built before encode")
         dataset = self._dataset(embeddings, shuffle=False)
         self.sae.eval()
         codes: list[torch.Tensor] = []
-        for batch in self._progress(dataset, total=len(dataset)):
+        for batch in self._logged_pass(self._reporter(logger, show_progress), dataset, "encode"):
             _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
             codes.append(sparse.detach().cpu())
         return torch.cat(codes, dim=0)
 
     @torch.no_grad()
-    def reconstruct(self, embeddings: np.ndarray | torch.Tensor) -> torch.Tensor:
-        """Return dense reconstructions for ``embeddings``."""
+    def reconstruct(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        logger: Any | None = _INHERIT,
+        show_progress: bool | _Inherit = _INHERIT,
+    ) -> torch.Tensor:
+        """Return dense reconstructions for ``embeddings``.
+
+        Parameters
+        ----------
+        embeddings:
+            Rows to run through the fitted SAE.
+        logger:
+            Reporting sink for this call only, overriding the one given to the
+            constructor. ``None`` disables log lines and drops an inherited
+            progress bar unless ``show_progress`` is passed explicitly.
+        show_progress:
+            tqdm bar for this call only, overriding ``config.show_progress``. A
+            logger suppresses the bar either way.
+        """
         if self.sae is None:
             raise RuntimeError("trainer must be fitted or built before reconstruct")
         dataset = self._dataset(embeddings, shuffle=False)
         self.sae.eval()
         reconstructions: list[torch.Tensor] = []
-        for batch in self._progress(dataset, total=len(dataset)):
+        for batch in self._logged_pass(self._reporter(logger, show_progress), dataset, "reconstruct"):
             reconstruction, _sparse, _stats = self.sae(self._standardize(batch))
             # Reconstructions are returned in the caller's own embedding space.
             reconstructions.append(self._destandardize(reconstruction).detach().cpu())
         return torch.cat(reconstructions, dim=0)
 
     @torch.no_grad()
-    def transform(self, embeddings: np.ndarray | torch.Tensor) -> SRPTensor:
+    def transform(
+        self,
+        embeddings: np.ndarray | torch.Tensor,
+        *,
+        logger: Any | None = _INHERIT,
+        show_progress: bool | _Inherit = _INHERIT,
+    ) -> SRPTensor:
         """Encode ``embeddings`` and return sparse codes as an ``SRPTensor``.
 
         Each batch is packed as it is produced, so the dense ``(n, hidden_dim)``
         code matrix is never held whole: peak memory is the packed ``(n, k)``
         result plus one batch. Top-k runs per row, so the result is identical to
         packing the full dense matrix in one go.
+
+        ``logger`` and ``show_progress`` override the trainer's own reporting
+        for this call, as on :meth:`encode`. In particular, ``logger=None``
+        disables log lines and drops an inherited progress bar unless
+        ``show_progress`` is passed explicitly.
         """
         if self.sae is None:
             raise RuntimeError("trainer must be fitted or built before transform")
@@ -1032,7 +1422,7 @@ class TopKSAETrainer:
         cols: list[torch.Tensor] = []
         vals: list[torch.Tensor] = []
         code_dim = 0
-        for batch in self._progress(dataset, total=len(dataset)):
+        for batch in self._logged_pass(self._reporter(logger, show_progress), dataset, "transform"):
             _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
             # Packed on the host, matching what encode() used to hand over, so
             # tie-breaking cannot depend on the training device.
@@ -1059,14 +1449,26 @@ class TopKSAETrainer:
         embeddings: np.ndarray | torch.Tensor,
         *,
         validation_embeddings: np.ndarray | torch.Tensor | None = None,
+        logger: Any | None = _INHERIT,
+        show_progress: bool | _Inherit = _INHERIT,
     ) -> SRPTensor:
         """Fit the SAE and return encoded sparse codes as an ``SRPTensor``.
 
         Codes are returned for every row of ``embeddings``, including any rows
         held out for validation by ``config.validation_frac``.
+
+        ``logger`` and ``show_progress`` cover both phases, so a long transform
+        is reported by whatever reported the fit. In particular,
+        ``logger=None`` disables log lines and drops an inherited progress bar
+        unless ``show_progress`` is passed explicitly.
         """
-        self.fit(embeddings, validation_embeddings=validation_embeddings)
-        return self.transform(embeddings)
+        self.fit(
+            embeddings,
+            validation_embeddings=validation_embeddings,
+            logger=logger,
+            show_progress=show_progress,
+        )
+        return self.transform(embeddings, logger=logger, show_progress=show_progress)
 
     def state_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a saveable trainer state dictionary."""
