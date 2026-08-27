@@ -646,11 +646,17 @@ class TopKSAETrainer:
             self.logger.info(f"[{self.cfg.log_prefix}] {message}")
         except Exception as exc:
             self._logging_disabled = True
-            warnings.warn(
-                f"logger.info raised {exc!r}; training continues with logging disabled",
-                RuntimeWarning,
-                stacklevel=2,
-            )
+            try:
+                warnings.warn(
+                    f"logger.info raised {exc!r}; training continues with logging disabled",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            except Exception:
+                # ``-W error`` turns that notice into a raise, which would end
+                # the fit by the very path this method exists to prevent. The
+                # guarantee outranks the notice, so the notice is what gives.
+                pass
 
     @staticmethod
     def _format_duration(seconds: float, unit_name: str | None = None) -> str:
@@ -717,18 +723,53 @@ class TopKSAETrainer:
             )
         )
 
-    def _log_step(self, step: int, steps: int, epoch: int, epochs: int, epoch_start: float) -> None:
-        """Log progress inside a long epoch."""
-        elapsed = time.monotonic() - epoch_start
+    def _log_step(self, label: str, step: int, steps: int, start: float) -> None:
+        """Log progress inside a long pass over batches."""
+        elapsed = time.monotonic() - start
         per_step = elapsed / max(1, step)
         self._log(
-            f"epoch {epoch}/{epochs} step {step}/{steps}: "
+            f"{label}: "
             + " | ".join(
                 [
                     self._format_duration(per_step, "step"),
                     f"{self._format_duration(elapsed)} elapsed",
                     f"{self._format_duration(per_step * (steps - step))} remaining",
                 ]
+            )
+        )
+
+    def _logged_pass(self, dataset: EmbeddingsDataset, name: str):
+        """Iterate ``dataset`` for an inference pass, reported like ``fit`` is.
+
+        ``encode``, ``reconstruct``, and ``transform`` share ``_progress``, so
+        attaching a logger would otherwise leave them with neither a bar nor a
+        line. That is worst in ``fit_transform``, which would log its fit as
+        finished and then spend minutes packing a large catalog in silence.
+        """
+        if not self._logging_active:
+            yield from self._progress(dataset, total=len(dataset))
+            return
+        steps = len(dataset)
+        log_steps = int(self.cfg.log_every_n_steps)
+        self._log(
+            f"{name} started: "
+            + " | ".join(
+                [
+                    f"{dataset.n} rows",
+                    f"{steps} batches of {self.cfg.batch_size}",
+                    f"device {self.device}",
+                ]
+            )
+        )
+        start = time.monotonic()
+        for step, batch in enumerate(dataset, start=1):
+            yield batch
+            if log_steps and step % log_steps == 0:
+                self._log_step(f"{name} step {step}/{steps}", step, steps, start)
+        self._log(
+            f"{name} finished: "
+            + " | ".join(
+                [f"{self._format_duration(time.monotonic() - start)} total", f"{dataset.n} rows"]
             )
         )
 
@@ -1162,7 +1203,12 @@ class TopKSAETrainer:
                     sums[key] = sums.get(key, 0.0) + float(value.detach().cpu().item())
                 n_batches += 1
                 if log_steps and n_batches % log_steps == 0:
-                    self._log_step(n_batches, steps_per_epoch, epoch, epochs, epoch_start)
+                    self._log_step(
+                        f"epoch {epoch}/{epochs} step {n_batches}/{steps_per_epoch}",
+                        n_batches,
+                        steps_per_epoch,
+                        epoch_start,
+                    )
             dataset.on_epoch_end()
             record = {key: value / max(1, n_batches) for key, value in sums.items()}
             record["epoch"] = float(epoch)
@@ -1210,7 +1256,7 @@ class TopKSAETrainer:
         dataset = self._dataset(embeddings, shuffle=False)
         self.sae.eval()
         codes: list[torch.Tensor] = []
-        for batch in self._progress(dataset, total=len(dataset)):
+        for batch in self._logged_pass(dataset, "encode"):
             _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
             codes.append(sparse.detach().cpu())
         return torch.cat(codes, dim=0)
@@ -1223,7 +1269,7 @@ class TopKSAETrainer:
         dataset = self._dataset(embeddings, shuffle=False)
         self.sae.eval()
         reconstructions: list[torch.Tensor] = []
-        for batch in self._progress(dataset, total=len(dataset)):
+        for batch in self._logged_pass(dataset, "reconstruct"):
             reconstruction, _sparse, _stats = self.sae(self._standardize(batch))
             # Reconstructions are returned in the caller's own embedding space.
             reconstructions.append(self._destandardize(reconstruction).detach().cpu())
@@ -1247,7 +1293,7 @@ class TopKSAETrainer:
         cols: list[torch.Tensor] = []
         vals: list[torch.Tensor] = []
         code_dim = 0
-        for batch in self._progress(dataset, total=len(dataset)):
+        for batch in self._logged_pass(dataset, "transform"):
             _reconstruction, sparse, _stats = self.sae(self._standardize(batch))
             # Packed on the host, matching what encode() used to hand over, so
             # tie-breaking cannot depend on the training device.

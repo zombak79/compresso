@@ -24,11 +24,24 @@ them. See [Release history notes](#release-history-notes) at the end.
   curated subset, so `dead_features` and `active_count` are always in the
   stream and a metric added to `history` later needs no change here.
 
+- `encode()`, `reconstruct()`, and `transform()` log the start and end of their
+  pass, and honour `log_every_n_steps`. These three share the progress helper
+  with `fit()`, so suppressing tqdm for a logger would otherwise have left them
+  reporting nothing at all — worst in `fit_transform()`, which would log its fit
+  as finished and then pack a large catalog in silence.
+
 ### Changed
 
 - Passing a `logger` suppresses the tqdm bar, since the two would report the
   same numbers. Callers who pass no logger are unaffected: `show_progress` and
   the bar behave exactly as before.
+
+### Fixed
+
+- The warning raised when a logger fails is itself suppressed if a strict
+  warning filter (`-W error`, `warnings.simplefilter("error")`) would turn it
+  into an exception. Otherwise the notice that logging cannot end a fit was
+  exactly what ended it.
 
 ## [0.1.6] — 2026-08-17
 

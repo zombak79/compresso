@@ -308,12 +308,22 @@ Dumping the whole record rather than a chosen few means ``dead_features`` is
 always in the stream — the number that says whether ``hidden_dim`` is too wide
 for the catalog — and a metric added to ``history`` later shows up on its own.
 
-When a single epoch runs for minutes, ``log_every_n_steps=N`` adds a line every
-``N``-th batch with time per step and time remaining in the epoch. It stays off
-at the default ``0``.
+``encode``, ``reconstruct``, and ``transform`` report themselves the same way,
+with a line opening and closing each pass. That matters most for
+``fit_transform``, where packing a large catalog can take longer than the fit
+that preceded it::
 
-A logger that raises never ends a fit: the failure becomes one
-``RuntimeWarning``, logging switches off, and training continues.
+   [SAE] transform started: 60000 rows | 469 batches of 128 | device cpu
+   [SAE] transform finished: 41s total | 60000 rows
+
+When a single epoch or pass runs for minutes, ``log_every_n_steps=N`` adds a
+line every ``N``-th batch with time per step and time remaining. It stays off at
+the default ``0``.
+
+A logger that raises never ends a fit. The failure is reported once as a
+``RuntimeWarning``, logging switches itself off, and training continues — and
+because a strict warning filter would otherwise re-raise that notice as an
+error, the notice is suppressed too rather than the fit being lost.
 
 Post-sparsification hooks
 -------------------------

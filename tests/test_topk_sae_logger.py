@@ -232,3 +232,81 @@ def test_non_numeric_metrics_still_print():
         warnings.simplefilter("error")
         trainer._log_epoch(1, 1, {"note": "restored"}, 0.0, 0.0)
     assert "note: restored" in logger.lines[-1]
+
+
+def test_a_strict_warning_filter_still_does_not_end_the_fit():
+    """``-W error`` must not turn the courtesy notice into a lost fit."""
+    logger = RaisingLogger()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        trainer = TopKSAETrainer(_config(), logger=logger).fit(_embeddings())
+
+    assert len(trainer.history) == 3
+    assert logger.calls == 1
+
+
+@pytest.mark.parametrize("method", ["encode", "reconstruct", "transform"])
+def test_inference_passes_are_logged(method):
+    """Suppressing tqdm must not leave these paths reporting nothing at all."""
+    logger = RecordingLogger()
+    trainer = TopKSAETrainer(_config(), logger=logger).fit(_embeddings())
+    logger.lines.clear()
+
+    getattr(trainer, method)(_embeddings())
+
+    assert any(line.startswith(f"[TopKSAE] {method} started:") for line in logger.lines)
+    assert any(line.startswith(f"[TopKSAE] {method} finished:") for line in logger.lines)
+
+
+def test_inference_step_lines_honour_the_interval():
+    logger = RecordingLogger()
+    trainer = TopKSAETrainer(_config(log_every_n_steps=1), logger=logger).fit(_embeddings())
+    logger.lines.clear()
+
+    trainer.transform(_embeddings(rows=12))
+
+    steps = [line for line in logger.lines if " step " in line]
+    assert len(steps) == 3
+    assert "transform step 1/3" in steps[0]
+
+
+def test_fit_transform_reports_its_transform_phase():
+    """The fit's end line must not be the last thing a long run says."""
+    logger = RecordingLogger()
+    TopKSAETrainer(_config(), logger=logger).fit_transform(_embeddings())
+
+    fit_end = next(i for i, line in enumerate(logger.lines) if "fit finished" in line)
+    assert any("transform started" in line for line in logger.lines[fit_end:])
+    assert "transform finished" in logger.lines[-1]
+
+
+@pytest.mark.parametrize("method", ["encode", "reconstruct", "transform"])
+def test_inference_keeps_its_progress_bar_without_a_logger(method):
+    """tqdm still wraps these passes when no logger is attached."""
+    pytest.importorskip("tqdm")
+    trainer = TopKSAETrainer(_config(show_progress=True)).fit(_embeddings())
+    calls: list[object] = []
+    original = trainer._progress
+
+    def spy(iterable, **kwargs):
+        calls.append(iterable)
+        return original(iterable, **kwargs)
+
+    trainer._progress = spy
+    getattr(trainer, method)(_embeddings())
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("method", ["encode", "reconstruct", "transform"])
+def test_inference_results_are_unchanged_by_logging(method):
+    """The logged pass is a wrapper, so it must not touch what comes out."""
+    embeddings = _embeddings()
+    quiet = TopKSAETrainer(_config(), logger=None).fit(embeddings)
+    loud = TopKSAETrainer(_config(), logger=RecordingLogger()).fit(embeddings)
+    loud.sae.load_state_dict(quiet.sae.state_dict())
+
+    left = getattr(quiet, method)(embeddings)
+    right = getattr(loud, method)(embeddings)
+    if hasattr(left, "to_dense"):
+        left, right = left.to_dense(), right.to_dense()
+    assert np.allclose(left.numpy(), right.numpy())
