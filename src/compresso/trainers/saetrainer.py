@@ -741,13 +741,25 @@ class TopKSAETrainer:
         return {key: value.detach().cpu().clone() for key, value in self.sae.state_dict().items()}
 
     def _reporter(self, logger: Any, show_progress: Any) -> _Reporter:
-        """Resolve one call's reporting from its arguments and the trainer."""
-        return _Reporter(
-            self.logger if logger is _INHERIT else logger,
-            bool(self.cfg.show_progress) if show_progress is _INHERIT else bool(show_progress),
-            self.cfg.log_prefix,
-            self.cfg.log_every_n_steps,
-        )
+        """Resolve one call's reporting from its arguments and the trainer.
+
+        An explicit ``logger=None`` asks for a quiet call, so it also drops the
+        bar rather than inheriting one. Reading the two arguments independently
+        would hand such a call the tqdm bar that the trainer's logger had been
+        suppressing all along, which is the opposite of what was asked for and
+        lands in a log stream with no tty to draw it on. A ``show_progress``
+        passed alongside still wins, since there is then nothing implicit left
+        to override.
+        """
+        inherited_logger = logger is _INHERIT
+        resolved_logger = self.logger if inherited_logger else logger
+        if show_progress is not _INHERIT:
+            bar = bool(show_progress)
+        elif not inherited_logger and resolved_logger is None:
+            bar = False
+        else:
+            bar = bool(self.cfg.show_progress)
+        return _Reporter(resolved_logger, bar, self.cfg.log_prefix, self.cfg.log_every_n_steps)
 
     def _log_fit_start(
         self,

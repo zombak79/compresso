@@ -37,6 +37,30 @@ def _config(**overrides) -> TopKSAEConfig:
     return TopKSAEConfig(**base)
 
 
+def _bar_config(**overrides) -> TopKSAEConfig:
+    """A config with the shipped ``show_progress=True``.
+
+    ``_config`` turns the bar off, which silently exempted every test above
+    from the interaction between a per-call logger and an inherited bar.
+    """
+    return _config(show_progress=True, **overrides)
+
+
+@pytest.fixture
+def bars(monkeypatch):
+    """Count the tqdm bars a call constructs."""
+    tqdm_auto = pytest.importorskip("tqdm.auto")
+    drawn: list[object] = []
+    original = tqdm_auto.tqdm
+
+    def spy(iterable, **kwargs):
+        drawn.append(iterable)
+        return original(iterable, **kwargs)
+
+    monkeypatch.setattr(tqdm_auto, "tqdm", spy)
+    return drawn
+
+
 def _embeddings(rows: int = 12, dim: int = 5) -> np.ndarray:
     return np.random.default_rng(0).normal(size=(rows, dim)).astype(np.float32)
 
@@ -362,6 +386,51 @@ def test_an_explicit_none_silences_one_call():
     # ...and the trainer's own logger is untouched by that one quiet call.
     trainer.transform(_embeddings())
     assert len(logger.lines) > logged_during_fit
+
+
+def test_an_explicit_none_is_silent_and_not_merely_unlogged(bars):
+    """Silence means no bar either, on a config that would inherit one."""
+    logger = RecordingLogger()
+    trainer = TopKSAETrainer(_bar_config(), logger=logger).fit(_embeddings())
+    before = len(logger.lines)
+    bars.clear()
+
+    trainer.transform(_embeddings(), logger=None)
+
+    assert len(logger.lines) == before
+    assert bars == []
+
+
+def test_a_quiet_call_can_still_ask_for_a_bar(bars):
+    """Nothing is implicit left to override, so the explicit request wins."""
+    trainer = TopKSAETrainer(_bar_config(), logger=RecordingLogger()).fit(_embeddings())
+    bars.clear()
+
+    trainer.transform(_embeddings(), logger=None, show_progress=True)
+
+    assert len(bars) == 1
+
+
+def test_a_trainer_without_a_logger_keeps_its_inherited_bar(bars):
+    """The untouched default path must stay exactly as it shipped."""
+    trainer = TopKSAETrainer(_bar_config()).fit(_embeddings())
+    bars.clear()
+
+    trainer.transform(_embeddings())
+
+    assert len(bars) == 1
+
+
+def test_a_per_call_logger_suppresses_an_inherited_bar(bars):
+    """The other direction: adding a sink takes the bar away for that call."""
+    trainer = TopKSAETrainer(_bar_config()).fit(_embeddings())
+    bars.clear()
+    logger = RecordingLogger()
+
+    trainer.transform(_embeddings(), logger=logger)
+
+    assert bars == []
+    assert any("transform finished" in line for line in logger.lines)
 
 
 def test_omitting_the_override_reuses_the_constructor_logger():

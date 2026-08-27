@@ -316,9 +316,21 @@ which override the constructor and ``config.show_progress`` for that call only:
 
 Omitting either argument inherits the trainer's own value, which is why
 ``logger=None`` has to mean something distinct: it silences that one call even
-on a trainer that has a logger. Because the resolution is per call, a sink that
-fails does not poison the trainer — logging stops for the call that hit the
-failure, and the next call starts fresh.
+on a trainer that has a logger. Silence means silence — an explicit
+``logger=None`` drops the bar as well, rather than inheriting the one the
+logger had been suppressing, since a bar is not what a caller asking for quiet
+wants and a container has no tty to draw it on anyway. Pass
+``show_progress=True`` in the same call if a bar is what you meant:
+
+.. code-block:: python
+
+   trainer.transform(x, logger=None)                      # nothing at all
+   trainer.transform(x, logger=None, show_progress=True)  # bar, no log lines
+
+A trainer with no logger is unaffected: it keeps drawing whatever
+``config.show_progress`` asks for. Because the resolution is per call, a sink
+that fails does not poison the trainer — logging stops for the call that hit
+the failure, and the next call starts fresh.
 
 A sink is deliberately not part of the model. It describes the job that is
 running, so it is never written to ``state_dict()`` and never restored by
