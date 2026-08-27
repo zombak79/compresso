@@ -24,6 +24,16 @@ them. See [Release history notes](#release-history-notes) at the end.
   curated subset, so `dead_features` and `active_count` are always in the
   stream and a metric added to `history` later needs no change here.
 
+- `fit()`, `fit_transform()`, `encode()`, `reconstruct()`, and `transform()`
+  each accept `logger` and `show_progress`, overriding the constructor and
+  `config.show_progress` for one call. Omitting either inherits the trainer's
+  value; passing `logger=None` silences that call even on a trainer that has a
+  logger. `fit_transform()` forwards both to its fit and its transform.
+- Reporting is resolved per call rather than held on the trainer, so a sink that
+  fails stops logging only for the call that hit the failure instead of
+  silencing the trainer for good, and two threads sharing a trainer cannot
+  disturb each other's reporting. A logger is never written to `state_dict()`,
+  which keeps a checkpoint picklable when the sink holds a socket or a session.
 - `encode()`, `reconstruct()`, and `transform()` log the start and end of their
   pass, and honour `log_every_n_steps`. These three share the progress helper
   with `fit()`, so suppressing tqdm for a logger would otherwise have left them

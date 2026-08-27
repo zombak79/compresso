@@ -295,7 +295,36 @@ Pass a ``logger`` to get structured lines and no bar:
 The logger is duck-typed: anything with an ``info(str)`` method works, so a
 ``logging.Logger``, a service's own logger, or a shim around ``print`` all fit
 and compresso needs no logging dependency of its own. Passing one suppresses
-tqdm, since a bar and a log stream would carry the same numbers.
+tqdm, since a bar and a log stream would carry the same numbers. That rule is
+absolute: a logger always wins, so asking for a bar in the same breath does not
+get you both.
+
+Reporting is resolved per call. ``fit``, ``fit_transform``, ``encode``,
+``reconstruct``, and ``transform`` each accept ``logger`` and ``show_progress``,
+which override the constructor and ``config.show_progress`` for that call only:
+
+.. code-block:: python
+
+   trainer = TopKSAETrainer(cfg, logger=job_logger)
+
+   trainer.fit(embeddings)                        # reports to job_logger
+   trainer.transform(embeddings, logger=None)     # this one call stays quiet
+   trainer.transform(embeddings, logger=other)    # reports somewhere else
+
+   quiet = TopKSAETrainer(cfg)                    # no default sink
+   quiet.fit(embeddings, logger=job_logger)       # ...supplied per call
+
+Omitting either argument inherits the trainer's own value, which is why
+``logger=None`` has to mean something distinct: it silences that one call even
+on a trainer that has a logger. Because the resolution is per call, a sink that
+fails does not poison the trainer — logging stops for the call that hit the
+failure, and the next call starts fresh.
+
+A sink is deliberately not part of the model. It describes the job that is
+running, so it is never written to ``state_dict()`` and never restored by
+``from_state_dict()``; a trainer loaded from a checkpoint starts with no logger
+until one is given. That is also what keeps checkpoints picklable when the sink
+holds a socket or an HTTP session.
 
 One line opens the run with its shape, one closes it with the outcome, and one
 lands per epoch carrying *every* key of that epoch's ``history`` record::
@@ -308,10 +337,9 @@ Dumping the whole record rather than a chosen few means ``dead_features`` is
 always in the stream — the number that says whether ``hidden_dim`` is too wide
 for the catalog — and a metric added to ``history`` later shows up on its own.
 
-``encode``, ``reconstruct``, and ``transform`` report themselves the same way,
-with a line opening and closing each pass. That matters most for
-``fit_transform``, where packing a large catalog can take longer than the fit
-that preceded it::
+Each inference pass opens and closes with a line of its own. That matters most
+for ``fit_transform``, which passes its ``logger`` to both phases, because
+packing a large catalog can take longer than the fit that preceded it::
 
    [SAE] transform started: 60000 rows | 469 batches of 128 | device cpu
    [SAE] transform finished: 41s total | 60000 rows

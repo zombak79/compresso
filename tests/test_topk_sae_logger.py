@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from compresso import TopKSAEConfig, TopKSAETrainer
+from compresso.trainers.saetrainer import _INHERIT, _format_duration, _format_metric
 
 
 class RecordingLogger:
@@ -25,6 +26,9 @@ class RaisingLogger:
     def info(self, message: str) -> None:
         self.calls += 1
         raise RuntimeError("log sink is down")
+
+
+_UNSET = _INHERIT
 
 
 def _config(**overrides) -> TopKSAEConfig:
@@ -52,15 +56,15 @@ def test_no_logger_leaves_history_and_output_untouched():
 def test_progress_bar_is_unchanged_without_a_logger():
     """tqdm is a soft import, so only its absence is guaranteed here."""
     pytest.importorskip("tqdm")
-    trainer = TopKSAETrainer(_config(show_progress=True))
+    rep = TopKSAETrainer(_config(show_progress=True))._reporter(_UNSET, _UNSET)
     iterable = range(3)
-    assert trainer._progress(iterable, total=3) is not iterable
+    assert rep.wrap(iterable, total=3) is not iterable
 
 
 def test_show_progress_false_stays_a_bare_iterable():
-    trainer = TopKSAETrainer(_config(show_progress=False))
+    rep = TopKSAETrainer(_config(show_progress=False))._reporter(_UNSET, _UNSET)
     iterable = range(3)
-    assert trainer._progress(iterable, total=3) is iterable
+    assert rep.wrap(iterable, total=3) is iterable
 
 
 @pytest.mark.parametrize("show_progress", [True, False])
@@ -68,7 +72,14 @@ def test_a_logger_suppresses_the_progress_bar(show_progress):
     """The two would report the same numbers, so the logger wins."""
     trainer = TopKSAETrainer(_config(show_progress=show_progress), logger=RecordingLogger())
     iterable = range(3)
-    assert trainer._progress(iterable, total=3) is iterable
+    assert trainer._reporter(_UNSET, _UNSET).wrap(iterable, total=3) is iterable
+
+
+def test_a_logger_wins_over_an_explicit_show_progress():
+    """The rule is absolute, so an override cannot draw a bar alongside lines."""
+    trainer = TopKSAETrainer(_config(show_progress=False), logger=RecordingLogger())
+    iterable = range(3)
+    assert trainer._reporter(_UNSET, True).wrap(iterable, total=3) is iterable
 
 
 def test_three_epoch_fit_emits_start_epochs_and_end():
@@ -123,7 +134,12 @@ def test_a_new_history_key_appears_without_touching_the_formatter():
     logger = RecordingLogger()
     trainer = TopKSAETrainer(_config(epochs=1), logger=logger)
     trainer._log_epoch(
-        1, 1, {"epoch": 1.0, "loss": 0.5, "a_metric_added_later": 1.25}, 0.0, 0.0
+        trainer._reporter(_UNSET, _UNSET),
+        1,
+        1,
+        {"epoch": 1.0, "loss": 0.5, "a_metric_added_later": 1.25},
+        0.0,
+        0.0,
     )
 
     line = logger.lines[-1]
@@ -135,7 +151,7 @@ def test_a_new_history_key_appears_without_touching_the_formatter():
 def test_small_values_keep_their_magnitude():
     logger = RecordingLogger()
     trainer = TopKSAETrainer(_config(), logger=logger)
-    trainer._log_epoch(1, 1, {"loss": 1e-7, "cosine_loss": 0.25}, 0.0, 0.0)
+    trainer._log_epoch(trainer._reporter(_UNSET, _UNSET), 1, 1, {"loss": 1e-7, "cosine_loss": 0.25}, 0.0, 0.0)
 
     line = logger.lines[-1]
     assert "loss: 1.0000e-07" in line
@@ -218,11 +234,11 @@ def test_log_prefix_is_configurable():
     [(0.0, "0s"), (2.5, "2s"), (0.25, "250ms"), (1e-5, "10us")],
 )
 def test_durations_are_scaled_to_readable_units(seconds, expected):
-    assert TopKSAETrainer._format_duration(seconds) == expected
+    assert _format_duration(seconds) == expected
 
 
 def test_durations_can_carry_a_unit_name():
-    assert TopKSAETrainer._format_duration(2.0, "epoch") == "2s/epoch"
+    assert _format_duration(2.0, "epoch") == "2s/epoch"
 
 
 def test_non_numeric_metrics_still_print():
@@ -230,8 +246,9 @@ def test_non_numeric_metrics_still_print():
     trainer = TopKSAETrainer(_config(), logger=logger)
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        trainer._log_epoch(1, 1, {"note": "restored"}, 0.0, 0.0)
+        trainer._log_epoch(trainer._reporter(_UNSET, _UNSET), 1, 1, {"note": "restored"}, 0.0, 0.0)
     assert "note: restored" in logger.lines[-1]
+    assert _format_metric("restored") == "restored"
 
 
 def test_a_strict_warning_filter_still_does_not_end_the_fit():
@@ -283,18 +300,21 @@ def test_fit_transform_reports_its_transform_phase():
 @pytest.mark.parametrize("method", ["encode", "reconstruct", "transform"])
 def test_inference_keeps_its_progress_bar_without_a_logger(method):
     """tqdm still wraps these passes when no logger is attached."""
-    pytest.importorskip("tqdm")
+    tqdm = pytest.importorskip("tqdm.auto")
     trainer = TopKSAETrainer(_config(show_progress=True)).fit(_embeddings())
-    calls: list[object] = []
-    original = trainer._progress
+    wrapped: list[object] = []
+    original = tqdm.tqdm
 
     def spy(iterable, **kwargs):
-        calls.append(iterable)
+        wrapped.append(iterable)
         return original(iterable, **kwargs)
 
-    trainer._progress = spy
-    getattr(trainer, method)(_embeddings())
-    assert len(calls) == 1
+    tqdm.tqdm = spy
+    try:
+        getattr(trainer, method)(_embeddings())
+    finally:
+        tqdm.tqdm = original
+    assert len(wrapped) == 1
 
 
 @pytest.mark.parametrize("method", ["encode", "reconstruct", "transform"])
@@ -310,3 +330,90 @@ def test_inference_results_are_unchanged_by_logging(method):
     if hasattr(left, "to_dense"):
         left, right = left.to_dense(), right.to_dense()
     assert np.allclose(left.numpy(), right.numpy())
+
+
+# --- Per-call overrides -----------------------------------------------------
+
+
+def test_a_call_can_supply_its_own_logger():
+    """A trainer built without one still reports when a call asks."""
+    logger = RecordingLogger()
+    trainer = TopKSAETrainer(_config()).fit(_embeddings(), logger=logger)
+    assert any("fit finished" in line for line in logger.lines)
+
+
+def test_a_call_logger_overrides_the_constructor_one():
+    built, called = RecordingLogger(), RecordingLogger()
+    TopKSAETrainer(_config(), logger=built).fit(_embeddings(), logger=called)
+
+    assert called.lines
+    assert not built.lines
+
+
+def test_an_explicit_none_silences_one_call():
+    """The sentinel is what makes overrides work in both directions."""
+    logger = RecordingLogger()
+    trainer = TopKSAETrainer(_config(), logger=logger).fit(_embeddings())
+    logged_during_fit = len(logger.lines)
+
+    trainer.transform(_embeddings(), logger=None)
+    assert len(logger.lines) == logged_during_fit
+
+    # ...and the trainer's own logger is untouched by that one quiet call.
+    trainer.transform(_embeddings())
+    assert len(logger.lines) > logged_during_fit
+
+
+def test_omitting_the_override_reuses_the_constructor_logger():
+    logger = RecordingLogger()
+    trainer = TopKSAETrainer(_config(), logger=logger)
+    trainer.fit(_embeddings())
+    assert trainer.logger is logger
+    assert any("fit started" in line for line in logger.lines)
+
+
+def test_show_progress_can_be_overridden_per_call():
+    pytest.importorskip("tqdm")
+    trainer = TopKSAETrainer(_config(show_progress=True))
+    iterable = range(3)
+    assert trainer._reporter(_UNSET, False).wrap(iterable, total=3) is iterable
+    assert trainer._reporter(_UNSET, True).wrap(iterable, total=3) is not iterable
+
+
+def test_fit_transform_passes_overrides_to_both_phases():
+    logger = RecordingLogger()
+    TopKSAETrainer(_config()).fit_transform(_embeddings(), logger=logger)
+
+    assert any("fit finished" in line for line in logger.lines)
+    assert "transform finished" in logger.lines[-1]
+
+
+def test_a_failed_logger_does_not_silence_later_calls():
+    """The disable latch is per call, so one bad handler is not permanent."""
+    trainer = TopKSAETrainer(_config(), logger=RaisingLogger())
+    with pytest.warns(RuntimeWarning):
+        trainer.fit(_embeddings())
+
+    healthy = RecordingLogger()
+    trainer.logger = healthy
+    trainer.fit(_embeddings())
+    assert any("fit finished" in line for line in healthy.lines)
+
+
+def test_reassigning_the_logger_attribute_takes_effect():
+    first, second = RecordingLogger(), RecordingLogger()
+    trainer = TopKSAETrainer(_config(), logger=first)
+    trainer.logger = second
+    trainer.fit(_embeddings())
+
+    assert second.lines
+    assert not first.lines
+
+
+def test_the_logger_is_not_persisted_in_state():
+    """A sink describes the job, not the model, so it must not be saved."""
+    trainer = TopKSAETrainer(_config(), logger=RecordingLogger()).fit(_embeddings())
+    state = trainer.state_dict()
+
+    assert not any(isinstance(value, RecordingLogger) for value in state.values())
+    assert TopKSAETrainer.from_state_dict(state).logger is None
